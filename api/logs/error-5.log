@@ -1,0 +1,463 @@
+2025-09-11 16:25:29 +09:00: Database connection failed: Error: /home/test-tyyacht/api/node_modules/better-sqlite3/build/Release/better_sqlite3.node: invalid ELF header
+2025-09-11 16:25:29 +09:00:     at Object..node (node:internal/modules/cjs/loader:1865:18)
+2025-09-11 16:25:29 +09:00:     at Module.load (node:internal/modules/cjs/loader:1441:32)
+2025-09-11 16:25:29 +09:00:     at Function._load (node:internal/modules/cjs/loader:1263:12)
+2025-09-11 16:25:29 +09:00:     at TracingChannel.traceSync (node:diagnostics_channel:322:14)
+2025-09-11 16:25:29 +09:00:     at wrapModuleLoad (node:internal/modules/cjs/loader:237:24)
+2025-09-11 16:25:29 +09:00:     at Module.<anonymous> (node:internal/modules/cjs/loader:1463:12)
+2025-09-11 16:25:29 +09:00:     at Module.Hook._require.Module.require (/usr/lib/node_modules/pm2/node_modules/require-in-the-middle/index.js:101:39)
+2025-09-11 16:25:29 +09:00:     at require (node:internal/modules/helpers:147:16)
+2025-09-11 16:25:29 +09:00:     at bindings (/home/test-tyyacht/api/node_modules/bindings/bindings.js:112:48)
+2025-09-11 16:25:29 +09:00:     at new Database (/home/test-tyyacht/api/node_modules/better-sqlite3/lib/database.js:48:64) {
+2025-09-11 16:25:29 +09:00:   code: 'ERR_DLOPEN_FAILED'
+2025-09-11 16:25:29 +09:00: }
+2025-09-11 16:25:29 +09:00: Error: /home/test-tyyacht/api/node_modules/better-sqlite3/build/Release/better_sqlite3.node: invalid ELF header
+2025-09-11 16:25:29 +09:00:     at Object..node (node:internal/modules/cjs/loader:1865:18)
+2025-09-11 16:25:29 +09:00:     at Module.load (node:internal/modules/cjs/loader:1441:32)
+2025-09-11 16:25:29 +09:00:     at Function._load (node:internal/modules/cjs/loader:1263:12)
+2025-09-11 16:25:29 +09:00:     at TracingChannel.traceSync (node:diagnostics_channel:322:14)
+2025-09-11 16:25:29 +09:00:     at wrapModuleLoad (node:internal/modules/cjs/loader:237:24)
+2025-09-11 16:25:29 +09:00:     at Module.<anonymous> (node:internal/modules/cjs/loader:1463:12)
+2025-09-11 16:25:29 +09:00:     at Module.Hook._require.Module.require (/usr/lib/node_modules/pm2/node_modules/require-in-the-middle/index.js:101:39)
+2025-09-11 16:25:29 +09:00:     at require (node:internal/modules/helpers:147:16)
+2025-09-11 16:25:29 +09:00:     at bindings (/home/test-tyyacht/api/node_modules/bindings/bindings.js:112:48)
+2025-09-11 16:25:29 +09:00:     at new Database (/home/test-tyyacht/api/node_modules/better-sqlite3/lib/database.js:48:64) {
+2025-09-11 16:25:29 +09:00:   code: 'ERR_DLOPEN_FAILED'
+2025-09-11 16:25:29 +09:00: }
+2025-09-11 16:25:30 +09:00: Database connection failed: Error: /home/test-tyyacht/api/node_modules/better-sqlite3/build/Release/better_sqlite3.node: invalid ELF header
+2025-09-11 16:25:30 +09:00:     at Object..node (node:internal/modules/cjs/loader:1865:18)
+2025-09-11 16:25:30 +09:00:     at Module.load (node:internal/modules/cjs/loader:1441:32)
+2025-09-11 16:25:30 +09:00:     at Function._load (node:internal/modules/cjs/loader:1263:12)
+2025-09-11 16:25:30 +09:00:     at TracingChannel.traceSync (node:diagnostics_channel:322:14)
+2025-09-11 16:25:30 +09:00:     at wrapModuleLoad (node:internal/modules/cjs/loader:237:24)
+2025-09-11 16:25:30 +09:00:     at Module.<anonymous> (node:internal/modules/cjs/loader:1463:12)
+2025-09-11 16:25:30 +09:00:     at Module.Hook._require.Module.require (/usr/lib/node_modules/pm2/node_modules/require-in-the-middle/index.js:101:39)
+2025-09-11 16:25:30 +09:00:     at require (node:internal/modules/helpers:147:16)
+2025-09-11 16:25:30 +09:00:     at bindings (/home/test-tyyacht/api/node_modules/bindings/bindings.js:112:48)
+2025-09-11 16:25:30 +09:00:     at new Database (/home/test-tyyacht/api/node_modules/better-sqlite3/lib/database.js:48:64) {
+2025-09-11 16:25:30 +09:00:   code: 'ERR_DLOPEN_FAILED'
+2025-09-11 16:25:30 +09:00: }
+2025-09-11 16:25:30 +09:00: Error: /home/test-tyyacht/api/node_modules/better-sqlite3/build/Release/better_sqlite3.node: invalid ELF header
+2025-09-11 16:25:30 +09:00:     at Object..node (node:internal/modules/cjs/loader:1865:18)
+2025-09-11 16:25:30 +09:00:     at Module.load (node:internal/modules/cjs/loader:1441:32)
+2025-09-11 16:25:30 +09:00:     at Function._load (node:internal/modules/cjs/loader:1263:12)
+2025-09-11 16:25:30 +09:00:     at TracingChannel.traceSync (node:diagnostics_channel:322:14)
+2025-09-11 16:25:30 +09:00:     at wrapModuleLoad (node:internal/modules/cjs/loader:237:24)
+2025-09-11 16:25:30 +09:00:     at Module.<anonymous> (node:internal/modules/cjs/loader:1463:12)
+2025-09-11 16:25:30 +09:00:     at Module.Hook._require.Module.require (/usr/lib/node_modules/pm2/node_modules/require-in-the-middle/index.js:101:39)
+2025-09-11 16:25:30 +09:00:     at require (node:internal/modules/helpers:147:16)
+2025-09-11 16:25:30 +09:00:     at bindings (/home/test-tyyacht/api/node_modules/bindings/bindings.js:112:48)
+2025-09-11 16:25:30 +09:00:     at new Database (/home/test-tyyacht/api/node_modules/better-sqlite3/lib/database.js:48:64) {
+2025-09-11 16:25:30 +09:00:   code: 'ERR_DLOPEN_FAILED'
+2025-09-11 16:25:30 +09:00: }
+2025-09-11 16:25:30 +09:00: Database connection failed: Error: /home/test-tyyacht/api/node_modules/better-sqlite3/build/Release/better_sqlite3.node: invalid ELF header
+2025-09-11 16:25:30 +09:00:     at Object..node (node:internal/modules/cjs/loader:1865:18)
+2025-09-11 16:25:30 +09:00:     at Module.load (node:internal/modules/cjs/loader:1441:32)
+2025-09-11 16:25:30 +09:00:     at Function._load (node:internal/modules/cjs/loader:1263:12)
+2025-09-11 16:25:30 +09:00:     at TracingChannel.traceSync (node:diagnostics_channel:322:14)
+2025-09-11 16:25:30 +09:00:     at wrapModuleLoad (node:internal/modules/cjs/loader:237:24)
+2025-09-11 16:25:30 +09:00:     at Module.<anonymous> (node:internal/modules/cjs/loader:1463:12)
+2025-09-11 16:25:30 +09:00:     at Module.Hook._require.Module.require (/usr/lib/node_modules/pm2/node_modules/require-in-the-middle/index.js:101:39)
+2025-09-11 16:25:30 +09:00:     at require (node:internal/modules/helpers:147:16)
+2025-09-11 16:25:30 +09:00:     at bindings (/home/test-tyyacht/api/node_modules/bindings/bindings.js:112:48)
+2025-09-11 16:25:30 +09:00:     at new Database (/home/test-tyyacht/api/node_modules/better-sqlite3/lib/database.js:48:64) {
+2025-09-11 16:25:30 +09:00:   code: 'ERR_DLOPEN_FAILED'
+2025-09-11 16:25:30 +09:00: }
+2025-09-11 16:25:30 +09:00: Error: /home/test-tyyacht/api/node_modules/better-sqlite3/build/Release/better_sqlite3.node: invalid ELF header
+2025-09-11 16:25:30 +09:00:     at Object..node (node:internal/modules/cjs/loader:1865:18)
+2025-09-11 16:25:30 +09:00:     at Module.load (node:internal/modules/cjs/loader:1441:32)
+2025-09-11 16:25:30 +09:00:     at Function._load (node:internal/modules/cjs/loader:1263:12)
+2025-09-11 16:25:30 +09:00:     at TracingChannel.traceSync (node:diagnostics_channel:322:14)
+2025-09-11 16:25:30 +09:00:     at wrapModuleLoad (node:internal/modules/cjs/loader:237:24)
+2025-09-11 16:25:30 +09:00:     at Module.<anonymous> (node:internal/modules/cjs/loader:1463:12)
+2025-09-11 16:25:30 +09:00:     at Module.Hook._require.Module.require (/usr/lib/node_modules/pm2/node_modules/require-in-the-middle/index.js:101:39)
+2025-09-11 16:25:30 +09:00:     at require (node:internal/modules/helpers:147:16)
+2025-09-11 16:25:30 +09:00:     at bindings (/home/test-tyyacht/api/node_modules/bindings/bindings.js:112:48)
+2025-09-11 16:25:30 +09:00:     at new Database (/home/test-tyyacht/api/node_modules/better-sqlite3/lib/database.js:48:64) {
+2025-09-11 16:25:30 +09:00:   code: 'ERR_DLOPEN_FAILED'
+2025-09-11 16:25:30 +09:00: }
+2025-09-11 16:25:31 +09:00: Database connection failed: Error: /home/test-tyyacht/api/node_modules/better-sqlite3/build/Release/better_sqlite3.node: invalid ELF header
+2025-09-11 16:25:31 +09:00:     at Object..node (node:internal/modules/cjs/loader:1865:18)
+2025-09-11 16:25:31 +09:00:     at Module.load (node:internal/modules/cjs/loader:1441:32)
+2025-09-11 16:25:31 +09:00:     at Function._load (node:internal/modules/cjs/loader:1263:12)
+2025-09-11 16:25:31 +09:00:     at TracingChannel.traceSync (node:diagnostics_channel:322:14)
+2025-09-11 16:25:31 +09:00:     at wrapModuleLoad (node:internal/modules/cjs/loader:237:24)
+2025-09-11 16:25:31 +09:00:     at Module.<anonymous> (node:internal/modules/cjs/loader:1463:12)
+2025-09-11 16:25:31 +09:00:     at Module.Hook._require.Module.require (/usr/lib/node_modules/pm2/node_modules/require-in-the-middle/index.js:101:39)
+2025-09-11 16:25:31 +09:00:     at require (node:internal/modules/helpers:147:16)
+2025-09-11 16:25:31 +09:00:     at bindings (/home/test-tyyacht/api/node_modules/bindings/bindings.js:112:48)
+2025-09-11 16:25:31 +09:00:     at new Database (/home/test-tyyacht/api/node_modules/better-sqlite3/lib/database.js:48:64) {
+2025-09-11 16:25:31 +09:00:   code: 'ERR_DLOPEN_FAILED'
+2025-09-11 16:25:31 +09:00: }
+2025-09-11 16:25:31 +09:00: Error: /home/test-tyyacht/api/node_modules/better-sqlite3/build/Release/better_sqlite3.node: invalid ELF header
+2025-09-11 16:25:31 +09:00:     at Object..node (node:internal/modules/cjs/loader:1865:18)
+2025-09-11 16:25:31 +09:00:     at Module.load (node:internal/modules/cjs/loader:1441:32)
+2025-09-11 16:25:31 +09:00:     at Function._load (node:internal/modules/cjs/loader:1263:12)
+2025-09-11 16:25:31 +09:00:     at TracingChannel.traceSync (node:diagnostics_channel:322:14)
+2025-09-11 16:25:31 +09:00:     at wrapModuleLoad (node:internal/modules/cjs/loader:237:24)
+2025-09-11 16:25:31 +09:00:     at Module.<anonymous> (node:internal/modules/cjs/loader:1463:12)
+2025-09-11 16:25:31 +09:00:     at Module.Hook._require.Module.require (/usr/lib/node_modules/pm2/node_modules/require-in-the-middle/index.js:101:39)
+2025-09-11 16:25:31 +09:00:     at require (node:internal/modules/helpers:147:16)
+2025-09-11 16:25:31 +09:00:     at bindings (/home/test-tyyacht/api/node_modules/bindings/bindings.js:112:48)
+2025-09-11 16:25:31 +09:00:     at new Database (/home/test-tyyacht/api/node_modules/better-sqlite3/lib/database.js:48:64) {
+2025-09-11 16:25:31 +09:00:   code: 'ERR_DLOPEN_FAILED'
+2025-09-11 16:25:31 +09:00: }
+2025-09-11 16:25:31 +09:00: Database connection failed: Error: /home/test-tyyacht/api/node_modules/better-sqlite3/build/Release/better_sqlite3.node: invalid ELF header
+2025-09-11 16:25:31 +09:00:     at Object..node (node:internal/modules/cjs/loader:1865:18)
+2025-09-11 16:25:31 +09:00:     at Module.load (node:internal/modules/cjs/loader:1441:32)
+2025-09-11 16:25:31 +09:00:     at Function._load (node:internal/modules/cjs/loader:1263:12)
+2025-09-11 16:25:31 +09:00:     at TracingChannel.traceSync (node:diagnostics_channel:322:14)
+2025-09-11 16:25:31 +09:00:     at wrapModuleLoad (node:internal/modules/cjs/loader:237:24)
+2025-09-11 16:25:31 +09:00:     at Module.<anonymous> (node:internal/modules/cjs/loader:1463:12)
+2025-09-11 16:25:31 +09:00:     at Module.Hook._require.Module.require (/usr/lib/node_modules/pm2/node_modules/require-in-the-middle/index.js:101:39)
+2025-09-11 16:25:31 +09:00:     at require (node:internal/modules/helpers:147:16)
+2025-09-11 16:25:31 +09:00:     at bindings (/home/test-tyyacht/api/node_modules/bindings/bindings.js:112:48)
+2025-09-11 16:25:31 +09:00:     at new Database (/home/test-tyyacht/api/node_modules/better-sqlite3/lib/database.js:48:64) {
+2025-09-11 16:25:31 +09:00:   code: 'ERR_DLOPEN_FAILED'
+2025-09-11 16:25:31 +09:00: }
+2025-09-11 16:25:31 +09:00: Error: /home/test-tyyacht/api/node_modules/better-sqlite3/build/Release/better_sqlite3.node: invalid ELF header
+2025-09-11 16:25:31 +09:00:     at Object..node (node:internal/modules/cjs/loader:1865:18)
+2025-09-11 16:25:31 +09:00:     at Module.load (node:internal/modules/cjs/loader:1441:32)
+2025-09-11 16:25:31 +09:00:     at Function._load (node:internal/modules/cjs/loader:1263:12)
+2025-09-11 16:25:31 +09:00:     at TracingChannel.traceSync (node:diagnostics_channel:322:14)
+2025-09-11 16:25:31 +09:00:     at wrapModuleLoad (node:internal/modules/cjs/loader:237:24)
+2025-09-11 16:25:31 +09:00:     at Module.<anonymous> (node:internal/modules/cjs/loader:1463:12)
+2025-09-11 16:25:31 +09:00:     at Module.Hook._require.Module.require (/usr/lib/node_modules/pm2/node_modules/require-in-the-middle/index.js:101:39)
+2025-09-11 16:25:31 +09:00:     at require (node:internal/modules/helpers:147:16)
+2025-09-11 16:25:31 +09:00:     at bindings (/home/test-tyyacht/api/node_modules/bindings/bindings.js:112:48)
+2025-09-11 16:25:31 +09:00:     at new Database (/home/test-tyyacht/api/node_modules/better-sqlite3/lib/database.js:48:64) {
+2025-09-11 16:25:31 +09:00:   code: 'ERR_DLOPEN_FAILED'
+2025-09-11 16:25:31 +09:00: }
+2025-09-11 16:25:31 +09:00: Database connection failed: Error: /home/test-tyyacht/api/node_modules/better-sqlite3/build/Release/better_sqlite3.node: invalid ELF header
+2025-09-11 16:25:31 +09:00:     at Object..node (node:internal/modules/cjs/loader:1865:18)
+2025-09-11 16:25:31 +09:00:     at Module.load (node:internal/modules/cjs/loader:1441:32)
+2025-09-11 16:25:31 +09:00:     at Function._load (node:internal/modules/cjs/loader:1263:12)
+2025-09-11 16:25:31 +09:00:     at TracingChannel.traceSync (node:diagnostics_channel:322:14)
+2025-09-11 16:25:31 +09:00:     at wrapModuleLoad (node:internal/modules/cjs/loader:237:24)
+2025-09-11 16:25:31 +09:00:     at Module.<anonymous> (node:internal/modules/cjs/loader:1463:12)
+2025-09-11 16:25:31 +09:00:     at Module.Hook._require.Module.require (/usr/lib/node_modules/pm2/node_modules/require-in-the-middle/index.js:101:39)
+2025-09-11 16:25:31 +09:00:     at require (node:internal/modules/helpers:147:16)
+2025-09-11 16:25:31 +09:00:     at bindings (/home/test-tyyacht/api/node_modules/bindings/bindings.js:112:48)
+2025-09-11 16:25:31 +09:00:     at new Database (/home/test-tyyacht/api/node_modules/better-sqlite3/lib/database.js:48:64) {
+2025-09-11 16:25:31 +09:00:   code: 'ERR_DLOPEN_FAILED'
+2025-09-11 16:25:31 +09:00: }
+2025-09-11 16:25:31 +09:00: Error: /home/test-tyyacht/api/node_modules/better-sqlite3/build/Release/better_sqlite3.node: invalid ELF header
+2025-09-11 16:25:31 +09:00:     at Object..node (node:internal/modules/cjs/loader:1865:18)
+2025-09-11 16:25:31 +09:00:     at Module.load (node:internal/modules/cjs/loader:1441:32)
+2025-09-11 16:25:31 +09:00:     at Function._load (node:internal/modules/cjs/loader:1263:12)
+2025-09-11 16:25:31 +09:00:     at TracingChannel.traceSync (node:diagnostics_channel:322:14)
+2025-09-11 16:25:31 +09:00:     at wrapModuleLoad (node:internal/modules/cjs/loader:237:24)
+2025-09-11 16:25:31 +09:00:     at Module.<anonymous> (node:internal/modules/cjs/loader:1463:12)
+2025-09-11 16:25:31 +09:00:     at Module.Hook._require.Module.require (/usr/lib/node_modules/pm2/node_modules/require-in-the-middle/index.js:101:39)
+2025-09-11 16:25:31 +09:00:     at require (node:internal/modules/helpers:147:16)
+2025-09-11 16:25:31 +09:00:     at bindings (/home/test-tyyacht/api/node_modules/bindings/bindings.js:112:48)
+2025-09-11 16:25:31 +09:00:     at new Database (/home/test-tyyacht/api/node_modules/better-sqlite3/lib/database.js:48:64) {
+2025-09-11 16:25:31 +09:00:   code: 'ERR_DLOPEN_FAILED'
+2025-09-11 16:25:31 +09:00: }
+2025-09-11 16:25:32 +09:00: Database connection failed: Error: /home/test-tyyacht/api/node_modules/better-sqlite3/build/Release/better_sqlite3.node: invalid ELF header
+2025-09-11 16:25:32 +09:00:     at Object..node (node:internal/modules/cjs/loader:1865:18)
+2025-09-11 16:25:32 +09:00:     at Module.load (node:internal/modules/cjs/loader:1441:32)
+2025-09-11 16:25:32 +09:00:     at Function._load (node:internal/modules/cjs/loader:1263:12)
+2025-09-11 16:25:32 +09:00:     at TracingChannel.traceSync (node:diagnostics_channel:322:14)
+2025-09-11 16:25:32 +09:00:     at wrapModuleLoad (node:internal/modules/cjs/loader:237:24)
+2025-09-11 16:25:32 +09:00:     at Module.<anonymous> (node:internal/modules/cjs/loader:1463:12)
+2025-09-11 16:25:32 +09:00:     at Module.Hook._require.Module.require (/usr/lib/node_modules/pm2/node_modules/require-in-the-middle/index.js:101:39)
+2025-09-11 16:25:32 +09:00:     at require (node:internal/modules/helpers:147:16)
+2025-09-11 16:25:32 +09:00:     at bindings (/home/test-tyyacht/api/node_modules/bindings/bindings.js:112:48)
+2025-09-11 16:25:32 +09:00:     at new Database (/home/test-tyyacht/api/node_modules/better-sqlite3/lib/database.js:48:64) {
+2025-09-11 16:25:32 +09:00:   code: 'ERR_DLOPEN_FAILED'
+2025-09-11 16:25:32 +09:00: }
+2025-09-11 16:25:32 +09:00: Error: /home/test-tyyacht/api/node_modules/better-sqlite3/build/Release/better_sqlite3.node: invalid ELF header
+2025-09-11 16:25:32 +09:00:     at Object..node (node:internal/modules/cjs/loader:1865:18)
+2025-09-11 16:25:32 +09:00:     at Module.load (node:internal/modules/cjs/loader:1441:32)
+2025-09-11 16:25:32 +09:00:     at Function._load (node:internal/modules/cjs/loader:1263:12)
+2025-09-11 16:25:32 +09:00:     at TracingChannel.traceSync (node:diagnostics_channel:322:14)
+2025-09-11 16:25:32 +09:00:     at wrapModuleLoad (node:internal/modules/cjs/loader:237:24)
+2025-09-11 16:25:32 +09:00:     at Module.<anonymous> (node:internal/modules/cjs/loader:1463:12)
+2025-09-11 16:25:32 +09:00:     at Module.Hook._require.Module.require (/usr/lib/node_modules/pm2/node_modules/require-in-the-middle/index.js:101:39)
+2025-09-11 16:25:32 +09:00:     at require (node:internal/modules/helpers:147:16)
+2025-09-11 16:25:32 +09:00:     at bindings (/home/test-tyyacht/api/node_modules/bindings/bindings.js:112:48)
+2025-09-11 16:25:32 +09:00:     at new Database (/home/test-tyyacht/api/node_modules/better-sqlite3/lib/database.js:48:64) {
+2025-09-11 16:25:32 +09:00:   code: 'ERR_DLOPEN_FAILED'
+2025-09-11 16:25:32 +09:00: }
+2025-09-11 16:25:32 +09:00: Database connection failed: Error: /home/test-tyyacht/api/node_modules/better-sqlite3/build/Release/better_sqlite3.node: invalid ELF header
+2025-09-11 16:25:32 +09:00:     at Object..node (node:internal/modules/cjs/loader:1865:18)
+2025-09-11 16:25:32 +09:00:     at Module.load (node:internal/modules/cjs/loader:1441:32)
+2025-09-11 16:25:32 +09:00:     at Function._load (node:internal/modules/cjs/loader:1263:12)
+2025-09-11 16:25:32 +09:00:     at TracingChannel.traceSync (node:diagnostics_channel:322:14)
+2025-09-11 16:25:32 +09:00:     at wrapModuleLoad (node:internal/modules/cjs/loader:237:24)
+2025-09-11 16:25:32 +09:00:     at Module.<anonymous> (node:internal/modules/cjs/loader:1463:12)
+2025-09-11 16:25:32 +09:00:     at Module.Hook._require.Module.require (/usr/lib/node_modules/pm2/node_modules/require-in-the-middle/index.js:101:39)
+2025-09-11 16:25:32 +09:00:     at require (node:internal/modules/helpers:147:16)
+2025-09-11 16:25:32 +09:00:     at bindings (/home/test-tyyacht/api/node_modules/bindings/bindings.js:112:48)
+2025-09-11 16:25:32 +09:00:     at new Database (/home/test-tyyacht/api/node_modules/better-sqlite3/lib/database.js:48:64) {
+2025-09-11 16:25:32 +09:00:   code: 'ERR_DLOPEN_FAILED'
+2025-09-11 16:25:32 +09:00: }
+2025-09-11 16:25:32 +09:00: Error: /home/test-tyyacht/api/node_modules/better-sqlite3/build/Release/better_sqlite3.node: invalid ELF header
+2025-09-11 16:25:32 +09:00:     at Object..node (node:internal/modules/cjs/loader:1865:18)
+2025-09-11 16:25:32 +09:00:     at Module.load (node:internal/modules/cjs/loader:1441:32)
+2025-09-11 16:25:32 +09:00:     at Function._load (node:internal/modules/cjs/loader:1263:12)
+2025-09-11 16:25:32 +09:00:     at TracingChannel.traceSync (node:diagnostics_channel:322:14)
+2025-09-11 16:25:32 +09:00:     at wrapModuleLoad (node:internal/modules/cjs/loader:237:24)
+2025-09-11 16:25:32 +09:00:     at Module.<anonymous> (node:internal/modules/cjs/loader:1463:12)
+2025-09-11 16:25:32 +09:00:     at Module.Hook._require.Module.require (/usr/lib/node_modules/pm2/node_modules/require-in-the-middle/index.js:101:39)
+2025-09-11 16:25:32 +09:00:     at require (node:internal/modules/helpers:147:16)
+2025-09-11 16:25:32 +09:00:     at bindings (/home/test-tyyacht/api/node_modules/bindings/bindings.js:112:48)
+2025-09-11 16:25:32 +09:00:     at new Database (/home/test-tyyacht/api/node_modules/better-sqlite3/lib/database.js:48:64) {
+2025-09-11 16:25:32 +09:00:   code: 'ERR_DLOPEN_FAILED'
+2025-09-11 16:25:32 +09:00: }
+2025-09-11 16:25:32 +09:00: Database connection failed: Error: /home/test-tyyacht/api/node_modules/better-sqlite3/build/Release/better_sqlite3.node: invalid ELF header
+2025-09-11 16:25:32 +09:00:     at Object..node (node:internal/modules/cjs/loader:1865:18)
+2025-09-11 16:25:32 +09:00:     at Module.load (node:internal/modules/cjs/loader:1441:32)
+2025-09-11 16:25:32 +09:00:     at Function._load (node:internal/modules/cjs/loader:1263:12)
+2025-09-11 16:25:32 +09:00:     at TracingChannel.traceSync (node:diagnostics_channel:322:14)
+2025-09-11 16:25:32 +09:00:     at wrapModuleLoad (node:internal/modules/cjs/loader:237:24)
+2025-09-11 16:25:32 +09:00:     at Module.<anonymous> (node:internal/modules/cjs/loader:1463:12)
+2025-09-11 16:25:32 +09:00:     at Module.Hook._require.Module.require (/usr/lib/node_modules/pm2/node_modules/require-in-the-middle/index.js:101:39)
+2025-09-11 16:25:32 +09:00:     at require (node:internal/modules/helpers:147:16)
+2025-09-11 16:25:32 +09:00:     at bindings (/home/test-tyyacht/api/node_modules/bindings/bindings.js:112:48)
+2025-09-11 16:25:32 +09:00:     at new Database (/home/test-tyyacht/api/node_modules/better-sqlite3/lib/database.js:48:64) {
+2025-09-11 16:25:32 +09:00:   code: 'ERR_DLOPEN_FAILED'
+2025-09-11 16:25:32 +09:00: }
+2025-09-11 16:25:32 +09:00: Error: /home/test-tyyacht/api/node_modules/better-sqlite3/build/Release/better_sqlite3.node: invalid ELF header
+2025-09-11 16:25:32 +09:00:     at Object..node (node:internal/modules/cjs/loader:1865:18)
+2025-09-11 16:25:32 +09:00:     at Module.load (node:internal/modules/cjs/loader:1441:32)
+2025-09-11 16:25:32 +09:00:     at Function._load (node:internal/modules/cjs/loader:1263:12)
+2025-09-11 16:25:32 +09:00:     at TracingChannel.traceSync (node:diagnostics_channel:322:14)
+2025-09-11 16:25:32 +09:00:     at wrapModuleLoad (node:internal/modules/cjs/loader:237:24)
+2025-09-11 16:25:32 +09:00:     at Module.<anonymous> (node:internal/modules/cjs/loader:1463:12)
+2025-09-11 16:25:32 +09:00:     at Module.Hook._require.Module.require (/usr/lib/node_modules/pm2/node_modules/require-in-the-middle/index.js:101:39)
+2025-09-11 16:25:32 +09:00:     at require (node:internal/modules/helpers:147:16)
+2025-09-11 16:25:32 +09:00:     at bindings (/home/test-tyyacht/api/node_modules/bindings/bindings.js:112:48)
+2025-09-11 16:25:32 +09:00:     at new Database (/home/test-tyyacht/api/node_modules/better-sqlite3/lib/database.js:48:64) {
+2025-09-11 16:25:32 +09:00:   code: 'ERR_DLOPEN_FAILED'
+2025-09-11 16:25:32 +09:00: }
+2025-09-11 16:25:33 +09:00: Database connection failed: Error: /home/test-tyyacht/api/node_modules/better-sqlite3/build/Release/better_sqlite3.node: invalid ELF header
+2025-09-11 16:25:33 +09:00:     at Object..node (node:internal/modules/cjs/loader:1865:18)
+2025-09-11 16:25:33 +09:00:     at Module.load (node:internal/modules/cjs/loader:1441:32)
+2025-09-11 16:25:33 +09:00:     at Function._load (node:internal/modules/cjs/loader:1263:12)
+2025-09-11 16:25:33 +09:00:     at TracingChannel.traceSync (node:diagnostics_channel:322:14)
+2025-09-11 16:25:33 +09:00:     at wrapModuleLoad (node:internal/modules/cjs/loader:237:24)
+2025-09-11 16:25:33 +09:00:     at Module.<anonymous> (node:internal/modules/cjs/loader:1463:12)
+2025-09-11 16:25:33 +09:00:     at Module.Hook._require.Module.require (/usr/lib/node_modules/pm2/node_modules/require-in-the-middle/index.js:101:39)
+2025-09-11 16:25:33 +09:00:     at require (node:internal/modules/helpers:147:16)
+2025-09-11 16:25:33 +09:00:     at bindings (/home/test-tyyacht/api/node_modules/bindings/bindings.js:112:48)
+2025-09-11 16:25:33 +09:00:     at new Database (/home/test-tyyacht/api/node_modules/better-sqlite3/lib/database.js:48:64) {
+2025-09-11 16:25:33 +09:00:   code: 'ERR_DLOPEN_FAILED'
+2025-09-11 16:25:33 +09:00: }
+2025-09-11 16:25:33 +09:00: Error: /home/test-tyyacht/api/node_modules/better-sqlite3/build/Release/better_sqlite3.node: invalid ELF header
+2025-09-11 16:25:33 +09:00:     at Object..node (node:internal/modules/cjs/loader:1865:18)
+2025-09-11 16:25:33 +09:00:     at Module.load (node:internal/modules/cjs/loader:1441:32)
+2025-09-11 16:25:33 +09:00:     at Function._load (node:internal/modules/cjs/loader:1263:12)
+2025-09-11 16:25:33 +09:00:     at TracingChannel.traceSync (node:diagnostics_channel:322:14)
+2025-09-11 16:25:33 +09:00:     at wrapModuleLoad (node:internal/modules/cjs/loader:237:24)
+2025-09-11 16:25:33 +09:00:     at Module.<anonymous> (node:internal/modules/cjs/loader:1463:12)
+2025-09-11 16:25:33 +09:00:     at Module.Hook._require.Module.require (/usr/lib/node_modules/pm2/node_modules/require-in-the-middle/index.js:101:39)
+2025-09-11 16:25:33 +09:00:     at require (node:internal/modules/helpers:147:16)
+2025-09-11 16:25:33 +09:00:     at bindings (/home/test-tyyacht/api/node_modules/bindings/bindings.js:112:48)
+2025-09-11 16:25:33 +09:00:     at new Database (/home/test-tyyacht/api/node_modules/better-sqlite3/lib/database.js:48:64) {
+2025-09-11 16:25:33 +09:00:   code: 'ERR_DLOPEN_FAILED'
+2025-09-11 16:25:33 +09:00: }
+2025-09-12 15:53:31 +09:00: ⚠️ Using default JWT_SECRET in development - please set JWT_SECRET environment variable
+2025-09-12 15:53:31 +09:00: ⚠️ Using default JWT_SECRET in development - please set JWT_SECRET environment variable
+2025-09-12 15:53:31 +09:00: ⚠️ Using default JWT_SECRET in development - please set JWT_SECRET environment variable
+2025-09-12 15:53:31 +09:00: Error: listen EADDRINUSE: address already in use :::3001
+2025-09-12 15:53:31 +09:00:     at Server.setupListenHandle [as _listen2] (node:net:1908:16)
+2025-09-12 15:53:31 +09:00:     at listenInCluster (node:net:1965:12)
+2025-09-12 15:53:31 +09:00:     at Server.listen (node:net:2067:7)
+2025-09-12 15:53:31 +09:00:     at Function.listen (/home/test-tyyacht/api/node_modules/express/lib/application.js:635:24)
+2025-09-12 15:53:31 +09:00:     at Object.<anonymous> (/home/test-tyyacht/api/index.ts:101:5)
+2025-09-12 15:53:31 +09:00:     at Module._compile (node:internal/modules/cjs/loader:1521:14)
+2025-09-12 15:53:31 +09:00:     at Object.Module._extensions..js (node:internal/modules/cjs/loader:1623:10)
+2025-09-12 15:53:31 +09:00:     at Module.load (node:internal/modules/cjs/loader:1266:32)
+2025-09-12 15:53:31 +09:00:     at Function.Module._load (node:internal/modules/cjs/loader:1091:12)
+2025-09-12 15:53:31 +09:00:     at Object.<anonymous> (/usr/lib/node_modules/pm2/lib/ProcessContainerFork.js:33:23) {
+2025-09-12 15:53:31 +09:00:   code: 'EADDRINUSE',
+2025-09-12 15:53:31 +09:00:   errno: -98,
+2025-09-12 15:53:31 +09:00:   syscall: 'listen',
+2025-09-12 15:53:31 +09:00:   address: '::',
+2025-09-12 15:53:31 +09:00:   port: 3001
+2025-09-12 15:53:31 +09:00: }
+2025-09-12 15:53:31 +09:00: ⚠️ Using default JWT_SECRET in development - please set JWT_SECRET environment variable
+2025-09-12 15:53:31 +09:00: ⚠️ Using default JWT_SECRET in development - please set JWT_SECRET environment variable
+2025-09-12 15:53:31 +09:00: ⚠️ Using default JWT_SECRET in development - please set JWT_SECRET environment variable
+2025-09-12 15:53:31 +09:00: Error: listen EADDRINUSE: address already in use :::3001
+2025-09-12 15:53:31 +09:00:     at Server.setupListenHandle [as _listen2] (node:net:1908:16)
+2025-09-12 15:53:31 +09:00:     at listenInCluster (node:net:1965:12)
+2025-09-12 15:53:31 +09:00:     at Server.listen (node:net:2067:7)
+2025-09-12 15:53:31 +09:00:     at Function.listen (/home/test-tyyacht/api/node_modules/express/lib/application.js:635:24)
+2025-09-12 15:53:31 +09:00:     at Object.<anonymous> (/home/test-tyyacht/api/index.ts:101:5)
+2025-09-12 15:53:31 +09:00:     at Module._compile (node:internal/modules/cjs/loader:1521:14)
+2025-09-12 15:53:31 +09:00:     at Object.Module._extensions..js (node:internal/modules/cjs/loader:1623:10)
+2025-09-12 15:53:31 +09:00:     at Module.load (node:internal/modules/cjs/loader:1266:32)
+2025-09-12 15:53:31 +09:00:     at Function.Module._load (node:internal/modules/cjs/loader:1091:12)
+2025-09-12 15:53:31 +09:00:     at Object.<anonymous> (/usr/lib/node_modules/pm2/lib/ProcessContainerFork.js:33:23) {
+2025-09-12 15:53:31 +09:00:   code: 'EADDRINUSE',
+2025-09-12 15:53:31 +09:00:   errno: -98,
+2025-09-12 15:53:31 +09:00:   syscall: 'listen',
+2025-09-12 15:53:31 +09:00:   address: '::',
+2025-09-12 15:53:31 +09:00:   port: 3001
+2025-09-12 15:53:31 +09:00: }
+2025-09-12 15:53:32 +09:00: ⚠️ Using default JWT_SECRET in development - please set JWT_SECRET environment variable
+2025-09-12 15:53:32 +09:00: ⚠️ Using default JWT_SECRET in development - please set JWT_SECRET environment variable
+2025-09-12 15:53:32 +09:00: ⚠️ Using default JWT_SECRET in development - please set JWT_SECRET environment variable
+2025-09-12 15:53:32 +09:00: Error: listen EADDRINUSE: address already in use :::3001
+2025-09-12 15:53:32 +09:00:     at Server.setupListenHandle [as _listen2] (node:net:1908:16)
+2025-09-12 15:53:32 +09:00:     at listenInCluster (node:net:1965:12)
+2025-09-12 15:53:32 +09:00:     at Server.listen (node:net:2067:7)
+2025-09-12 15:53:32 +09:00:     at Function.listen (/home/test-tyyacht/api/node_modules/express/lib/application.js:635:24)
+2025-09-12 15:53:32 +09:00:     at Object.<anonymous> (/home/test-tyyacht/api/index.ts:101:5)
+2025-09-12 15:53:32 +09:00:     at Module._compile (node:internal/modules/cjs/loader:1521:14)
+2025-09-12 15:53:32 +09:00:     at Object.Module._extensions..js (node:internal/modules/cjs/loader:1623:10)
+2025-09-12 15:53:32 +09:00:     at Module.load (node:internal/modules/cjs/loader:1266:32)
+2025-09-12 15:53:32 +09:00:     at Function.Module._load (node:internal/modules/cjs/loader:1091:12)
+2025-09-12 15:53:32 +09:00:     at Object.<anonymous> (/usr/lib/node_modules/pm2/lib/ProcessContainerFork.js:33:23) {
+2025-09-12 15:53:32 +09:00:   code: 'EADDRINUSE',
+2025-09-12 15:53:32 +09:00:   errno: -98,
+2025-09-12 15:53:32 +09:00:   syscall: 'listen',
+2025-09-12 15:53:32 +09:00:   address: '::',
+2025-09-12 15:53:32 +09:00:   port: 3001
+2025-09-12 15:53:32 +09:00: }
+2025-09-12 15:53:32 +09:00: ⚠️ Using default JWT_SECRET in development - please set JWT_SECRET environment variable
+2025-09-12 15:53:32 +09:00: ⚠️ Using default JWT_SECRET in development - please set JWT_SECRET environment variable
+2025-09-12 15:53:32 +09:00: ⚠️ Using default JWT_SECRET in development - please set JWT_SECRET environment variable
+2025-09-12 15:53:32 +09:00: Error: listen EADDRINUSE: address already in use :::3001
+2025-09-12 15:53:32 +09:00:     at Server.setupListenHandle [as _listen2] (node:net:1908:16)
+2025-09-12 15:53:32 +09:00:     at listenInCluster (node:net:1965:12)
+2025-09-12 15:53:32 +09:00:     at Server.listen (node:net:2067:7)
+2025-09-12 15:53:32 +09:00:     at Function.listen (/home/test-tyyacht/api/node_modules/express/lib/application.js:635:24)
+2025-09-12 15:53:32 +09:00:     at Object.<anonymous> (/home/test-tyyacht/api/index.ts:101:5)
+2025-09-12 15:53:32 +09:00:     at Module._compile (node:internal/modules/cjs/loader:1521:14)
+2025-09-12 15:53:32 +09:00:     at Object.Module._extensions..js (node:internal/modules/cjs/loader:1623:10)
+2025-09-12 15:53:32 +09:00:     at Module.load (node:internal/modules/cjs/loader:1266:32)
+2025-09-12 15:53:32 +09:00:     at Function.Module._load (node:internal/modules/cjs/loader:1091:12)
+2025-09-12 15:53:32 +09:00:     at Object.<anonymous> (/usr/lib/node_modules/pm2/lib/ProcessContainerFork.js:33:23) {
+2025-09-12 15:53:32 +09:00:   code: 'EADDRINUSE',
+2025-09-12 15:53:32 +09:00:   errno: -98,
+2025-09-12 15:53:32 +09:00:   syscall: 'listen',
+2025-09-12 15:53:32 +09:00:   address: '::',
+2025-09-12 15:53:32 +09:00:   port: 3001
+2025-09-12 15:53:32 +09:00: }
+2025-09-12 15:53:33 +09:00: ⚠️ Using default JWT_SECRET in development - please set JWT_SECRET environment variable
+2025-09-12 15:53:33 +09:00: ⚠️ Using default JWT_SECRET in development - please set JWT_SECRET environment variable
+2025-09-12 15:53:33 +09:00: ⚠️ Using default JWT_SECRET in development - please set JWT_SECRET environment variable
+2025-09-12 15:53:33 +09:00: Error: listen EADDRINUSE: address already in use :::3001
+2025-09-12 15:53:33 +09:00:     at Server.setupListenHandle [as _listen2] (node:net:1908:16)
+2025-09-12 15:53:33 +09:00:     at listenInCluster (node:net:1965:12)
+2025-09-12 15:53:33 +09:00:     at Server.listen (node:net:2067:7)
+2025-09-12 15:53:33 +09:00:     at Function.listen (/home/test-tyyacht/api/node_modules/express/lib/application.js:635:24)
+2025-09-12 15:53:33 +09:00:     at Object.<anonymous> (/home/test-tyyacht/api/index.ts:101:5)
+2025-09-12 15:53:33 +09:00:     at Module._compile (node:internal/modules/cjs/loader:1521:14)
+2025-09-12 15:53:33 +09:00:     at Object.Module._extensions..js (node:internal/modules/cjs/loader:1623:10)
+2025-09-12 15:53:33 +09:00:     at Module.load (node:internal/modules/cjs/loader:1266:32)
+2025-09-12 15:53:33 +09:00:     at Function.Module._load (node:internal/modules/cjs/loader:1091:12)
+2025-09-12 15:53:33 +09:00:     at Object.<anonymous> (/usr/lib/node_modules/pm2/lib/ProcessContainerFork.js:33:23) {
+2025-09-12 15:53:33 +09:00:   code: 'EADDRINUSE',
+2025-09-12 15:53:33 +09:00:   errno: -98,
+2025-09-12 15:53:33 +09:00:   syscall: 'listen',
+2025-09-12 15:53:33 +09:00:   address: '::',
+2025-09-12 15:53:33 +09:00:   port: 3001
+2025-09-12 15:53:33 +09:00: }
+2025-09-12 15:53:33 +09:00: ⚠️ Using default JWT_SECRET in development - please set JWT_SECRET environment variable
+2025-09-12 15:53:33 +09:00: ⚠️ Using default JWT_SECRET in development - please set JWT_SECRET environment variable
+2025-09-12 15:53:33 +09:00: ⚠️ Using default JWT_SECRET in development - please set JWT_SECRET environment variable
+2025-09-12 15:53:33 +09:00: Error: listen EADDRINUSE: address already in use :::3001
+2025-09-12 15:53:33 +09:00:     at Server.setupListenHandle [as _listen2] (node:net:1908:16)
+2025-09-12 15:53:33 +09:00:     at listenInCluster (node:net:1965:12)
+2025-09-12 15:53:33 +09:00:     at Server.listen (node:net:2067:7)
+2025-09-12 15:53:33 +09:00:     at Function.listen (/home/test-tyyacht/api/node_modules/express/lib/application.js:635:24)
+2025-09-12 15:53:33 +09:00:     at Object.<anonymous> (/home/test-tyyacht/api/index.ts:101:5)
+2025-09-12 15:53:33 +09:00:     at Module._compile (node:internal/modules/cjs/loader:1521:14)
+2025-09-12 15:53:33 +09:00:     at Object.Module._extensions..js (node:internal/modules/cjs/loader:1623:10)
+2025-09-12 15:53:33 +09:00:     at Module.load (node:internal/modules/cjs/loader:1266:32)
+2025-09-12 15:53:33 +09:00:     at Function.Module._load (node:internal/modules/cjs/loader:1091:12)
+2025-09-12 15:53:33 +09:00:     at Object.<anonymous> (/usr/lib/node_modules/pm2/lib/ProcessContainerFork.js:33:23) {
+2025-09-12 15:53:33 +09:00:   code: 'EADDRINUSE',
+2025-09-12 15:53:33 +09:00:   errno: -98,
+2025-09-12 15:53:33 +09:00:   syscall: 'listen',
+2025-09-12 15:53:33 +09:00:   address: '::',
+2025-09-12 15:53:33 +09:00:   port: 3001
+2025-09-12 15:53:33 +09:00: }
+2025-09-12 15:53:34 +09:00: ⚠️ Using default JWT_SECRET in development - please set JWT_SECRET environment variable
+2025-09-12 15:53:34 +09:00: ⚠️ Using default JWT_SECRET in development - please set JWT_SECRET environment variable
+2025-09-12 15:53:34 +09:00: ⚠️ Using default JWT_SECRET in development - please set JWT_SECRET environment variable
+2025-09-12 15:53:34 +09:00: Error: listen EADDRINUSE: address already in use :::3001
+2025-09-12 15:53:34 +09:00:     at Server.setupListenHandle [as _listen2] (node:net:1908:16)
+2025-09-12 15:53:34 +09:00:     at listenInCluster (node:net:1965:12)
+2025-09-12 15:53:34 +09:00:     at Server.listen (node:net:2067:7)
+2025-09-12 15:53:34 +09:00:     at Function.listen (/home/test-tyyacht/api/node_modules/express/lib/application.js:635:24)
+2025-09-12 15:53:34 +09:00:     at Object.<anonymous> (/home/test-tyyacht/api/index.ts:101:5)
+2025-09-12 15:53:34 +09:00:     at Module._compile (node:internal/modules/cjs/loader:1521:14)
+2025-09-12 15:53:34 +09:00:     at Object.Module._extensions..js (node:internal/modules/cjs/loader:1623:10)
+2025-09-12 15:53:34 +09:00:     at Module.load (node:internal/modules/cjs/loader:1266:32)
+2025-09-12 15:53:34 +09:00:     at Function.Module._load (node:internal/modules/cjs/loader:1091:12)
+2025-09-12 15:53:34 +09:00:     at Object.<anonymous> (/usr/lib/node_modules/pm2/lib/ProcessContainerFork.js:33:23) {
+2025-09-12 15:53:34 +09:00:   code: 'EADDRINUSE',
+2025-09-12 15:53:34 +09:00:   errno: -98,
+2025-09-12 15:53:34 +09:00:   syscall: 'listen',
+2025-09-12 15:53:34 +09:00:   address: '::',
+2025-09-12 15:53:34 +09:00:   port: 3001
+2025-09-12 15:53:34 +09:00: }
+2025-09-12 15:53:34 +09:00: ⚠️ Using default JWT_SECRET in development - please set JWT_SECRET environment variable
+2025-09-12 15:53:34 +09:00: ⚠️ Using default JWT_SECRET in development - please set JWT_SECRET environment variable
+2025-09-12 15:53:34 +09:00: ⚠️ Using default JWT_SECRET in development - please set JWT_SECRET environment variable
+2025-09-12 15:53:34 +09:00: Error: listen EADDRINUSE: address already in use :::3001
+2025-09-12 15:53:34 +09:00:     at Server.setupListenHandle [as _listen2] (node:net:1908:16)
+2025-09-12 15:53:34 +09:00:     at listenInCluster (node:net:1965:12)
+2025-09-12 15:53:34 +09:00:     at Server.listen (node:net:2067:7)
+2025-09-12 15:53:34 +09:00:     at Function.listen (/home/test-tyyacht/api/node_modules/express/lib/application.js:635:24)
+2025-09-12 15:53:34 +09:00:     at Object.<anonymous> (/home/test-tyyacht/api/index.ts:101:5)
+2025-09-12 15:53:34 +09:00:     at Module._compile (node:internal/modules/cjs/loader:1521:14)
+2025-09-12 15:53:34 +09:00:     at Object.Module._extensions..js (node:internal/modules/cjs/loader:1623:10)
+2025-09-12 15:53:34 +09:00:     at Module.load (node:internal/modules/cjs/loader:1266:32)
+2025-09-12 15:53:34 +09:00:     at Function.Module._load (node:internal/modules/cjs/loader:1091:12)
+2025-09-12 15:53:34 +09:00:     at Object.<anonymous> (/usr/lib/node_modules/pm2/lib/ProcessContainerFork.js:33:23) {
+2025-09-12 15:53:34 +09:00:   code: 'EADDRINUSE',
+2025-09-12 15:53:34 +09:00:   errno: -98,
+2025-09-12 15:53:34 +09:00:   syscall: 'listen',
+2025-09-12 15:53:34 +09:00:   address: '::',
+2025-09-12 15:53:34 +09:00:   port: 3001
+2025-09-12 15:53:34 +09:00: }
+2025-09-12 15:53:35 +09:00: ⚠️ Using default JWT_SECRET in development - please set JWT_SECRET environment variable
+2025-09-12 15:53:35 +09:00: ⚠️ Using default JWT_SECRET in development - please set JWT_SECRET environment variable
+2025-09-12 15:53:35 +09:00: ⚠️ Using default JWT_SECRET in development - please set JWT_SECRET environment variable
+2025-09-12 15:53:35 +09:00: Error: listen EADDRINUSE: address already in use :::3001
+2025-09-12 15:53:35 +09:00:     at Server.setupListenHandle [as _listen2] (node:net:1908:16)
+2025-09-12 15:53:35 +09:00:     at listenInCluster (node:net:1965:12)
+2025-09-12 15:53:35 +09:00:     at Server.listen (node:net:2067:7)
+2025-09-12 15:53:35 +09:00:     at Function.listen (/home/test-tyyacht/api/node_modules/express/lib/application.js:635:24)
+2025-09-12 15:53:35 +09:00:     at Object.<anonymous> (/home/test-tyyacht/api/index.ts:101:5)
+2025-09-12 15:53:35 +09:00:     at Module._compile (node:internal/modules/cjs/loader:1521:14)
+2025-09-12 15:53:35 +09:00:     at Object.Module._extensions..js (node:internal/modules/cjs/loader:1623:10)
+2025-09-12 15:53:35 +09:00:     at Module.load (node:internal/modules/cjs/loader:1266:32)
+2025-09-12 15:53:35 +09:00:     at Function.Module._load (node:internal/modules/cjs/loader:1091:12)
+2025-09-12 15:53:35 +09:00:     at Object.<anonymous> (/usr/lib/node_modules/pm2/lib/ProcessContainerFork.js:33:23) {
+2025-09-12 15:53:35 +09:00:   code: 'EADDRINUSE',
+2025-09-12 15:53:35 +09:00:   errno: -98,
+2025-09-12 15:53:35 +09:00:   syscall: 'listen',
+2025-09-12 15:53:35 +09:00:   address: '::',
+2025-09-12 15:53:35 +09:00:   port: 3001
+2025-09-12 15:53:35 +09:00: }
+2025-09-12 15:53:35 +09:00: ⚠️ Using default JWT_SECRET in development - please set JWT_SECRET environment variable
+2025-09-12 15:53:35 +09:00: ⚠️ Using default JWT_SECRET in development - please set JWT_SECRET environment variable
+2025-09-12 15:53:35 +09:00: ⚠️ Using default JWT_SECRET in development - please set JWT_SECRET environment variable
+2025-09-12 15:53:35 +09:00: Error: listen EADDRINUSE: address already in use :::3001
+2025-09-12 15:53:35 +09:00:     at Server.setupListenHandle [as _listen2] (node:net:1908:16)
+2025-09-12 15:53:35 +09:00:     at listenInCluster (node:net:1965:12)
+2025-09-12 15:53:35 +09:00:     at Server.listen (node:net:2067:7)
+2025-09-12 15:53:35 +09:00:     at Function.listen (/home/test-tyyacht/api/node_modules/express/lib/application.js:635:24)
+2025-09-12 15:53:35 +09:00:     at Object.<anonymous> (/home/test-tyyacht/api/index.ts:101:5)
+2025-09-12 15:53:35 +09:00:     at Module._compile (node:internal/modules/cjs/loader:1521:14)
+2025-09-12 15:53:35 +09:00:     at Object.Module._extensions..js (node:internal/modules/cjs/loader:1623:10)
+2025-09-12 15:53:35 +09:00:     at Module.load (node:internal/modules/cjs/loader:1266:32)
+2025-09-12 15:53:35 +09:00:     at Function.Module._load (node:internal/modules/cjs/loader:1091:12)
+2025-09-12 15:53:35 +09:00:     at Object.<anonymous> (/usr/lib/node_modules/pm2/lib/ProcessContainerFork.js:33:23) {
+2025-09-12 15:53:35 +09:00:   code: 'EADDRINUSE',
+2025-09-12 15:53:35 +09:00:   errno: -98,
+2025-09-12 15:53:35 +09:00:   syscall: 'listen',
+2025-09-12 15:53:35 +09:00:   address: '::',
+2025-09-12 15:53:35 +09:00:   port: 3001
+2025-09-12 15:53:35 +09:00: }
+2025-09-13 14:36:05 +09:00: ⚠️ Using default JWT_SECRET in development - please set JWT_SECRET environment variable
+2025-09-13 14:36:05 +09:00: ⚠️ Using default JWT_SECRET in development - please set JWT_SECRET environment variable
+2025-09-13 14:36:05 +09:00: ⚠️ Using default JWT_SECRET in development - please set JWT_SECRET environment variable

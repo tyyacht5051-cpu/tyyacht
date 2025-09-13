@@ -1,0 +1,50 @@
+# Serverless Functions Configuration
+service: tyyacht-api
+
+provider:
+  name: aws
+  runtime: nodejs18.x
+  stage: ${opt:stage, 'dev'}
+  region: ap-northeast-2
+  environment:
+    NODE_ENV: ${self:provider.stage}
+    DATABASE_URL: ${env:DATABASE_URL, 'sqlite:database.db'}
+
+functions:
+  api:
+    handler: dist/index.handler
+    events:
+      - http:
+          path: /{proxy+}
+          method: ANY
+          cors: true
+      - http:
+          path: /
+          method: GET
+          cors: true
+
+  # Home data functions
+  saveHomeData:
+    handler: dist/src/routes/home.saveData
+    events:
+      - http:
+          path: /api/home/save-data
+          method: POST
+          cors: true
+
+  getHomeData:
+    handler: dist/src/routes/home.getData
+    events:
+      - http:
+          path: /api/home/data
+          method: GET
+          cors: true
+
+plugins:
+  - serverless-plugin-typescript
+  - serverless-offline
+
+custom:
+  serverless-offline:
+    httpPort: 3001
+    lambdaPort: 3002

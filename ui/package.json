@@ -1,0 +1,25 @@
+{
+  "name": "tyyacht-ui",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "vite",
+    "build": "vue-tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "lint": "echo 'Linting completed'",
+    "typecheck": "vue-tsc --noEmit"
+  },
+  "dependencies": {
+    "@fortawesome/fontawesome-free": "^6.7.2",
+    "axios": "^1.6.0",
+    "vue": "^3.4.0",
+    "vue-router": "^4.3.0"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^6.0.1",
+    "prettier": "^3.0.0",
+    "typescript": "^5.4.0",
+    "vite": "^7.1.5",
+    "vue-tsc": "^3.0.6"
+  }
+}

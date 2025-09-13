@@ -1,0 +1,9 @@
+
+> tyyacht-api@1.0.0 dev
+> ts-node-dev --respawn --transpile-only index.ts
+
+[INFO] 13:48:37 ts-node-dev ver. 2.0.0 (using ts-node ver. 10.9.2, typescript ver. 5.9.2)
+기존 면제교육 스케줄이 존재하여 건너뜁니다.
+Exemption schedules initialized
+Database initialized successfully
+API server running at http://localhost:3001
