@@ -1,17 +1,17 @@
 // 환경별 설정
 const config = {
   development: {
-    API_BASE_URL: 'http://localhost:3001',
+    API_BASE_URL: 'http://localhost:4001',
     API_TIMEOUT: 10000,
     DEBUG: true
   },
   test: {
-    API_BASE_URL: 'http://test-tyyacht.com:3001',
+    API_BASE_URL: 'http://test-tyyacht.com',
     API_TIMEOUT: 10000,
     DEBUG: true
   },
   production: {
-    API_BASE_URL: 'https://tyyacht-test.com:3001',
+    API_BASE_URL: 'https://tyyacht.com',
     API_TIMEOUT: 10000,
     DEBUG: false
   }
@@ -23,7 +23,7 @@ const getEnvironment = () => {
   
   const hostname = window.location.hostname
   
-  if (hostname === 'localhost' || hostname === '127.0.0.1') {
+  if (hostname === 'localhost' || hostname === '127.0.0.1' || hostname.includes('localhost')) {
     return 'development'
   } else if (hostname === 'test-tyyacht.com') {
     return 'test'

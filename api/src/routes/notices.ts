@@ -1,18 +1,18 @@
 import express from 'express';
 import multer from 'multer';
 import path from 'path';
-import fs from 'fs';
 import { db } from '../db/database';
+import { authenticateToken, requireAdmin, AuthenticatedRequest } from '../middleware/auth';
+import { config } from '../config/env';
+import { ensureDirectory, safeDeleteFile } from '../utils/fileSystem';
 
 const router = express.Router();
 
 // 파일 업로드 설정
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    const uploadDir = path.join(__dirname, '../../uploads/notices');
-    if (!fs.existsSync(uploadDir)) {
-      fs.mkdirSync(uploadDir, { recursive: true });
-    }
+    const uploadDir = path.join(config.UPLOAD_PATH, 'notices');
+    ensureDirectory(uploadDir);
     cb(null, uploadDir);
   },
   filename: (req, file, cb) => {
@@ -24,13 +24,26 @@ const storage = multer.diskStorage({
 const upload = multer({ 
   storage: storage,
   limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
-  fileFilter: (req, file, cb) => {
-    if (file.mimetype.startsWith('image/')) {
-      cb(null, true);
-    } else {
-      cb(new Error('Only image files are allowed'));
+ fileFilter: (req, file, cb) => {
+      // 이미지와 문서 파일 모두 허용
+      const allowedMimes = [
+        'image/',
+        'application/pdf',
+        'application/msword',
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',       
+        'application/vnd.ms-excel',
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        'application/zip',
+        'application/x-zip-compressed'
+      ];
+
+      if (allowedMimes.some(type => file.mimetype.startsWith(type) || file.mimetype      
+  === type)) {
+        cb(null, true);
+      } else {
+        cb(new Error('File type not allowed'));
+      }
     }
-  }
 });
 
 // 인터페이스 정의
@@ -42,6 +55,7 @@ interface Notice {
   important: number;
   views: number;
   author_id: number;
+  published: number;
   created_at: string;
   updated_at: string;
 }
@@ -56,28 +70,6 @@ interface NoticeImage {
   created_at: string;
 }
 
-// 관리자 권한 확인 미들웨어
-const authenticateAdmin = (req: any, res: any, next: any) => {
-  const token = req.headers.authorization?.replace('Bearer ', '');
-  if (!token) {
-    return res.status(401).json({ error: 'No token provided' });
-  }
-
-  try {
-    const jwt = require('jsonwebtoken');
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'tyyacht-jwt-secret-key-2024-development');
-    const user = db.prepare('SELECT * FROM users WHERE id = ?').get(decoded.userId) as any;
-    
-    if (!user || user.role !== 'admin') {
-      return res.status(403).json({ error: 'Admin access required' });
-    }
-    
-    req.user = user;
-    next();
-  } catch (error) {
-    return res.status(401).json({ error: 'Invalid token' });
-  }
-};
 
 // 공지사항 목록 조회
 router.get('/', (req, res) => {
@@ -104,7 +96,14 @@ router.get('/', (req, res) => {
     // 각 공지사항의 이미지 정보도 가져오기
     const noticesWithImages = notices.map(notice => {
       const images = db.prepare('SELECT * FROM notice_images WHERE notice_id = ?').all(notice.id) as NoticeImage[];
-      return { ...notice, images };
+       const files = db.prepare('SELECT * FROM notice_files WHERE notice_id = ?').all(notice.id);     
+   
+ // 이미지 파일 경로를 웹에서 접근 가능한 URL로 변환
+      const imagesWithUrls = images.map(image => ({
+        ...image,
+        url: `/api/uploads/notices/${image.filename}`
+      }));
+      return { ...notice, images, files: imagesWithUrls };
     });
     
     res.json(noticesWithImages);
@@ -118,37 +117,134 @@ router.get('/', (req, res) => {
 router.get('/:id', (req, res) => {
   try {
     const noticeId = parseInt(req.params.id);
-    
+
     // 조회수 증가
     db.prepare('UPDATE notices SET views = views + 1 WHERE id = ?').run(noticeId);
-    
+
     // 공지사항 정보 조회
     const notice = db.prepare(`
       SELECT n.*, u.username as author_name, u.full_name as author_full_name
-      FROM notices n 
-      JOIN users u ON n.author_id = u.id 
+      FROM notices n
+      JOIN users u ON n.author_id = u.id
       WHERE n.id = ?
     `).get(noticeId) as Notice;
-    
+
     if (!notice) {
       return res.status(404).json({ error: 'Notice not found' });
     }
-    
+
     // 첨부 이미지 조회
     const images = db.prepare('SELECT * FROM notice_images WHERE notice_id = ?').all(noticeId) as NoticeImage[];
-    
-    res.json({ ...notice, images });
+
+      // 파일 조회 추가
+      const files = db.prepare('SELECT * FROM notice_files WHERE notice_id = ?').all(noticeId);
+
+    // 이미지 파일 경로를 웹에서 접근 가능한 URL로 변환
+    const imagesWithUrls = images.map(image => ({
+      ...image,
+      url: `/api/uploads/notices/${image.filename}`
+    }));
+
+    res.json({ ...notice, images, files: imagesWithUrls });
   } catch (error) {
     console.error('Failed to fetch notice:', error);
     res.status(500).json({ error: 'Failed to fetch notice' });
   }
 });
 
+// 조회수 증가 (별도 엔드포인트)
+router.post('/:id/view', (req, res) => {
+  try {
+    const noticeId = parseInt(req.params.id);
+
+    // 공지사항 존재 확인
+    const notice = db.prepare('SELECT id FROM notices WHERE id = ?').get(noticeId);
+
+    if (!notice) {
+      return res.status(404).json({ error: 'Notice not found' });
+    }
+
+    // 조회수 증가
+    db.prepare('UPDATE notices SET views = views + 1 WHERE id = ?').run(noticeId);
+
+    res.json({ message: 'View count incremented' });
+  } catch (error) {
+    console.error('Failed to increment view count:', error);
+    res.status(500).json({ error: 'Failed to increment view count' });
+  }
+});
+
+// 이전/다음 공지사항 조회
+router.get('/:id/adjacent', (req, res) => {
+  try {
+    const noticeId = parseInt(req.params.id);
+    const { category } = req.query;
+
+    // 현재 공지사항의 카테고리 확인
+    const currentNotice = db.prepare('SELECT category_id FROM notices WHERE id = ?').get(noticeId) as { category_id: string };
+
+    if (!currentNotice) {
+      return res.status(404).json({ error: 'Notice not found' });
+    }
+
+    const categoryFilter = category || currentNotice.category_id;
+
+    // 이전 공지사항 (더 높은 ID, 최신)
+    const nextNotice = db.prepare(`
+      SELECT id, title FROM notices
+      WHERE id > ? AND category_id = ?
+      ORDER BY id ASC
+      LIMIT 1
+    `).get(noticeId, categoryFilter) as { id: number; title: string } | undefined;
+
+    // 다음 공지사항 (더 낮은 ID, 이전)
+    const prevNotice = db.prepare(`
+      SELECT id, title FROM notices
+      WHERE id < ? AND category_id = ?
+      ORDER BY id DESC
+      LIMIT 1
+    `).get(noticeId, categoryFilter) as { id: number; title: string } | undefined;
+
+    res.json({
+      prev: prevNotice || null,
+      next: nextNotice || null
+    });
+  } catch (error) {
+    console.error('Failed to fetch adjacent notices:', error);
+    res.status(500).json({ error: 'Failed to fetch adjacent notices' });
+  }
+});
+
+// 드래프트 공지사항 생성 (관리자만)
+router.post('/draft', authenticateToken, requireAdmin, (req: AuthenticatedRequest, res) => {
+  try {
+    const { title = '새 공지사항', content = '내용을 입력하세요...', category_id, important = false } = req.body;
+    const author_id = req.user?.id;
+
+    if (!category_id) {
+      return res.status(400).json({ error: 'Category is required' });
+    }
+
+    // 드래프트 공지사항 생성
+    const result = db.prepare(`
+      INSERT INTO notices (title, content, category_id, important, author_id)
+      VALUES (?, ?, ?, ?, ?)
+    `).run(title, content, category_id, important ? 1 : 0, author_id);
+
+    const noticeId = result.lastInsertRowid;
+
+    res.status(201).json({ id: noticeId, message: 'Draft notice created successfully' });
+  } catch (error) {
+    console.error('Failed to create draft notice:', error);
+    res.status(500).json({ error: 'Failed to create draft notice' });
+  }
+});
+
 // 공지사항 작성 (관리자만)
-router.post('/', authenticateAdmin, upload.array('images', 3), (req: any, res) => {
+router.post('/', authenticateToken, requireAdmin, upload.array('images', 3), (req: AuthenticatedRequest, res) => {
   try {
     const { title, content, category_id, important = false } = req.body;
-    const author_id = req.user.id;
+    const author_id = req.user?.id;
     
     if (!title || !content || !category_id) {
       return res.status(400).json({ error: 'Title, content, and category are required' });
@@ -163,23 +259,30 @@ router.post('/', authenticateAdmin, upload.array('images', 3), (req: any, res) =
     const noticeId = result.lastInsertRowid;
     
     // 이미지 파일 처리
-    if (req.files && req.files.length > 0) {
-      const imageStmt = db.prepare(`
-        INSERT INTO notice_images (notice_id, filename, original_name, file_path, file_size)
-        VALUES (?, ?, ?, ?, ?)
-      `);
-      
-      for (const file of req.files) {
-        imageStmt.run(
-          noticeId,
-          file.filename,
-          file.originalname,
-          file.path,
-          file.size
-        );
-      }
-    }
-    
+    const files = req.files as Express.Multer.File[];
+         if (files && files.length > 0) {
+        for (const file of files) {
+          // 이미지 파일인지 확인
+          const isImage = file.mimetype.startsWith('image/');
+
+          if (isImage) {
+            // 이미지는 notice_images 테이블에 저장
+            db.prepare(`
+              INSERT INTO notice_images (notice_id, filename, original_name,
+  file_path, file_size)
+              VALUES (?, ?, ?, ?, ?)
+            `).run(noticeId, file.filename, file.originalname, file.path, file.size);    
+          } else {
+            // 일반 파일은 notice_files 테이블에 저장
+            db.prepare(`
+              INSERT INTO notice_files (notice_id, filename, original_name,
+  file_path, file_size, file_type)
+              VALUES (?, ?, ?, ?, ?, ?)
+            `).run(noticeId, file.filename, file.originalname, file.path, file.size,     
+  file.mimetype);
+          }
+        }
+      } 
     res.status(201).json({ id: noticeId, message: 'Notice created successfully' });
   } catch (error) {
     console.error('Failed to create notice:', error);
@@ -188,7 +291,7 @@ router.post('/', authenticateAdmin, upload.array('images', 3), (req: any, res) =
 });
 
 // 공지사항 수정 (관리자만)
-router.put('/:id', authenticateAdmin, upload.array('images', 3), (req: any, res) => {
+router.put('/:id', authenticateToken, requireAdmin, upload.array('images', 3), (req: AuthenticatedRequest, res) => {
   try {
     const noticeId = parseInt(req.params.id);
     const { title, content, category_id, important = false } = req.body;
@@ -209,23 +312,27 @@ router.put('/:id', authenticateAdmin, upload.array('images', 3), (req: any, res)
     }
     
     // 새 이미지 파일 처리
-    if (req.files && req.files.length > 0) {
-      const imageStmt = db.prepare(`
-        INSERT INTO notice_images (notice_id, filename, original_name, file_path, file_size)
-        VALUES (?, ?, ?, ?, ?)
-      `);
-      
-      for (const file of req.files) {
-        imageStmt.run(
-          noticeId,
-          file.filename,
-          file.originalname,
-          file.path,
-          file.size
-        );
-      }
-    }
-    
+    const files = req.files as Express.Multer.File[];
+      if (files && files.length > 0) {
+        for (const file of files) {
+          const isImage = file.mimetype.startsWith('image/');
+
+          if (isImage) {
+            db.prepare(`
+              INSERT INTO notice_images (notice_id, filename, original_name,
+  file_path, file_size)
+              VALUES (?, ?, ?, ?, ?)
+            `).run(noticeId, file.filename, file.originalname, file.path, file.size);    
+          } else {
+            db.prepare(`
+              INSERT INTO notice_files (notice_id, filename, original_name,
+  file_path, file_size, file_type)
+              VALUES (?, ?, ?, ?, ?, ?)
+            `).run(noticeId, file.filename, file.originalname, file.path, file.size,     
+  file.mimetype);
+          }
+        }
+      }    
     res.json({ message: 'Notice updated successfully' });
   } catch (error) {
     console.error('Failed to update notice:', error);
@@ -234,21 +341,20 @@ router.put('/:id', authenticateAdmin, upload.array('images', 3), (req: any, res)
 });
 
 // 공지사항 삭제 (관리자만)
-router.delete('/:id', authenticateAdmin, (req: any, res) => {
+router.delete('/:id', authenticateToken, requireAdmin, (req: AuthenticatedRequest, res) => {
   try {
     const noticeId = parseInt(req.params.id);
     
     // 첨부된 이미지 파일 삭제
     const images = db.prepare('SELECT * FROM notice_images WHERE notice_id = ?').all(noticeId) as NoticeImage[];
-    
+
+// 일반 파일 삭제 추가
+     const files = db.prepare('SELECT file_path FROM notice_files WHERE notice_id = ?').all(noticeId) as Array<{ file_path: string }>;
+    for (const file of files) {
+      safeDeleteFile(file.file_path);
+    }
     for (const image of images) {
-      try {
-        if (fs.existsSync(image.file_path)) {
-          fs.unlinkSync(image.file_path);
-        }
-      } catch (fileError) {
-        console.warn('Failed to delete image file:', image.file_path);
-      }
+      safeDeleteFile(image.file_path);
     }
     
     // 공지사항 삭제 (CASCADE로 이미지 레코드도 자동 삭제됨)
@@ -266,7 +372,7 @@ router.delete('/:id', authenticateAdmin, (req: any, res) => {
 });
 
 // 이미지 삭제 (관리자만)
-router.delete('/images/:imageId', authenticateAdmin, (req: any, res) => {
+router.delete('/images/:imageId', authenticateToken, requireAdmin, (req: AuthenticatedRequest, res) => {
   try {
     const imageId = parseInt(req.params.imageId);
     
@@ -277,13 +383,7 @@ router.delete('/images/:imageId', authenticateAdmin, (req: any, res) => {
     }
     
     // 파일 삭제
-    try {
-      if (fs.existsSync(image.file_path)) {
-        fs.unlinkSync(image.file_path);
-      }
-    } catch (fileError) {
-      console.warn('Failed to delete image file:', image.file_path);
-    }
+    safeDeleteFile(image.file_path);
     
     // 데이터베이스에서 삭제
     db.prepare('DELETE FROM notice_images WHERE id = ?').run(imageId);
@@ -295,18 +395,48 @@ router.delete('/images/:imageId', authenticateAdmin, (req: any, res) => {
   }
 });
 
+// 공지사항 상태 변경 (게시/비게시)
+router.patch('/:id/status', authenticateToken, requireAdmin, (req: AuthenticatedRequest, res) => {
+  try {
+    const noticeId = parseInt(req.params.id);
+    const { published } = req.body;
+
+    if (typeof published !== 'boolean') {
+      return res.status(400).json({ error: 'Published status must be a boolean' });
+    }
+
+    const result = db.prepare(`
+      UPDATE notices
+      SET published = ?, updated_at = datetime('now', 'localtime')
+      WHERE id = ?
+    `).run(published ? 1 : 0, noticeId);
+
+    if (result.changes === 0) {
+      return res.status(404).json({ error: 'Notice not found' });
+    }
+
+    res.json({
+      message: `Notice ${published ? 'published' : 'unpublished'} successfully`,
+      published
+    });
+  } catch (error) {
+    console.error('Failed to update notice status:', error);
+    res.status(500).json({ error: 'Failed to update notice status' });
+  }
+});
+
 // 카테고리별 통계
 router.get('/stats/categories', (req, res) => {
   try {
     const stats = db.prepare(`
-      SELECT 
+      SELECT
         category_id,
         COUNT(*) as count,
         MAX(created_at) as latest_date
-      FROM notices 
+      FROM notices
       GROUP BY category_id
     `).all();
-    
+
     res.json(stats);
   } catch (error) {
     console.error('Failed to fetch category stats:', error);

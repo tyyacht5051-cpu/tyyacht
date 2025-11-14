@@ -39,7 +39,7 @@
                         <button @click="searchNotices" class="search-btn">검색</button>
                     </div>
                     <div class="admin-controls" v-if="isAdmin">
-                        <button @click="showWriteForm = true" class="write-btn">✏️ 글쓰기</button>
+                        <button @click="createNewPage" class="write-btn">✏️ 글쓰기</button>
                     </div>
                 </div>
 
@@ -51,12 +51,14 @@
                         <div class="col-views">조회</div>
                     </div>
 
-                    <div v-for="notice in paginatedNotices" :key="notice.id" class="table-row" @click="viewNotice(notice)">
+                    <div v-for="notice in paginatedNotices" :key="notice.id" class="table-row">
                         <div class="col-number">{{ notice.id }}</div>
                         <div class="col-title">
-                            <span class="title-text">{{ notice.title }}</span>
-                            <span v-if="isNewNotice(notice.date)" class="new-badge">NEW</span>
-                            <span v-if="notice.important" class="important-badge">중요</span>
+                            <router-link :to="`/notice/exemption/${notice.id}`" class="title-link">
+                                <span class="title-text">{{ notice.title }}</span>
+                                <span v-if="isNewNotice(notice.date)" class="new-badge">NEW</span>
+                                <span v-if="notice.important" class="important-badge">중요</span>
+                            </router-link>
                         </div>
                         <div class="col-date">{{ formatDate(notice.date) }}</div>
                         <div class="col-views">{{ notice.views }}</div>
@@ -81,71 +83,6 @@
                     </button>
                 </div>
 
-                <!-- 공지사항 작성 폼 (관리자 전용) -->
-                <div v-if="showWriteForm && isAdmin" class="write-form">
-                    <div class="form-header">
-                        <h3>면제교육 공지사항 작성</h3>
-                        <button class="close-btn" @click="showWriteForm = false">✕</button>
-                    </div>
-                    <form @submit.prevent="submitNotice">
-                        <div class="form-group">
-                            <label>제목</label>
-                            <input v-model="newNotice.title" type="text" required />
-                        </div>
-                        <div class="form-group">
-                            <label>내용</label>
-                            <textarea v-model="newNotice.content" rows="10" required></textarea>
-                        </div>
-                        <div class="form-group">
-                            <label>이미지 첨부</label>
-                            <input type="file" accept="image/*" multiple @change="handleImageSelection" ref="imageFileInput" />
-                            <small>지원 형식: JPG, PNG, GIF (최대 5MB, 최대 3개 파일)</small>
-                        </div>
-                        <div v-if="selectedImages.length > 0" class="selected-images">
-                            <h4>선택된 이미지:</h4>
-                            <div class="image-list">
-                                <div v-for="(image, index) in selectedImages" :key="index" class="image-item">
-                                    <div class="image-preview">
-                                        <img :src="image.preview" :alt="image.name" />
-                                    </div>
-                                    <div class="image-info">
-                                        <span class="image-name">{{ image.name }}</span>
-                                        <span class="image-size">{{ formatFileSize(image.size) }}</span>
-                                    </div>
-                                    <button type="button" @click="removeImage(index)" class="remove-image">✕</button>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label class="checkbox-label">
-                                <input type="checkbox" v-model="newNotice.important" />
-                                중요 공지사항
-                            </label>
-                        </div>
-                        <div class="form-actions">
-                            <button type="button" class="cancel-btn" @click="showWriteForm = false">
-                                취소
-                            </button>
-                            <button type="submit" class="submit-btn">등록</button>
-                        </div>
-                    </form>
-                </div>
-
-                <!-- 공지사항 상세보기 -->
-                <div v-if="selectedNotice" class="notice-detail">
-                    <div class="detail-header">
-                        <h3>{{ selectedNotice.title }}</h3>
-                        <button class="close-btn" @click="selectedNotice = null">✕</button>
-                    </div>
-                    <div class="detail-meta">
-                        <span>작성일: {{ formatDate(selectedNotice.date) }}</span>
-                        <span>조회수: {{ selectedNotice.views }}</span>
-                        <span v-if="selectedNotice.important" class="important-badge">중요</span>
-                    </div>
-                    <div class="detail-content">
-                        {{ selectedNotice.content }}
-                    </div>
-                </div>
             </div>
         </section>
 
@@ -155,13 +92,26 @@
                 ← 공지사항으로 돌아가기
             </button>
         </div>
+
+        <!-- 이미지 모달 -->
+        <div v-if="imageModal.show" class="image-modal" @click="closeImageModal">
+            <div class="modal-content" @click.stop>
+                <button class="modal-close" @click="closeImageModal">✕</button>
+                <img :src="`${API_BASE_URL}${imageModal.image.url}`"
+                     :alt="imageModal.image.original_name" />
+                <div class="modal-info">
+                    <p>{{ imageModal.image.original_name }}</p>
+                </div>
+            </div>
+        </div>
     </div>
 </template>
 
 <script>
-import noticeStore from '../services/noticeStore.js';
 import { useToast } from '../components/Toast.vue';
 import authStore from '../stores/auth.js';
+import { API_BASE_URL } from '../config/env.js';
+import axios from 'axios';
 
 export default {
     name: 'NoticeExemption',
@@ -172,58 +122,21 @@ export default {
     data() {
         return {
             authStore,
-            showWriteForm: false,
-            selectedNotice: null,
             searchType: 'title',
             searchKeyword: '',
             currentPage: 1,
             noticesPerPage: 10,
-            newNotice: {
-                title: '',
-                content: '',
-                important: false
+            imageModal: {
+                show: false,
+                image: null
             },
-            selectedImages: [],
-            notices: [
-                {
-                    id: 8,
-                    title: '2024년 상반기 요트면허 면제교육 일정 안내',
-                    content: '2024년 상반기 요트면허 면제교육 일정을 안내드립니다.\n\n교육 일정:\n- 1차: 4월 15일-19일 (5일)\n- 2차: 5월 20일-24일 (5일)\n- 3차: 6월 17일-21일 (5일)\n\n참가비: 70만원\n신청 방법: 전화 또는 방문 접수\n문의: 055-641-5051~2',
-                    date: '2024-03-16',
-                    views: 156,
-                    important: true
-                },
-                {
-                    id: 7,
-                    title: '면제교육 시 준비물 안내',
-                    content: '면제교육 참가 시 준비해주실 물품들을 안내드립니다.\n\n필수 준비물:\n- 신분증\n- 수영복 또는 운동복\n- 운동화\n- 개인 세면도구\n- 필기구\n\n제공 물품:\n- 교재\n- 구명조끼\n- 점심식사',
-                    date: '2024-03-14',
-                    views: 89,
-                    important: false
-                },
-                {
-                    id: 6,
-                    title: '면제교육 이론/실기 시간표 변경',
-                    content: '면제교육의 이론 및 실기 시간표가 일부 변경되었습니다.\n\n변경 내용:\n- 이론교육: 09:00-17:00 (기존 09:00-18:00)\n- 실기교육: 09:00-16:00 (기존 10:00-17:00)\n\n변경 사유: 교육생들의 편의를 위한 조정\n적용일: 2024년 4월부터',
-                    date: '2024-03-12',
-                    views: 134,
-                    important: true
-                },
-                {
-                    id: 5,
-                    title: '면제교육 수료증 발급 절차 안내',
-                    content: '면제교육 수료 후 수료증 발급 절차를 안내드립니다.\n\n발급 절차:\n1. 교육 이수 완료\n2. 평가 통과 (이론+실기)\n3. 수료증 신청서 작성\n4. 수료증 발급 (3-5일 소요)\n\n발급비용: 무료\n수령방법: 직접 수령 또는 우편 발송',
-                    date: '2024-03-10',
-                    views: 78,
-                    important: false
-                }
-            ]
+            notices: [],
+            API_BASE_URL
         };
     },
     
-    mounted() {
-        // 기존 데이터를 noticeStore에 로드
-        noticeStore.loadCategoryNotices('exemption', this.notices);
+    async mounted() {
+        await this.loadNotices();
     },
     computed: {
         isAdmin() {
@@ -277,86 +190,51 @@ export default {
         changePage(page) {
             this.currentPage = page;
         },
-        viewNotice(notice) {
-            notice.views++;
-            this.selectedNotice = notice;
+        async loadNotices() {
+            try {
+                const response = await axios.get(`${API_BASE_URL}/api/notices`, {
+                    params: {
+                        category: 'exemption',
+                        limit: 100
+                    }
+                });
+                this.notices = response.data.map(notice => ({
+                    ...notice,
+                    date: notice.created_at.split('T')[0]
+                }));
+            } catch (error) {
+                console.error('면제교육 공지사항 로드 실패:', error);
+                this.toast.error('공지사항을 불러오는데 실패했습니다.', '⚠️ 로드 오류');
+            }
         },
-        submitNotice() {
-            if (!this.newNotice.title || !this.newNotice.content) {
-                this.toast.error('제목과 내용을 입력해주세요.');
-                return;
-            }
+        async createNewPage() {
+            try {
+                // 새로운 빈 공지사항을 서버에 먼저 생성
+                const response = await axios.post(`${API_BASE_URL}/api/notices/draft`, {
+                    category_id: 'exemption',
+                    title: '새 공지사항',
+                    content: '내용을 입력하세요...'
+                }, {
+                    headers: {
+                        'Authorization': `Bearer ${this.authStore.state.token}`
+                    }
+                });
 
-            const newNoticeItem = {
-                id: Math.max(...this.notices.map(n => n.id)) + 1,
-                title: this.newNotice.title,
-                content: this.newNotice.content,
-                date: new Date().toISOString().split('T')[0],
-                views: 0,
-                important: this.newNotice.important,
-                images: this.selectedImages.map(img => img.preview)
-            };
-            
-            this.notices.unshift(newNoticeItem);
-            
-            // noticeStore에 새 공지사항 추가
-            noticeStore.addNotice(newNoticeItem, 'exemption');
+                const newPostId = response.data.id;
 
-            // 폼 초기화
-            this.showWriteForm = false;
-            this.newNotice = { title: '', content: '', important: false };
-            this.selectedImages = [];
-            if (this.$refs.imageFileInput) {
-                this.$refs.imageFileInput.value = '';
-            }
-
-            this.toast.success('공지사항이 등록되었습니다.', '등록 완료');
-        },
-        handleImageSelection(event) {
-            const files = Array.from(event.target.files);
-            
-            if (files.length > 3) {
-                this.toast.error('최대 3개의 이미지만 선택할 수 있습니다.');
-                return;
-            }
-
-            this.selectedImages = [];
-
-            files.forEach(file => {
-                // 파일 크기 체크 (5MB)
-                if (file.size > 5 * 1024 * 1024) {
-                    this.toast.error(`${file.name}은(는) 파일 크기가 5MB를 초과합니다.`);
-                    return;
+                // 새로 생성된 페이지로 이동 (편집 모드)
+                this.$router.push(`/notice/exemption/edit/${newPostId}`);
+            } catch (error) {
+                console.error('새 페이지 생성 실패:', error);
+                if (error.response?.status === 401) {
+                    this.toast.urgent('로그인이 필요합니다.', '🔐 로그인 필요');
+                    this.$router.push('/login');
+                } else if (error.response?.status === 403) {
+                    this.toast.urgent('관리자만 글을 작성할 수 있습니다.', '⚠️ 권한 없음');
+                } else {
+                    this.toast.error('새 페이지 생성에 실패했습니다.', '❌ 생성 실패');
                 }
-
-                // 이미지 파일 타입 체크
-                if (!file.type.startsWith('image/')) {
-                    this.toast.error(`${file.name}은(는) 이미지 파일이 아닙니다.`);
-                    return;
-                }
-
-                // 미리보기 생성
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    this.selectedImages.push({
-                        file: file,
-                        name: file.name,
-                        size: file.size,
-                        preview: e.target.result
-                    });
-                };
-                reader.readAsDataURL(file);
-            });
-        },
-        removeImage(index) {
-            this.selectedImages.splice(index, 1);
-        },
-        formatFileSize(bytes) {
-            if (bytes === 0) return '0 Bytes';
-            const k = 1024;
-            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-            const i = Math.floor(Math.log(bytes) / Math.log(k));
-            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+            }
         },
         formatDate(dateString) {
             const date = new Date(dateString);
@@ -380,6 +258,14 @@ export default {
         },
         goBack() {
             this.$router.push('/notice');
+        },
+        openImageModal(image) {
+            this.imageModal.show = true;
+            this.imageModal.image = image;
+        },
+        closeImageModal() {
+            this.imageModal.show = false;
+            this.imageModal.image = null;
         }
     }
 };
@@ -572,7 +458,6 @@ export default {
     grid-template-columns: 80px 1fr 120px 80px;
     padding: 15px;
     border-bottom: 1px solid #f9f9f9;
-    cursor: pointer;
     transition: background 0.3s;
 }
 
@@ -584,6 +469,19 @@ export default {
     display: flex;
     align-items: center;
     gap: 8px;
+}
+
+.title-link {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    text-decoration: none;
+    color: inherit;
+    width: 100%;
+}
+
+.title-link:hover {
+    color: #28a745;
 }
 
 .title-text {
@@ -769,13 +667,20 @@ export default {
 }
 
 .detail-content {
-    line-height: 1.8;
-    color: #333;
-    min-height: 200px;
     padding: 20px;
     background: #fafafa;
     border-radius: 8px;
+}
+
+.content-text {
+    line-height: 1.8;
+    color: #333;
     white-space: pre-wrap;
+    margin-bottom: 20px;
+}
+
+.content-images {
+    margin-top: 20px;
 }
 
 .back-button {
@@ -843,5 +748,178 @@ export default {
     .form-actions {
         flex-direction: column;
     }
+
+    .images-gallery {
+        grid-template-columns: 1fr;
+    }
+
+    .images-gallery .image-item img {
+        height: 200px;
+    }
+}
+
+.images-gallery {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 15px;
+}
+
+.images-gallery .image-item {
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.images-gallery .image-item img {
+    width: 100%;
+    height: 200px;
+    object-fit: cover;
+    cursor: pointer;
+    transition: transform 0.3s;
+}
+
+.images-gallery .image-item img:hover {
+    transform: scale(1.02);
+}
+
+/* 이미지 모달 */
+.image-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+}
+
+.modal-content {
+    position: relative;
+    max-width: 90vw;
+    max-height: 90vh;
+    background: white;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+}
+
+.modal-close {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: rgba(0, 0, 0, 0.7);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 30px;
+    height: 30px;
+    cursor: pointer;
+    font-size: 1rem;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-content img {
+    width: 100%;
+    height: auto;
+    max-height: 80vh;
+    object-fit: contain;
+}
+
+.modal-info {
+    padding: 15px;
+    background: #f8f9fa;
+    text-align: center;
+}
+
+.modal-info p {
+    margin: 0;
+    color: #333;
+    font-weight: 500;
+}
+
+.selected-images {
+    margin-top: 20px;
+    padding: 20px;
+    background: #f8f9fa;
+    border-radius: 8px;
+}
+
+.selected-images h4 {
+    color: #28a745;
+    margin-bottom: 15px;
+    font-size: 1rem;
+}
+
+.image-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.image-list .image-item {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 10px;
+    background: white;
+    border-radius: 8px;
+    border: 1px solid #e0e0e0;
+}
+
+.image-preview {
+    width: 80px;
+    height: 80px;
+    border-radius: 8px;
+    overflow: hidden;
+    flex-shrink: 0;
+}
+
+.image-preview img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.image-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.image-name {
+    font-weight: 500;
+    color: #333;
+    word-break: break-all;
+}
+
+.image-size {
+    color: #666;
+    font-size: 0.9rem;
+}
+
+.remove-image {
+    background: #dc3545;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 24px;
+    height: 24px;
+    cursor: pointer;
+    font-size: 0.8rem;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.remove-image:hover {
+    background: #c82333;
 }
 </style>

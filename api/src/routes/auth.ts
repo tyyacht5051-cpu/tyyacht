@@ -2,8 +2,11 @@ import express from 'express';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import { db } from '../db/database';
-import fs from 'fs';
 import path from 'path';
+import { authenticateToken, optionalAuth, AuthenticatedRequest } from '../middleware/auth';
+import { loginLimiter, registerLimiter } from '../middleware/rateLimiter';
+import { config } from '../config/env';
+import { appendToFile } from '../utils/fileSystem';
 
 interface User {
   id: number;
@@ -24,26 +27,16 @@ interface User {
 }
 
 const router = express.Router();
-const JWT_SECRET = process.env.JWT_SECRET || 'tyyacht-jwt-secret-key-2024-development';
+const loginLogPath = path.join(config.LOG_PATH, 'login.txt');
 
-if (!process.env.JWT_SECRET && process.env.NODE_ENV === 'production') {
-  console.error('❌ JWT_SECRET must be configured in production');
-  process.exit(1);
-}
-
-if (!process.env.JWT_SECRET) {
-  console.warn('⚠️ Using default JWT_SECRET in development - please set JWT_SECRET environment variable');
-}
-const loginLogPath = path.join(__dirname, '../../logs/login.txt');
-
-function logLoginActivity(username: string, email: string, status: 'SUCCESS' | 'FAILED', ip?: string) {
+function logLoginActivity(username: string, email: string, status: 'SUCCESS' | 'FAILED' | 'LOGOUT', ip?: string) {
   const timestamp = new Date().toISOString();
   const logEntry = `[${timestamp}] ${status}: ${username} (${email}) ${ip ? `from ${ip}` : ''}\n`;
-  
-  fs.appendFileSync(loginLogPath, logEntry, 'utf8');
+
+  appendToFile(loginLogPath, logEntry);
 }
 
-router.post('/register', async (req, res) => {
+router.post('/register', registerLimiter, async (req, res) => {
   try {
     const { username, email, password, fullName, phone, birthDate, gender, termsAgreed, privacyAgreed } = req.body;
 
@@ -79,7 +72,7 @@ router.post('/register', async (req, res) => {
   }
 });
 
-router.post('/login', async (req, res) => {
+router.post('/login', loginLimiter, async (req, res) => {
   try {
     const { username, password } = req.body;
 
@@ -88,14 +81,21 @@ router.post('/login', async (req, res) => {
     }
 
     const user = db.prepare('SELECT * FROM users WHERE username = ? OR email = ?').get(username, username) as User | undefined;
-    
+
     if (!user) {
       logLoginActivity(username, '', 'FAILED', req.ip);
       return res.status(401).json({ error: '사용자를 찾을 수 없습니다.' });
     }
 
+    console.log('Login attempt - Username:', username);
+    console.log('Login attempt - Password received:', password);
+    console.log('Login attempt - Hash from DB:', user.password_hash);
+    console.log('Login attempt - Hash length:', user.password_hash?.length);
+
     const isValidPassword = await bcrypt.compare(password, user.password_hash);
-    
+
+    console.log('Login attempt - Password valid:', isValidPassword);
+
     if (!isValidPassword) {
       logLoginActivity(user.username, user.email, 'FAILED', req.ip);
       return res.status(401).json({ error: '비밀번호가 올바르지 않습니다.' });
@@ -110,15 +110,23 @@ router.post('/login', async (req, res) => {
 
     const token = jwt.sign(
       { userId: user.id, username: user.username, role: user.role },
-      JWT_SECRET,
+      config.JWT_SECRET,
       { expiresIn: '24h' }
     );
 
     logLoginActivity(user.username, user.email, 'SUCCESS', req.ip);
 
+    // httpOnly 쿠키로 JWT 토큰 설정
+    res.cookie('authToken', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production', // HTTPS에서만 전송 (프로덕션)
+      sameSite: 'strict', // CSRF 공격 방지
+      maxAge: 24 * 60 * 60 * 1000 // 24시간 (밀리초)
+    });
+
     res.json({
       message: '로그인 성공',
-      token,
+      token: token,
       user: {
         id: user.id,
         username: user.username,
@@ -133,36 +141,31 @@ router.post('/login', async (req, res) => {
   }
 });
 
-router.post('/logout', (req, res) => {
-  const authHeader = req.headers.authorization;
-  const token = authHeader?.split(' ')[1];
-  
-  if (token) {
+router.post('/logout', optionalAuth, (req: AuthenticatedRequest, res) => {
+  if (req.user) {
     try {
-      const decoded = jwt.verify(token, JWT_SECRET) as any;
-      logLoginActivity(decoded.username, '', 'SUCCESS', req.ip);
+      logLoginActivity(req.user.username, '', 'LOGOUT', req.ip);
     } catch (error) {
-      console.error('Token decode error during logout:', error);
+      console.error('Logout logging error:', error);
     }
   }
-  
+
+  // httpOnly 쿠키 삭제
+  res.clearCookie('authToken', {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'strict'
+  });
+
   res.json({ message: '로그아웃 되었습니다.' });
 });
 
-router.get('/me', (req, res) => {
-  const authHeader = req.headers.authorization;
-  const token = authHeader?.split(' ')[1];
-
-  if (!token) {
-    return res.status(401).json({ error: '인증 토큰이 필요합니다.' });
-  }
-
+router.get('/me', authenticateToken, (req: AuthenticatedRequest, res) => {
   try {
-    const decoded = jwt.verify(token, JWT_SECRET) as any;
-    const user = db.prepare('SELECT id, username, email, full_name, role FROM users WHERE id = ?').get(decoded.userId) as Pick<User, 'id' | 'username' | 'email' | 'full_name' | 'role'> | undefined;
-    
+    const user = db.prepare('SELECT id, username, email, full_name, role FROM users WHERE id = ?').get(req.user?.id) as Pick<User, 'id' | 'username' | 'email' | 'full_name' | 'role'> | undefined;
+
     if (!user) {
-      return res.status(401).json({ error: '사용자를 찾을 수 없습니다.' });
+      return res.status(404).json({ error: '사용자를 찾을 수 없습니다.' });
     }
 
     res.json({
@@ -173,7 +176,48 @@ router.get('/me', (req, res) => {
       role: user.role
     });
   } catch (error) {
-    return res.status(401).json({ error: '유효하지 않은 토큰입니다.' });
+    console.error('Get user info error:', error);
+    res.status(500).json({ error: '사용자 정보를 가져오는데 실패했습니다.' });
+  }
+});
+
+router.put('/change-password', authenticateToken, async (req: AuthenticatedRequest, res) => {
+  try {
+    const { currentPassword, newPassword } = req.body;
+    const userId = req.user?.id;
+
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({ error: '현재 비밀번호와 새 비밀번호를 입력해주세요.' });
+    }
+
+    if (newPassword.length < 8) {
+      return res.status(400).json({ error: '새 비밀번호는 최소 8자 이상이어야 합니다.' });
+    }
+
+    const user = db.prepare('SELECT * FROM users WHERE id = ?').get(userId) as User | undefined;
+
+    if (!user) {
+      return res.status(404).json({ error: '사용자를 찾을 수 없습니다.' });
+    }
+
+    const isValidPassword = await bcrypt.compare(currentPassword, user.password_hash);
+
+    if (!isValidPassword) {
+      return res.status(401).json({ error: '현재 비밀번호가 올바르지 않습니다.' });
+    }
+
+    const newPasswordHash = await bcrypt.hash(newPassword, 10);
+
+    db.prepare('UPDATE users SET password_hash = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?')
+      .run(newPasswordHash, userId);
+
+    logLoginActivity(user.username, user.email, 'SUCCESS', req.ip);
+    appendToFile(loginLogPath, `[${new Date().toISOString()}] PASSWORD_CHANGED: ${user.username} (${user.email})\n`);
+
+    res.json({ message: '비밀번호가 성공적으로 변경되었습니다.' });
+  } catch (error) {
+    console.error('Change password error:', error);
+    res.status(500).json({ error: '비밀번호 변경 중 오류가 발생했습니다.' });
   }
 });
 

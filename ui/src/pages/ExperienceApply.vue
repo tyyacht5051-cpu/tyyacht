@@ -55,7 +55,7 @@
                                     <h4>대표자 정보</h4>
                                 </div>
 
-                                <div class="grid grid-2">
+                                <div class="grid grid-3">
                                     <div class="form-group">
                                         <label class="form-label">이름 *</label>
                                         <input
@@ -82,6 +82,23 @@
                                         />
                                         <div v-if="errors.birthDate" class="form-error">
                                             {{ errors.birthDate }}
+                                        </div>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label class="form-label">성별 *</label>
+                                        <select
+                                            v-model="form.gender"
+                                            class="form-control form-select"
+                                            :class="{ error: errors.gender }"
+                                            required
+                                        >
+                                            <option value="">선택하세요</option>
+                                            <option value="M">남성</option>
+                                            <option value="F">여성</option>
+                                        </select>
+                                        <div v-if="errors.gender" class="form-error">
+                                            {{ errors.gender }}
                                         </div>
                                     </div>
                                 </div>
@@ -193,9 +210,7 @@
                                             {{ errors.participants }}
                                         </div>
                                     </div>
-
                                 </div>
-
 
                                 <!-- 동승자 정보 섹션 -->
                                 <div class="form-section-title">
@@ -248,17 +263,19 @@
                                                 </div>
                                             </div>
                                             <div class="form-group">
-                                                <label class="form-label">소재지 *</label>
-                                                <input
-                                                    type="text"
-                                                    v-model="companion.location"
-                                                    class="form-control"
-                                                    :class="{ error: errors[`companion_${index}_location`] }"
-                                                    placeholder="예: 경상남도 통영시"
+                                                <label class="form-label">성별 *</label>
+                                                <select
+                                                    v-model="companion.gender"
+                                                    class="form-control form-select"
+                                                    :class="{ error: errors[`companion_${index}_gender`] }"
                                                     required
-                                                />
-                                                <div v-if="errors[`companion_${index}_location`]" class="form-error">
-                                                    {{ errors[`companion_${index}_location`] }}
+                                                >
+                                                    <option value="">선택하세요</option>
+                                                    <option value="M">남성</option>
+                                                    <option value="F">여성</option>
+                                                </select>
+                                                <div v-if="errors[`companion_${index}_gender`]" class="form-error">
+                                                    {{ errors[`companion_${index}_gender`] }}
                                                 </div>
                                             </div>
                                         </div>
@@ -341,6 +358,7 @@ export default {
             form: {
                 name: '',
                 birthDate: '',
+                gender: '',
                 phone: '',
                 location: '',
                 programType: '',
@@ -382,6 +400,10 @@ export default {
 
             if (!this.form.birthDate) {
                 this.errors.birthDate = '생년월일을 선택해주세요';
+            }
+
+            if (!this.form.gender) {
+                this.errors.gender = '성별을 선택해주세요';
             }
 
             if (!this.form.phone.trim()) {
@@ -426,8 +448,8 @@ export default {
                 if (!companion.birthDate) {
                     this.errors[`companion_${index}_birthDate`] = '생년월일을 선택해주세요';
                 }
-                if (!companion.location.trim()) {
-                    this.errors[`companion_${index}_location`] = '소재지를 입력해주세요';
+                if (!companion.gender) {
+                    this.errors[`companion_${index}_gender`] = '성별을 선택해주세요';
                 }
             });
 
@@ -447,14 +469,25 @@ export default {
             this.isSubmitting = true;
 
             try {
-                // API가 기대하는 형식으로 데이터 변환
+                // 대표자와 동승자 정보를 포함한 신청서 정보 - 서버에서 실제 demographic 계산
                 const applicationData = {
                     name: this.form.name,
                     phone: this.form.phone,
                     email: '', // ExperienceApply 폼에는 이메일 필드가 없음 - 추가 필요
                     experience_date: this.form.preferredDate,
                     participants: parseInt(this.form.participants) || 1,
-                    special_requests: `프로그램: ${this.form.programType} - ${this.form.subProgram}\n동승자: ${this.form.companions.length}명`
+                    experience_type: this.form.programType || '크루즈요트',
+                    // 대표자 정보 포함
+                    representative: {
+                        name: this.form.name,
+                        birthDate: this.form.birthDate,
+                        gender: this.form.gender
+                    },
+                    // 동승자 정보 포함
+                    companions: this.form.companions,
+                    // 소재지 정보
+                    location: this.form.location,
+                    special_requests: `프로그램: ${this.form.programType} - ${this.form.subProgram}\n소재지: ${this.form.location}\n동승자: ${this.form.companions.length}명`
                 };
                 
                 const response = await axios.post(`${API_BASE_URL}/api/applications/cruise`, applicationData);
@@ -492,7 +525,7 @@ export default {
                 this.form.companions.push({
                     name: '',
                     birthDate: '',
-                    location: ''
+                    gender: ''
                 });
             }
         },
@@ -787,6 +820,25 @@ export default {
     color: #2c5aa0;
 }
 
+.calculated-field {
+    background-color: #f8f9fa !important;
+    color: #666 !important;
+    cursor: not-allowed !important;
+}
+
+.demographic-section {
+    background-color: #f8f9fa;
+    padding: 20px;
+    border-radius: 8px;
+    border: 1px solid #e9ecef;
+    margin: 20px 0;
+}
+
+.grid-4 {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 15px;
+}
+
 @media (max-width: 768px) {
     .form-actions {
         flex-direction: column;
@@ -795,11 +847,21 @@ export default {
     .checkbox-group {
         grid-template-columns: 1fr;
     }
-    
+
     .companion-header {
         flex-direction: column;
         align-items: flex-start;
         gap: 10px;
+    }
+
+    .grid-4 {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 992px) and (min-width: 769px) {
+    .grid-4 {
+        grid-template-columns: 1fr 1fr;
     }
 }
 </style>

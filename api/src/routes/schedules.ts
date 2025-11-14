@@ -44,12 +44,15 @@ const authenticateAdmin = (req: any, res: any, next: any) => {
 router.get('/', async (req: any, res) => {
   try {
     const schedules = db.prepare('SELECT * FROM exemption_schedules ORDER BY month').all() as any[];
-    
-    const schedulesMap: { [key: string]: string[] } = {};
+
+    const schedulesMap: { [key: string]: { dates: string[], isClosed: boolean } } = {};
     schedules.forEach((schedule: any) => {
-      schedulesMap[schedule.month] = JSON.parse(schedule.dates);
+      schedulesMap[schedule.month] = {
+        dates: JSON.parse(schedule.dates),
+        isClosed: Boolean(schedule.is_closed)
+      };
     });
-    
+
     res.json(schedulesMap);
   } catch (error) {
     console.error('Failed to load schedules:', error);
@@ -62,14 +65,15 @@ router.get('/:month', async (req: any, res) => {
   try {
     const { month } = req.params;
     const schedule = db.prepare('SELECT * FROM exemption_schedules WHERE month = ?').get(month) as any;
-    
+
     if (!schedule) {
-      return res.json({ dates: [] });
+      return res.json({ dates: [], isClosed: false });
     }
-    
+
     res.json({
       month: schedule.month,
-      dates: JSON.parse(schedule.dates)
+      dates: JSON.parse(schedule.dates),
+      isClosed: Boolean(schedule.is_closed)
     });
   } catch (error) {
     console.error('Failed to load schedule:', error);
@@ -153,21 +157,68 @@ router.get('/available/:month', async (req: any, res) => {
   try {
     const { month } = req.params;
     const schedule = db.prepare('SELECT * FROM exemption_schedules WHERE month = ?').get(month) as any;
-    
+
     if (!schedule) {
       return res.json({ dates: [] });
     }
-    
+
     const dates = JSON.parse(schedule.dates);
+    const isClosed = Boolean(schedule.is_closed);
     const today = new Date().toISOString().split('T')[0];
-    
+
+    // 월이 마감된 경우 빈 배열 반환
+    if (isClosed) {
+      return res.json({ dates: [] });
+    }
+
     // 오늘 이후 날짜만 반환
     const availableDates = dates.filter((date: string) => date >= today);
-    
+
     res.json({ dates: availableDates });
   } catch (error) {
     console.error('Failed to load available dates:', error);
     res.status(500).json({ error: 'Failed to load available dates' });
+  }
+});
+
+// 월별 마감/재오픈 (관리자만)
+router.post('/toggle-close', authenticateAdmin, async (req: any, res) => {
+  try {
+    const { month } = req.body;
+
+    if (!month) {
+      return res.status(400).json({ error: 'Month is required' });
+    }
+
+    const schedule = db.prepare('SELECT * FROM exemption_schedules WHERE month = ?').get(month) as any;
+
+    if (!schedule) {
+      return res.status(404).json({ error: 'Schedule not found' });
+    }
+
+    const currentIsClosed = Boolean(schedule.is_closed);
+    const newIsClosed = !currentIsClosed;
+    const action = newIsClosed ? 'closed' : 'opened';
+
+    // 데이터베이스 업데이트
+    const stmt = db.prepare(`
+      UPDATE exemption_schedules
+      SET is_closed = ?, updated_at = CURRENT_TIMESTAMP
+      WHERE month = ?
+    `);
+
+    stmt.run(newIsClosed ? 1 : 0, month);
+
+    res.json({
+      success: true,
+      message: `Month ${action} successfully`,
+      month,
+      action,
+      isClosed: newIsClosed
+    });
+  } catch (error) {
+    console.error('Failed to toggle month closure:', error);
+    res.status(500).json({ error: 'Failed to toggle month closure' });
   }
 });
 

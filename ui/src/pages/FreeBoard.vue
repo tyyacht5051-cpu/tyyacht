@@ -72,10 +72,10 @@
                         <div class="col-title">
                             <span class="title-text">{{ post.title }}</span>
                             <span v-if="post.comments > 0" class="comment-count">[{{ post.comments }}]</span>
-                            <span v-if="isNewPost(post.date)" class="new-badge">NEW</span>
+                            <span v-if="isNewPost(post.created_at)" class="new-badge">NEW</span>
                         </div>
-                        <div class="col-author">{{ post.author }}</div>
-                        <div class="col-date">{{ formatDate(post.date) }}</div>
+                        <div class="col-author">{{ post.author_name }}</div>
+                        <div class="col-date">{{ formatDate(post.created_at) }}</div>
                         <div class="col-views">{{ post.views }}</div>
                         <div class="col-likes">{{ post.likes }}</div>
                     </div>
@@ -106,10 +106,6 @@
                         <button class="close-btn" @click="showWriteForm = false">✕</button>
                     </div>
                     <form @submit.prevent="submitPost">
-                        <div class="form-group">
-                            <label>작성자</label>
-                            <input v-model="newPost.author" type="text" required />
-                        </div>
                         <div class="form-group">
                             <label>제목</label>
                             <input v-model="newPost.title" type="text" required />
@@ -183,6 +179,9 @@
 </template>
 
 <script>
+import axios from 'axios';
+import { API_BASE_URL } from '../config/env.js';
+
 export default {
     name: 'FreeBoard',
     data() {
@@ -195,69 +194,19 @@ export default {
             currentPage: 1,
             postsPerPage: 10,
             newPost: {
-                author: '',
                 title: '',
-                content: '',
-                password: ''
+                content: ''
             },
             newComment: {
                 author: '',
                 content: '',
                 password: ''
             },
-            posts: [
-                {
-                    id: 15,
-                    title: '크루즈 요트 교육 후기',
-                    content: '지난 주에 크루즈 요트 교육을 받았는데 정말 유익했습니다. 강사님의 친절한 설명과 실습 덕분에 많은 것을 배울 수 있었어요.',
-                    author: '김요트',
-                    date: '2024-03-15',
-                    views: 45,
-                    likes: 8,
-                    comments: 3
-                },
-                {
-                    id: 14,
-                    title: '딩기 요트 체험 문의',
-                    content: '딩기 요트 체험 프로그램에 참여하고 싶은데, 초보자도 가능한가요? 준비물은 따로 있나요?',
-                    author: '바다사랑',
-                    date: '2024-03-14',
-                    views: 32,
-                    likes: 2,
-                    comments: 5
-                },
-                {
-                    id: 13,
-                    title: '가족과 함께한 요트 체험',
-                    content: '아이들과 함께 요트 체험을 했는데 너무 즐거웠습니다. 안전 교육도 철저히 해주시고, 아이들이 무척 좋아했어요.',
-                    author: '행복가족',
-                    date: '2024-03-13',
-                    views: 67,
-                    likes: 12,
-                    comments: 7
-                },
-                {
-                    id: 12,
-                    title: '패들보드 체험 추천해요!',
-                    content: '패들보드 체험 정말 재미있어요! 생각보다 어렵지 않고 바다 위에서 보는 풍경이 환상적입니다.',
-                    author: '파도타기',
-                    date: '2024-03-12',
-                    views: 28,
-                    likes: 6,
-                    comments: 2
-                },
-                {
-                    id: 11,
-                    title: '요트 면허 취득 과정 질문',
-                    content: '요트 면허 취득 과정에 관심이 있는데, 교육 기간이나 비용에 대해 자세히 알고 싶습니다.',
-                    author: '미래선장',
-                    date: '2024-03-11',
-                    views: 89,
-                    likes: 4,
-                    comments: 8
-                }
-            ]
+            posts: []
         };
+    },
+    async mounted() {
+        await this.loadPosts();
     },
     computed: {
         filteredPosts() {
@@ -270,11 +219,11 @@ export default {
                     case 'content':
                         return post.content.includes(this.searchKeyword);
                     case 'author':
-                        return post.author.includes(this.searchKeyword);
+                        return post.author_name.includes(this.searchKeyword);
                     case 'all':
-                        return post.title.includes(this.searchKeyword) || 
-                               post.content.includes(this.searchKeyword) || 
-                               post.author.includes(this.searchKeyword);
+                        return post.title.includes(this.searchKeyword) ||
+                               post.content.includes(this.searchKeyword) ||
+                               post.author_name.includes(this.searchKeyword);
                     default:
                         return true;
                 }
@@ -304,14 +253,31 @@ export default {
             return pages;
         },
         totalComments() {
-            return this.posts.reduce((sum, post) => sum + post.comments, 0);
+            return 0; // 댓글 기능은 추후 구현
         },
         todayPosts() {
             const today = new Date().toISOString().split('T')[0];
-            return this.posts.filter(post => post.date === today).length;
+            return this.posts.filter(post => {
+                const postDate = new Date(post.created_at).toISOString().split('T')[0];
+                return postDate === today;
+            }).length;
         }
     },
     methods: {
+        async loadPosts() {
+            try {
+                const response = await axios.get(`${API_BASE_URL}/api/notices?category=free_board`);
+                this.posts = response.data.map(post => ({
+                    ...post,
+                    author_name: post.author_name || '익명',
+                    likes: 0, // 좋아요 기능은 추후 구현
+                    comments: 0 // 댓글 기능은 추후 구현
+                }));
+            } catch (error) {
+                console.error('Failed to load posts:', error);
+                this.posts = [];
+            }
+        },
         searchPosts() {
             this.currentPage = 1;
         },
@@ -326,21 +292,24 @@ export default {
         likePost(post) {
             post.likes++;
         },
-        submitPost() {
-            const newPost = {
-                id: Math.max(...this.posts.map(p => p.id)) + 1,
-                title: this.newPost.title,
-                content: this.newPost.content,
-                author: this.newPost.author,
-                date: new Date().toISOString().split('T')[0],
-                views: 0,
-                likes: 0,
-                comments: 0
-            };
-            
-            this.posts.unshift(newPost);
-            this.showWriteForm = false;
-            this.newPost = { author: '', title: '', content: '', password: '' };
+        async submitPost() {
+            try {
+                const response = await axios.post(`${API_BASE_URL}/api/notices`, {
+                    title: this.newPost.title,
+                    content: this.newPost.content,
+                    category_id: 'free_board'
+                });
+
+                // 목록 새로고침
+                await this.loadPosts();
+                this.showWriteForm = false;
+                this.newPost = { title: '', content: '' };
+
+                alert('게시글이 성공적으로 등록되었습니다!');
+            } catch (error) {
+                console.error('Failed to submit post:', error);
+                alert('게시글 등록에 실패했습니다.');
+            }
         },
         submitComment() {
             if (this.selectedPost) {
@@ -350,23 +319,14 @@ export default {
             }
         },
         formatDate(dateString) {
-            const date = new Date(dateString);
-            const today = new Date();
-            const diffTime = today - date;
-            const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-            
-            if (diffDays === 0) return '오늘';
-            if (diffDays === 1) return '어제';
-            if (diffDays < 7) return `${diffDays}일 전`;
-            
-            return date.toLocaleDateString('ko-KR');
+            return new Date(dateString).toLocaleDateString('ko-KR');
         },
         isNewPost(dateString) {
             const postDate = new Date(dateString);
             const today = new Date();
             const diffTime = today - postDate;
             const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-            
+
             return diffDays <= 1;
         },
         goBack() {

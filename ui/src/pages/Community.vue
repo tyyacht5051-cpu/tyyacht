@@ -34,26 +34,6 @@
                     </div>
                 </div>
 
-                <div class="recent-activity">
-                    <h2>최근 활동</h2>
-                    <div class="activity-grid">
-                        <div class="activity-card">
-                            <h4>📸 포토갤러리</h4>
-                            <p>최근 딩기 요트 교육 현장 사진이 업데이트되었습니다.</p>
-                            <span class="activity-date">2024-03-15</span>
-                        </div>
-                        <div class="activity-card">
-                            <h4>🎥 동영상갤러리</h4>
-                            <p>크루즈 요트 체험 영상이 새로 추가되었습니다.</p>
-                            <span class="activity-date">2024-03-14</span>
-                        </div>
-                        <div class="activity-card">
-                            <h4>💬 자유게시판</h4>
-                            <p>요트 교육 후기 글이 새로 등록되었습니다.</p>
-                            <span class="activity-date">2024-03-13</span>
-                        </div>
-                    </div>
-                </div>
 
                 <div class="community-rules">
                     <h2>커뮤니티 이용 안내</h2>
@@ -86,6 +66,8 @@
 </template>
 
 <script>
+import axios from 'axios';
+
 export default {
     name: 'Community',
     data() {
@@ -98,7 +80,7 @@ export default {
                     icon: '📸',
                     access: '관리자 전용',
                     accessClass: 'admin-only',
-                    count: 24,
+                    count: 0,
                     path: '/community/photo-gallery'
                 },
                 {
@@ -108,7 +90,7 @@ export default {
                     icon: '🎥',
                     access: '관리자 전용',
                     accessClass: 'admin-only',
-                    count: 12,
+                    count: 0,
                     path: '/community/video-gallery'
                 },
                 {
@@ -118,13 +100,55 @@ export default {
                     icon: '💬',
                     access: '모든 사용자',
                     accessClass: 'public',
-                    count: 156,
+                    count: 0,
                     path: '/community/free-board'
+                },
+                {
+                    id: 4,
+                    title: '후기게시판',
+                    description: '교육 및 체험 후기를 공유하는 공간입니다',
+                    icon: '⭐',
+                    access: '모든 사용자',
+                    accessClass: 'public',
+                    count: 0,
+                    path: '/community/review-board'
+                },
+                {
+                    id: 5,
+                    title: '크루모집게시판',
+                    description: '함께 요트를 탈 크루원을 모집하는 공간입니다',
+                    icon: '👥',
+                    access: '모든 사용자',
+                    accessClass: 'public',
+                    count: 0,
+                    path: '/community/crew-recruitment'
                 }
             ]
         };
     },
+    async mounted() {
+        await this.loadCounts();
+    },
     methods: {
+        async loadCounts() {
+            try {
+                // 포토갤러리 수 - 임시로 직접 설정
+                this.sections[0].count = 1;
+
+                // 동영상갤러리 수 - 임시로 직접 설정
+                this.sections[1].count = 1;
+
+                // 자유게시판, 후기게시판, 크루모집게시판은 0으로 설정
+                this.sections[2].count = 0; // 자유게시판
+                this.sections[3].count = 0; // 후기게시판
+                this.sections[4].count = 0; // 크루모집게시판
+
+                console.log('Final sections:', this.sections);
+
+            } catch (error) {
+                console.error('Failed to load counts:', error);
+            }
+        },
         goToSection(path) {
             this.$router.push(path);
         }
@@ -288,35 +312,6 @@ export default {
     font-size: 0.9rem;
 }
 
-.activity-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 25px;
-}
-
-.activity-card {
-    background: #f8f9fa;
-    padding: 25px;
-    border-radius: 15px;
-    border-left: 4px solid #2c5aa0;
-}
-
-.activity-card h4 {
-    color: #2c5aa0;
-    margin-bottom: 10px;
-    font-size: 1.1rem;
-}
-
-.activity-card p {
-    color: #666;
-    line-height: 1.6;
-    margin-bottom: 15px;
-}
-
-.activity-date {
-    color: #999;
-    font-size: 0.9rem;
-}
 
 .rules-grid {
     display: grid;
@@ -358,7 +353,6 @@ export default {
     }
 
     .sections-grid,
-    .activity-grid,
     .rules-grid {
         grid-template-columns: 1fr;
         gap: 20px;

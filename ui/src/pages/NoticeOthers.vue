@@ -39,7 +39,7 @@
                         <button @click="searchNotices" class="search-btn">검색</button>
                     </div>
                     <div class="admin-controls" v-if="isAdmin">
-                        <button @click="showWriteForm = true" class="write-btn">✏️ 글쓰기</button>
+                        <button @click="createNewPage" class="write-btn">✏️ 글쓰기</button>
                     </div>
                 </div>
 
@@ -51,7 +51,7 @@
                         <div class="col-views">조회</div>
                     </div>
 
-                    <div v-for="notice in filteredNotices" :key="notice.id" class="table-row" @click="viewNotice(notice)">
+                    <router-link v-for="notice in paginatedNotices" :key="notice.id" :to="`/notice/others/${notice.id}`" class="table-row title-link">
                         <div class="col-number">{{ notice.id }}</div>
                         <div class="col-title">
                             <span class="title-text">{{ notice.title }}</span>
@@ -60,7 +60,7 @@
                         </div>
                         <div class="col-date">{{ formatDate(notice.date) }}</div>
                         <div class="col-views">{{ notice.views }}</div>
-                    </div>
+                    </router-link>
                 </div>
 
                 <!-- 관리자 작성 폼 -->
@@ -126,15 +126,47 @@
         <div class="back-button">
             <button @click="goBack" class="back-btn">← 공지사항으로 돌아가기</button>
         </div>
+
+        <!-- 공지사항 상세 모달 -->
+        <div v-if="showModal && selectedNotice" class="modal-overlay" @click="closeModal">
+            <div class="modal-content" @click.stop>
+                <div class="modal-header">
+                    <h2>{{ selectedNotice.title }}</h2>
+                    <button class="close-btn" @click="closeModal">✕</button>
+                </div>
+                <div class="modal-body">
+                    <div class="notice-meta">
+                        <span class="date">{{ formatDate(selectedNotice.created_at || selectedNotice.date) }}</span>
+                        <span class="views">조회 {{ selectedNotice.views }}</span>
+                    </div>
+                    <div class="detail-content">
+                        <div class="content-text">{{ selectedNotice.content }}</div>
+                        <div v-if="selectedNotice.images && selectedNotice.images.length > 0" class="content-images">
+                            <div class="images-gallery">
+                                <div v-for="image in selectedNotice.images" :key="image.id" class="image-item">
+                                    <img :src="`${API_BASE_URL}${image.url}`" :alt="image.original_name" @click="openImageModal(image)" />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 </template>
 
 <script>
-import noticeStore from '../services/noticeStore.js';
 import authStore from '../stores/auth.js';
+import { useToast } from '../components/Toast.vue';
+import { API_BASE_URL } from '../config/env.js';
+import axios from 'axios';
 
 export default {
     name: 'NoticeOthers',
+    setup() {
+        const toast = useToast();
+        return { toast };
+    },
     data() {
         return {
             authStore,
@@ -143,32 +175,10 @@ export default {
             searchKeyword: '',
             newNotice: { title: '', content: '', images: [] },
             selectedImages: [],
-            notices: [
-                {
-                    id: 15,
-                    title: '봄철 요트 체험 프로그램 운영 안내',
-                    content: '봄철을 맞이하여 특별 요트 체험 프로그램을 운영합니다.',
-                    date: '2024-03-16',
-                    views: 123,
-                    important: false
-                },
-                {
-                    id: 14,
-                    title: '휴무일 안내',
-                    content: '추석 연휴 기간 중 휴무 안내',
-                    date: '2024-03-12',
-                    views: 98,
-                    important: true
-                },
-                {
-                    id: 13,
-                    title: '시설 보수 공사 안내',
-                    content: '교육장 시설 보수 공사로 인한 일정 변경 안내',
-                    date: '2024-03-08',
-                    views: 156,
-                    important: false
-                }
-            ]
+            selectedNotice: null,
+            showModal: false,
+            API_BASE_URL,
+            notices: []
         };
     },
     computed: {
@@ -177,7 +187,7 @@ export default {
         },
         filteredNotices() {
             if (!this.searchKeyword) return this.notices;
-            
+
             return this.notices.filter(notice => {
                 switch (this.searchType) {
                     case 'title':
@@ -185,20 +195,42 @@ export default {
                     case 'content':
                         return notice.content.includes(this.searchKeyword);
                     case 'all':
-                        return notice.title.includes(this.searchKeyword) || 
+                        return notice.title.includes(this.searchKeyword) ||
                                notice.content.includes(this.searchKeyword);
                     default:
                         return true;
                 }
             });
+        },
+        paginatedNotices() {
+            return this.filteredNotices;
         }
     },
-    mounted() {
-        // 기존 데이터를 noticeStore에 로드
-        noticeStore.loadCategoryNotices('others', this.notices);
+    async mounted() {
+        await this.loadNotices();
     },
     methods: {
-        viewNotice(notice) { notice.views++; },
+        viewNotice(notice) {
+            this.selectedNotice = notice;
+            this.showModal = true;
+        },
+        async loadNotices() {
+            try {
+                const response = await axios.get(`${API_BASE_URL}/api/notices`, {
+                    params: {
+                        category: 'others',
+                        limit: 100
+                    }
+                });
+                this.notices = response.data.map(notice => ({
+                    ...notice,
+                    date: notice.created_at.split('T')[0]
+                }));
+            } catch (error) {
+                console.error('기타 공지사항 로드 실패:', error);
+                this.toast.error('공지사항을 불러오는데 실패했습니다.', '⚠️ 로드 오류');
+            }
+        },
         searchNotices() {
             // 필터링은 computed에서 자동으로 처리됨
         },
@@ -248,34 +280,53 @@ export default {
             return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
         },
         
-        submitNotice() {
-            if (!this.newNotice.title || !this.newNotice.content) return;
-            
-            const noticeData = {
-                id: Math.max(...this.notices.map(n => n.id)) + 1,
-                title: this.newNotice.title,
-                content: this.newNotice.content,
-                date: new Date().toISOString().split('T')[0],
-                views: 0,
-                important: false,
-                images: this.selectedImages.map(img => ({
-                    name: img.name,
-                    size: img.size,
-                    preview: img.preview
-                }))
-            };
-            
-            this.notices.unshift(noticeData);
-            
-            // noticeStore에 새 공지사항 추가
-            noticeStore.addNotice(noticeData, 'others');
-            
-            this.showWriteForm = false;
-            this.newNotice = { title: '', content: '', images: [] };
-            this.selectedImages = [];
-            
-            if (this.$refs.imageInput) {
-                this.$refs.imageInput.value = '';
+        async submitNotice() {
+            if (!this.newNotice.title || !this.newNotice.content) {
+                this.toast.warning('제목과 내용을 모두 입력해주세요.', '✏️ 입력 확인');
+                return;
+            }
+
+            try {
+                const formData = new FormData();
+                formData.append('title', this.newNotice.title);
+                formData.append('content', this.newNotice.content);
+                formData.append('category_id', 'others');
+                formData.append('important', 'false');
+
+                // 이미지 파일 추가
+                this.selectedImages.forEach(image => {
+                    formData.append('images', image.file);
+                });
+
+                const response = await axios.post(`${API_BASE_URL}/api/notices`, formData, {
+                    headers: {
+                        'Content-Type': 'multipart/form-data',
+                        'Authorization': `Bearer ${this.authStore.state.token}`
+                    }
+                });
+
+                // 폼 초기화
+                this.showWriteForm = false;
+                this.newNotice = { title: '', content: '', images: [] };
+                this.selectedImages = [];
+                if (this.$refs.imageInput) {
+                    this.$refs.imageInput.value = '';
+                }
+
+                // 데이터 새로고침
+                await this.loadNotices();
+
+                this.toast.success('공지사항이 등록되었습니다.', '등록 완료');
+            } catch (error) {
+                console.error('공지사항 등록 실패:', error);
+                if (error.response?.status === 401) {
+                    this.toast.urgent('로그인이 필요합니다.', '🔐 로그인 필요');
+                    this.$router.push('/login');
+                } else if (error.response?.status === 403) {
+                    this.toast.urgent('관리자만 공지사항을 작성할 수 있습니다.', '⚠️ 권한 없음');
+                } else {
+                    this.toast.error('공지사항 등록에 실패했습니다.', '❌ 등록 실패');
+                }
             }
         },
         formatDate(dateString) {
@@ -287,7 +338,31 @@ export default {
         isNewNotice(dateString) {
             return Math.floor((new Date() - new Date(dateString)) / (1000 * 60 * 60 * 24)) <= 3;
         },
-        goBack() { this.$router.push('/notice'); }
+        goBack() { this.$router.push('/notice'); },
+        openImageModal(image) {
+            window.open(`${this.API_BASE_URL}${image.url}`, '_blank');
+        },
+        closeModal() {
+            this.showModal = false;
+            this.selectedNotice = null;
+        },
+        async createNewPage() {
+            try {
+                const response = await axios.post(`${API_BASE_URL}/api/notices/draft`, {
+                    category_id: 'others'
+                }, {
+                    headers: {
+                        'Authorization': `Bearer ${this.authStore.state.token}`
+                    }
+                });
+
+                const draftId = response.data.id;
+                this.$router.push(`/notice/others/edit/${draftId}`);
+            } catch (error) {
+                console.error('드래프트 생성 실패:', error);
+                this.toast.error('새 공지사항을 생성할 수 없습니다.', '❌ 오류');
+            }
+        }
     }
 };
 </script>
@@ -367,6 +442,8 @@ export default {
 .table-header { display: grid; grid-template-columns: 80px 1fr 120px 80px; background: #f8f9fa; padding: 15px; font-weight: 600; }
 .table-row { display: grid; grid-template-columns: 80px 1fr 120px 80px; padding: 15px; border-bottom: 1px solid #f9f9f9; cursor: pointer; }
 .table-row:hover { background: #f8f9fa; }
+.title-link { color: inherit; text-decoration: none; }
+.title-link:hover { color: inherit; }
 .new-badge { background: #dc3545; color: white; font-size: 0.7rem; padding: 2px 6px; border-radius: 10px; }
 .important-badge { background: #ffc107; color: #333; font-size: 0.7rem; padding: 2px 6px; border-radius: 10px; }
 .admin-controls { text-align: center; margin: 20px 0; }
@@ -542,24 +619,156 @@ export default {
     background: #545b62;
 }
 
+/* 모달 스타일 */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    padding: 20px;
+}
+
+.modal-content {
+    background: white;
+    border-radius: 15px;
+    max-width: 800px;
+    width: 100%;
+    max-height: 90vh;
+    overflow-y: auto;
+    position: relative;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 25px 30px;
+    border-bottom: 1px solid #f0f0f0;
+    background: linear-gradient(135deg, #6c757d, #545b62);
+    color: white;
+    border-radius: 15px 15px 0 0;
+}
+
+.modal-header h2 {
+    margin: 0;
+    font-size: 1.4rem;
+    font-weight: 600;
+}
+
+.modal-header .close-btn {
+    background: none;
+    border: none;
+    font-size: 1.8rem;
+    cursor: pointer;
+    color: white;
+    opacity: 0.8;
+    transition: opacity 0.3s;
+}
+
+.modal-header .close-btn:hover {
+    opacity: 1;
+}
+
+.modal-body {
+    padding: 30px;
+}
+
+.notice-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 25px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #f0f0f0;
+    color: #666;
+    font-size: 0.9rem;
+}
+
+.detail-content {
+    line-height: 1.8;
+    color: #333;
+}
+
+.content-text {
+    margin-bottom: 25px;
+    white-space: pre-line;
+    font-size: 1rem;
+}
+
+.content-images {
+    margin-top: 25px;
+}
+
+.images-gallery {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px;
+    margin-top: 15px;
+}
+
+.image-item {
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s;
+}
+
+.image-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+}
+
+.image-item img {
+    width: 100%;
+    height: 200px;
+    object-fit: cover;
+    cursor: pointer;
+    transition: transform 0.3s;
+}
+
+.image-item img:hover {
+    transform: scale(1.05);
+}
+
 @media (max-width: 768px) {
     .hero-title {
         font-size: 2rem;
     }
-    
+
     .hero-subtitle {
         font-size: 1rem;
     }
-    
+
     .search-section {
         flex-direction: column;
         align-items: stretch;
         gap: 15px;
     }
-    
+
     .search-controls {
         flex-direction: column;
         gap: 10px;
+    }
+
+    .modal-content {
+        margin: 10px;
+        max-height: 95vh;
+    }
+
+    .modal-header,
+    .modal-body {
+        padding: 20px;
+    }
+
+    .images-gallery {
+        grid-template-columns: 1fr;
     }
 }
 </style>

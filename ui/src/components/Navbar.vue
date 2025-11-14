@@ -33,6 +33,8 @@
             <li><router-link to="/community/photo-gallery" class="dropdown-link">포토갤러리</router-link></li>
             <li><router-link to="/community/video-gallery" class="dropdown-link">동영상갤러리</router-link></li>
             <li><router-link to="/community/free-board" class="dropdown-link">자유게시판</router-link></li>
+            <li><router-link to="/community/review-board" class="dropdown-link">후기게시판</router-link></li>
+            <li><router-link to="/community/crew-recruitment" class="dropdown-link">크루모집게시판</router-link></li>
           </ul>
         </li>
         <li class="nav-item dropdown" :class="{ active: isNoticeDropdownOpen }" @mouseenter="showNoticeDropdown" @mouseleave="hideNoticeDropdown">

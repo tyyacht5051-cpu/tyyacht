@@ -180,7 +180,7 @@
 </template>
 
 <script setup lang="ts">
-import { reactive, ref, computed } from 'vue';
+import { reactive, ref } from 'vue';
 import { useToast } from './Toast.vue';
 import { API_BASE_URL } from '../config/env.js';
 import axios from 'axios';

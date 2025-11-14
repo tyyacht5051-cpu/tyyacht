@@ -288,8 +288,8 @@ export default {
 
 .new-notice-badge {
   position: absolute;
-  top: -10px;
-  right: -10px;
+  top: -35px;
+  right: 15px;
   background: #ff4444;
   color: white;
   padding: 6px 12px;
@@ -298,6 +298,7 @@ export default {
   font-weight: bold;
   animation: pulse 2s infinite;
   z-index: 10;
+  box-shadow: 0 2px 8px rgba(255, 68, 68, 0.3);
 }
 
 .new-notice-badge i {
@@ -346,6 +347,13 @@ export default {
   
   .category-badge {
     min-width: 40px;
+    font-size: 11px;
+  }
+
+  .new-notice-badge {
+    top: -30px;
+    right: 10px;
+    padding: 4px 8px;
     font-size: 11px;
   }
 }

@@ -88,27 +88,27 @@
 </template>
 
 <script>
-import { useToast } from '../components/Toast.vue'
-import { useRouter } from 'vue-router'
+import { useToast } from '../components/Toast.vue';
+import { useRouter } from 'vue-router';
 
 export default {
     name: 'CruiseExperience',
     setup() {
-        const toast = useToast()
-        const router = useRouter()
-        
+        const toast = useToast();
+        const router = useRouter();
+
         const goToApplication = () => {
-            router.push('/experience-apply')
-        }
-        
+            router.push('/experience-apply');
+        };
+
         const contactUs = () => {
-            toast.tip('전화: 055-641-5051~2\n운영시간: 09:00~18:00', '🚢 크루즈 체험 문의')
-        }
-        
+            toast.tip('전화: 055-641-5051~2\n운영시간: 09:00~18:00', '🚢 크루즈 체험 문의');
+        };
+
         return {
             goToApplication,
-            contactUs
-        }
+            contactUs,
+        };
     },
     data() {
         return {
@@ -126,7 +126,8 @@ export default {
                     id: 1.5,
                     name: '한산대첩 승전항로 (연장)',
                     duration: '1시간 30분',
-                    description: '이순신 장군의 한산대첩 승전 루트를 따라가는 역사 체험 (심화 코스)',
+                    description:
+                        '이순신 장군의 한산대첩 승전 루트를 따라가는 역사 체험 (심화 코스)',
                     highlights: ['한산대첩 역사 해설', '승전지 관광', '추가 역사 탐방'],
                     price: '30,000원',
                     note: '1인 기준',
@@ -135,8 +136,8 @@ export default {
                     id: 2,
                     name: '이순신 역사 탐방',
                     duration: '2시간',
-                    description: '통영 일대 이순신 관련 역사 유적지 탐방',
-                    highlights: ['역사 해설', '유적지 관람'],
+                    description: '한산도에 입성해 수루까지 직접 갔다 올수 있는 유적지 탐방',
+                    highlights: ['한산태첩 역사 해설', '유적지 관람'],
                     price: '35,000원',
                     note: '1인 기준',
                 },
@@ -154,7 +155,13 @@ export default {
                     name: '힐링 섬 탐방 (하루종일)',
                     duration: '8시간',
                     description: '아름다운 한려수도의 섬들을 탐방하는 힐링 여행 (하루 종일 코스)',
-                    highlights: ['사량도/비진도/욕지도 등 방문', '섬 산책', '해양 생태 관찰', '다도해 경관 감상', '해변 휴식'],
+                    highlights: [
+                        '사량도/비진도/욕지도 등 방문',
+                        '섬 산책',
+                        '해양 생태 관찰',
+                        '다도해 경관 감상',
+                        '해변 휴식',
+                    ],
                     price: '120,000원',
                     note: '1인 기준, 점심 포함',
                 },
@@ -468,7 +475,7 @@ export default {
     .hero-title {
         font-size: 2.2rem;
     }
-    
+
     .hero-subtitle {
         font-size: 1.1rem;
     }

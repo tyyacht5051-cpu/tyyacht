@@ -81,26 +81,6 @@
                     </div>
                 </div>
 
-                <div class="process-section">
-                    <h2>체험 과정</h2>
-                    <div class="process-timeline">
-                        <div
-                            class="timeline-item"
-                            v-for="(step, index) in processSteps"
-                            :key="index"
-                        >
-                            <div class="timeline-marker">
-                                <span class="step-number">{{ index + 1 }}</span>
-                            </div>
-                            <div class="timeline-content">
-                                <h4>{{ step.title }}</h4>
-                                <p>{{ step.description }}</p>
-                                <span class="step-duration">{{ step.duration }}</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
                 <div class="safety-section">
                     <h2>안전 수칙 & 준비사항</h2>
                     <div class="safety-grid">
@@ -161,20 +141,10 @@
                             <div class="contact-item">
                                 <h3>📍 체험 장소</h3>
                                 <p class="contact-value">통영요트학교 앞바다</p>
-                                <p class="contact-note">경남 통영시 산양읍</p>
+                                <p class="contact-note">경남 통영시 도남로269-28</p>
                             </div>
                         </div>
 
-                        <div class="special-notes">
-                            <h3>📝 특별 안내</h3>
-                            <div class="note-list">
-                                <p>• 체험 최소 1일 전 예약 필수</p>
-                                <p>• 기상 악화 시 안전을 위해 취소될 수 있습니다</p>
-                                <p>• 단체 예약 시 할인 혜택이 있습니다</p>
-                                <p>• 체험 중 사진 촬영 서비스 제공</p>
-                                <p>• 샤워실 및 탈의실 이용 가능</p>
-                            </div>
-                        </div>
                     </div>
                 </div>
 
@@ -188,27 +158,27 @@
 </template>
 
 <script>
-import { useToast } from '../components/Toast.vue'
-import { useRouter } from 'vue-router'
+import { useToast } from '../components/Toast.vue';
+import { useRouter } from 'vue-router';
 
 export default {
     name: 'PaddleboardExperience',
     setup() {
-        const toast = useToast()
-        const router = useRouter()
-        
+        const toast = useToast();
+        const router = useRouter();
+
         const goToApplication = () => {
-            router.push('/experience-apply')
-        }
-        
+            router.push('/experience-apply');
+        };
+
         const contactUs = () => {
-            toast.tip('전화: 055-641-5051~2\n운영시간: 09:00~18:00', '🏄‍♂️ 패들보드 체험 문의')
-        }
-        
+            toast.tip('전화: 055-641-5051~2\n운영시간: 09:00~18:00', '🏄‍♂️ 패들보드 체험 문의');
+        };
+
         return {
             goToApplication,
-            contactUs
-        }
+            contactUs,
+        };
     },
     data() {
         return {
@@ -678,7 +648,7 @@ export default {
 
 .booking-info {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 1fr;
     gap: 40px;
 }
 
@@ -713,23 +683,6 @@ export default {
     font-size: 0.9rem;
 }
 
-.special-notes {
-    background: #f8f9fa;
-    padding: 30px;
-    border-radius: 15px;
-}
-
-.special-notes h3 {
-    color: #2c5aa0;
-    margin-bottom: 20px;
-    font-size: 1.2rem;
-}
-
-.note-list p {
-    color: #666;
-    margin-bottom: 10px;
-    line-height: 1.6;
-}
 
 .action-section {
     text-align: center;
@@ -775,7 +728,7 @@ export default {
     .hero-title {
         font-size: 2.2rem;
     }
-    
+
     .hero-subtitle {
         font-size: 1.1rem;
     }

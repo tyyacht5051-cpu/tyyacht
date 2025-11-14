@@ -235,11 +235,12 @@ export default {
     },
     async login() {
       const result = await authStore.login(this.loginForm);
-      
+
       if (result.success) {
         this.$router.push('/');
       } else {
-        this.errorMessage = result.error;
+        // XSS 방지를 위한 에러 메시지 sanitization
+        this.errorMessage = this.sanitizeErrorMessage(result.error);
       }
     },
     async register() {
@@ -264,8 +265,27 @@ export default {
           this.errorMessage = '';
         }, 3000);
       } else {
-        this.errorMessage = result.error;
+        // XSS 방지를 위한 에러 메시지 sanitization
+        this.errorMessage = this.sanitizeErrorMessage(result.error);
       }
+    },
+
+    // XSS 방지를 위한 에러 메시지 sanitization 함수
+    sanitizeErrorMessage(errorMsg) {
+      // 허용된 에러 메시지 화이트리스트
+      const allowedMessages = {
+        'Invalid credentials': '아이디 또는 비밀번호가 올바르지 않습니다.',
+        'User not found': '존재하지 않는 사용자입니다.',
+        'Username already exists': '이미 사용 중인 아이디입니다.',
+        'Email already exists': '이미 사용 중인 이메일입니다.',
+        'Password too short': '비밀번호가 너무 짧습니다. (최소 8자)',
+        'Required field missing': '필수 정보가 누락되었습니다.',
+        'Terms agreement required': '약관 동의가 필요합니다.',
+        'Server error': '서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.'
+      };
+
+      // 화이트리스트에 있는 메시지면 한국어 버전 반환, 없으면 기본 메시지
+      return allowedMessages[errorMsg] || '로그인 처리 중 오류가 발생했습니다. 다시 시도해주세요.';
     }
   }
 };

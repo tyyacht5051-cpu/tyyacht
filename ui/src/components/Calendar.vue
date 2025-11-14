@@ -39,29 +39,6 @@
       </div>
     </div>
     
-    <!-- 이벤트 목록 -->
-    <div class="event-list">
-      <h4>이번 달 일정</h4>
-      <div v-if="currentMonthEvents.length === 0" class="no-events">
-        등록된 일정이 없습니다.
-      </div>
-      <div v-else>
-        <div 
-          v-for="event in currentMonthEvents" 
-          :key="event.id"
-          :class="['event-item', `event-${event.type}`]"
-          @click="$emit('event-click', event)"
-        >
-          <div class="event-date">{{ formatEventDate(event.date) }}</div>
-          <div class="event-title">
-            {{ event.title }}
-            <span v-if="event.applicantCount !== undefined" class="event-count">
-              ({{ event.applicantCount }}{{ event.maxCapacity ? `/${event.maxCapacity}` : '' }}명)
-            </span>
-          </div>
-        </div>
-      </div>
-    </div>
   </div>
 </template>
 
@@ -123,15 +100,6 @@ export default {
       
       return dates
     },
-    currentMonthEvents() {
-      const year = this.currentDate.getFullYear()
-      const month = this.currentDate.getMonth()
-      
-      return this.events.filter(event => {
-        const eventDate = new Date(event.date)
-        return eventDate.getFullYear() === year && eventDate.getMonth() === month
-      }).sort((a, b) => new Date(a.date) - new Date(b.date))
-    }
   },
   methods: {
     previousMonth() {
@@ -147,10 +115,6 @@ export default {
     },
     formatDate(date) {
       return date.toISOString().split('T')[0]
-    },
-    formatEventDate(dateStr) {
-      const date = new Date(dateStr)
-      return `${date.getMonth() + 1}/${date.getDate()}`
     },
     isToday(date) {
       const today = new Date()

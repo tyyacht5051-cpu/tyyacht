@@ -44,7 +44,11 @@
                     >
                         <div class="video-container">
                             <div class="video-thumbnail">
-                                <div class="thumbnail-placeholder">
+                                <img v-if="video.thumbnail_url" :src="`${API_BASE_URL}${video.thumbnail_url}`" :alt="video.title" class="thumbnail-image" />
+                                <div v-else class="thumbnail-placeholder">
+                                    <div class="play-icon">▶</div>
+                                </div>
+                                <div class="play-overlay">
                                     <div class="play-icon">▶</div>
                                 </div>
                                 <div class="duration-badge">{{ video.duration }}</div>
@@ -106,9 +110,14 @@
                             </select>
                         </div>
                         <div class="form-group">
+                            <label>재생 시간 (선택사항)</label>
+                            <input v-model="newVideo.duration" type="text" placeholder="예: 5:30" />
+                            <small>형식: MM:SS 또는 HH:MM:SS</small>
+                        </div>
+                        <div class="form-group">
                             <label>동영상 파일</label>
-                            <input type="file" accept="video/*" @change="handleVideoFileSelection" ref="videoFileInput" />
-                            <small>지원 형식: MP4, AVI, MOV (최대 100MB)</small>
+                            <input type="file" accept="video/*" @change="handleVideoSelection" ref="videoFileInput" />
+                            <small>지원 형식: MP4, AVI, MOV (최대 1GB)</small>
                         </div>
                         <div class="form-group">
                             <label>썸네일 이미지</label>
@@ -119,7 +128,7 @@
                             <h4>선택된 동영상:</h4>
                             <div class="video-item">
                                 <div class="video-preview">
-                                    <img v-if="selectedThumbnail" :src="selectedThumbnail" alt="썸네일" />
+                                    <img v-if="thumbnailPreview" :src="thumbnailPreview" alt="썸네일" />
                                     <div v-else class="no-preview">🎥</div>
                                 </div>
                                 <div class="video-info">
@@ -146,10 +155,20 @@
                             <button class="close-btn" @click="closeModal">✕</button>
                         </div>
                         <div class="video-player">
-                            <div class="player-placeholder">
+                            <video
+                                v-if="selectedVideo.url"
+                                :src="`${API_BASE_URL}${selectedVideo.url}`"
+                                controls
+                                autoplay
+                                class="video-element"
+                                @error="onVideoError"
+                            >
+                                브라우저가 동영상 재생을 지원하지 않습니다.
+                            </video>
+                            <div v-else class="player-placeholder">
                                 <div class="play-icon large">▶</div>
                                 <p>{{ selectedVideo.title }}</p>
-                                <small>실제 구현 시 여기에 동영상 플레이어가 표시됩니다</small>
+                                <small>동영상을 찾을 수 없습니다</small>
                             </div>
                         </div>
                         <div class="modal-info">
@@ -176,8 +195,9 @@
 
 <script>
 import authStore from '../stores/auth.js'
-
+import axios from 'axios'
 import { useToast } from '../components/Toast.vue'
+import { API_BASE_URL } from '../config/env.js'
 
 export default {
     name: 'VideoGallery',
@@ -188,66 +208,28 @@ export default {
     data() {
         return {
             authStore,
+            API_BASE_URL,
             activeCategory: 'all',
             showUploadForm: false,
             selectedVideo: null,
             newVideo: {
                 title: '',
                 description: '',
-                categoryId: ''
+                categoryId: '',
+                duration: ''
             },
             selectedVideoFile: null,
             selectedThumbnail: null,
+            thumbnailPreview: null,
             categories: [
-                { id: 'all', name: '전체', count: 12 },
-                { id: 'cruise-education', name: '크루즈 요트 교육', count: 4 },
-                { id: 'cruise-experience', name: '크루즈 요트 체험', count: 3 },
-                { id: 'dinghy-education', name: '딩기 요트 교육', count: 3 },
-                { id: 'dinghy-experience', name: '딩기 요트 체험', count: 1 },
-                { id: 'paddleboard', name: '패들보드 체험', count: 1 }
+                { id: 'all', name: '전체', count: 0 },
+                { id: 'cruise-education', name: '크루즈 요트 교육', count: 0 },
+                { id: 'cruise-experience', name: '크루즈 요트 체험', count: 0 },
+                { id: 'dinghy-education', name: '딩기 요트 교육', count: 0 },
+                { id: 'dinghy-experience', name: '딩기 요트 체험', count: 0 },
+                { id: 'paddleboard', name: '패들보드 체험', count: 0 }
             ],
-            videos: [
-                {
-                    id: 1,
-                    title: '크루즈 요트 교육 하이라이트',
-                    description: '크루즈 요트 교육 과정의 주요 내용을 담은 영상입니다. 기초 이론부터 실습까지 전 과정을 확인하세요.',
-                    categoryId: 'cruise-education',
-                    date: '2024-03-15',
-                    duration: '10:32',
-                    views: 245,
-                    url: '/videos/sample1.mp4'
-                },
-                {
-                    id: 2,
-                    title: '딩기 요트 조종 기초',
-                    description: '딩기 요트의 기본 조종법과 안전 수칙을 배워보는 교육 영상입니다.',
-                    categoryId: 'dinghy-education',
-                    date: '2024-03-14',
-                    duration: '8:45',
-                    views: 189,
-                    url: '/videos/sample2.mp4'
-                },
-                {
-                    id: 3,
-                    title: '가족과 함께하는 요트 체험',
-                    description: '가족 단위로 참여한 요트 체험 프로그램의 즐거운 순간들을 담았습니다.',
-                    categoryId: 'cruise-experience',
-                    date: '2024-03-13',
-                    duration: '12:18',
-                    views: 156,
-                    url: '/videos/sample3.mp4'
-                },
-                {
-                    id: 4,
-                    title: '패들보드 체험 현장',
-                    description: '청정 바다에서 즐기는 패들보드 체험의 생생한 현장을 만나보세요.',
-                    categoryId: 'paddleboard',
-                    date: '2024-03-12',
-                    duration: '6:22',
-                    views: 98,
-                    url: '/videos/sample4.mp4'
-                }
-            ]
+            videos: []
         };
     },
     computed: {
@@ -271,112 +253,47 @@ export default {
         },
         playVideo(video) {
             this.selectedVideo = video;
-            // 조회수 증가 로직
-            video.views++;
+            // 조회수 증가 API 호출
+            this.incrementViews(video.id);
         },
         closeModal() {
             this.selectedVideo = null;
         },
-        uploadVideo() {
-            if (!this.selectedVideoFile) {
-                this.toast.warning('동영상을 선택해주세요.', '🎥 동영상 선택 필요');
-                return;
-            }
-
-            if (!this.newVideo.title || !this.newVideo.categoryId) {
-                this.toast.warning('제목과 카테고리를 입력해주세요.', '✏️ 정보 입력 필요');
-                return;
-            }
-
-            // 새 동영상 항목 생성
-            const newVideoItem = {
-                id: Math.max(...this.videos.map(v => v.id)) + 1,
-                title: this.newVideo.title,
-                description: this.newVideo.description,
-                categoryId: this.newVideo.categoryId,
-                date: new Date().toISOString().split('T')[0],
-                duration: this.generateRandomDuration(), // 실제로는 동영상 파일에서 추출
-                views: 0,
-                url: this.selectedThumbnail || '/videos/placeholder.mp4'
-            };
-            
-            this.videos.unshift(newVideoItem);
-
-            // 카테고리 개수 업데이트
-            this.updateCategoryCounts();
-
-            // 폼 초기화
-            this.showUploadForm = false;
-            this.newVideo = { title: '', description: '', categoryId: '' };
-            this.selectedVideoFile = null;
-            this.selectedThumbnail = null;
-            this.$refs.videoFileInput.value = '';
-            if (this.$refs.thumbnailFileInput) {
-                this.$refs.thumbnailFileInput.value = '';
-            }
-
-            this.toast.celebrate('동영상이 업로드되었습니다.', '🎥 동영상 업로드 완료');
-        },
-        handleVideoFileSelection(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-
-            // 파일 크기 체크 (100MB)
-            if (file.size > 100 * 1024 * 1024) {
-                this.toast.error('동영상 파일 크기가 100MB를 초과합니다.', '⚠️ 파일 크기 초과');
-                return;
-            }
-
-            // 동영상 파일 타입 체크
-            if (!file.type.startsWith('video/')) {
-                this.toast.error('동영상 파일이 아닙니다.', '⚠️ 파일 형식 오류');
-                return;
-            }
-
-            this.selectedVideoFile = file;
-        },
-        handleThumbnailSelection(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-
-            // 이미지 파일 타입 체크
-            if (!file.type.startsWith('image/')) {
-                this.toast.error('이미지 파일이 아닙니다.', '⚠️ 파일 형식 오류');
-                return;
-            }
-
-            // 파일 크기 체크 (5MB)
-            if (file.size > 5 * 1024 * 1024) {
-                this.toast.error('썸네일 이미지 크기가 5MB를 초과합니다.', '⚠️ 썸네일 크기 초과');
-                return;
-            }
-
-            // 미리보기 생성
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                this.selectedThumbnail = e.target.result;
-            };
-            reader.readAsDataURL(file);
-        },
-        removeVideoFile() {
-            this.selectedVideoFile = null;
-            this.selectedThumbnail = null;
-            this.$refs.videoFileInput.value = '';
-            if (this.$refs.thumbnailFileInput) {
-                this.$refs.thumbnailFileInput.value = '';
+        async incrementViews(videoId) {
+            try {
+                await axios.get(`${API_BASE_URL}/api/videos/${videoId}`);
+            } catch (error) {
+                console.error('Failed to increment views:', error);
             }
         },
-        formatFileSize(bytes) {
-            if (bytes === 0) return '0 Bytes';
-            const k = 1024;
-            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-            const i = Math.floor(Math.log(bytes) / Math.log(k));
-            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-        },
-        generateRandomDuration() {
-            const minutes = Math.floor(Math.random() * 15) + 1;
-            const seconds = Math.floor(Math.random() * 60);
-            return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+        async loadVideos() {
+            try {
+                console.log('Loading videos from:', `${API_BASE_URL}/api/videos`);
+                const response = await axios.get(`${API_BASE_URL}/api/videos`);
+                console.log('Videos response:', response.data);
+
+                // API 데이터를 프론트엔드 형식으로 변환
+                this.videos = (response.data || []).map(video => ({
+                    id: video.id,
+                    title: video.title,
+                    description: video.description,
+                    categoryId: video.category_id,
+                    date: video.created_at ? video.created_at.split('T')[0] : new Date().toISOString().split('T')[0],
+                    duration: video.duration || '0:00',
+                    views: video.views || 0,
+                    url: video.url,
+                    thumbnail_url: video.thumbnail_url,
+                    filename: video.filename,
+                    author: video.author_name || '관리자'
+                }));
+                this.updateCategoryCounts();
+                console.log('Videos loaded:', this.videos.length);
+            } catch (error) {
+                console.error('Failed to load videos:', error);
+                this.videos = [];
+                this.updateCategoryCounts();
+                console.warn('API server may not be running. Videos will be empty.');
+            }
         },
         updateCategoryCounts() {
             this.categories.forEach(category => {
@@ -387,14 +304,133 @@ export default {
                 }
             });
         },
+        handleVideoSelection(event) {
+            const file = event.target.files[0];
+            if (file) {
+                this.selectedVideoFile = file;
+                console.log('Video selected:', file.name, file.size, file.type);
+            }
+        },
+        handleThumbnailSelection(event) {
+            const file = event.target.files[0];
+            if (file) {
+                this.selectedThumbnail = file;
+
+                // 썸네일 미리보기 생성
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    this.thumbnailPreview = e.target.result;
+                };
+                reader.readAsDataURL(file);
+
+                console.log('Thumbnail selected:', file.name, file.size, file.type);
+            }
+        },
+        removeVideoFile() {
+            this.selectedVideoFile = null;
+            this.selectedThumbnail = null;
+            this.thumbnailPreview = null;
+            this.$refs.videoFileInput.value = '';
+            this.$refs.thumbnailFileInput.value = '';
+        },
+        formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        },
+        async uploadVideo() {
+            if (!this.selectedVideoFile) {
+                this.toast.warning('동영상을 선택해주세요.', '🎥 동영상 선택 필요');
+                return;
+            }
+
+            if (!this.newVideo.title || !this.newVideo.categoryId) {
+                this.toast.warning('제목과 카테고리를 입력해주세요.', '✏️ 정보 입력 필요');
+                return;
+            }
+
+            try {
+                console.log('Starting video upload...');
+                console.log('Selected video:', this.selectedVideoFile.name, this.selectedVideoFile.size);
+                console.log('Form data:', this.newVideo);
+
+                const formData = new FormData();
+                formData.append('title', this.newVideo.title);
+                formData.append('description', this.newVideo.description);
+                formData.append('category_id', this.newVideo.categoryId);
+                formData.append('duration', this.newVideo.duration);
+                formData.append('video', this.selectedVideoFile);
+
+                if (this.selectedThumbnail) {
+                    formData.append('thumbnail', this.selectedThumbnail);
+                }
+
+                const token = localStorage.getItem('token');
+                console.log('Token exists:', !!token);
+                console.log('Upload URL:', `${API_BASE_URL}/api/videos`);
+
+                this.toast.info('동영상 업로드 중... 잠시만 기다려주세요.', '⏳ 업로드 진행중');
+
+                const response = await axios.post(`${API_BASE_URL}/api/videos`, formData, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'multipart/form-data'
+                    }
+                });
+
+                console.log('Upload response:', response.data);
+
+                // 업로드 후 동영상 목록 새로고침
+                await this.loadVideos();
+
+                // 성공 메시지
+                this.toast.celebrate('동영상이 업로드되었습니다.', '🎥 동영상 업로드 완료');
+
+                // 폼 초기화
+                this.showUploadForm = false;
+                this.newVideo = { title: '', description: '', categoryId: '', duration: '' };
+                this.selectedVideoFile = null;
+                this.selectedThumbnail = null;
+                this.thumbnailPreview = null;
+                this.$refs.videoFileInput.value = '';
+                this.$refs.thumbnailFileInput.value = '';
+            } catch (error) {
+                console.error('Upload error details:', error);
+                console.error('Error response:', error.response?.data);
+                console.error('Error status:', error.response?.status);
+
+                let errorMessage = '동영상 업로드에 실패했습니다.';
+                if (error.response?.status === 401) {
+                    errorMessage = '로그인이 필요합니다.';
+                } else if (error.response?.status === 403) {
+                    errorMessage = '관리자 권한이 필요합니다.';
+                } else if (error.response?.status === 413) {
+                    errorMessage = '파일 크기가 너무 큽니다.';
+                } else if (error.response?.data?.error) {
+                    errorMessage = error.response.data.error;
+                }
+
+                this.toast.error(errorMessage, '❌ 업로드 실패');
+            }
+        },
         manageVideos() {
             // 동영상 관리 페이지로 이동
+            console.log('Manage videos');
         },
         goBack() {
             this.$router.push('/community');
+        },
+        onVideoError(error) {
+            console.error('Video playback error:', error);
+            this.toast.error('동영상 재생 중 오류가 발생했습니다.', '❌ 재생 오류');
         }
     },
+
     mounted() {
+        this.loadVideos();
+
         // ESC 키로 모달 닫기
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape' && this.selectedVideo) {
@@ -586,6 +622,41 @@ export default {
     background: #f8f9fa;
     position: relative;
     overflow: hidden;
+}
+
+.thumbnail-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+}
+
+.video-card:hover .thumbnail-image {
+    transform: scale(1.05);
+}
+
+.play-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.3);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.video-card:hover .play-overlay {
+    opacity: 1;
+}
+
+.play-overlay .play-icon {
+    font-size: 3rem;
+    color: white;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
 }
 
 .thumbnail-placeholder {
@@ -894,10 +965,11 @@ export default {
     background: white;
     border-radius: 15px;
     overflow: hidden;
-    max-width: 800px;
-    width: 100%;
-    max-height: 90vh;
+    max-width: 1440px;
+    width: 98vw;
+    max-height: 98vh;
     overflow-y: auto;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
 }
 
 .modal-header {
@@ -915,7 +987,8 @@ export default {
 }
 
 .video-player {
-    height: 400px;
+    height: 84vh;
+    min-height: 600px;
     background: #000;
     display: flex;
     align-items: center;
@@ -923,6 +996,12 @@ export default {
     flex-direction: column;
     color: white;
     text-align: center;
+}
+
+.video-element {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
 }
 
 .player-placeholder {
@@ -978,6 +1057,18 @@ export default {
     border-color: #2c5aa0;
 }
 
+@media (min-width: 769px) and (max-width: 1024px) {
+    .modal-content {
+        max-width: 900px;
+        width: 90vw;
+    }
+
+    .video-player {
+        height: 60vh;
+        min-height: 400px;
+    }
+}
+
 @media (max-width: 768px) {
     .hero-title {
         font-size: 2rem;
@@ -1007,11 +1098,13 @@ export default {
     }
 
     .modal-content {
-        max-height: 95vh;
+        width: 98vw;
+        max-height: 98vh;
     }
 
     .video-player {
-        height: 250px;
+        height: 40vh;
+        min-height: 250px;
     }
 
     .modal-meta {

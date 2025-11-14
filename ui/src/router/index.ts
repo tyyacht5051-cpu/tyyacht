@@ -58,6 +58,11 @@ const routes: RouteRecordRaw[] = [
     component: () => import('../pages/LicenseEducation.vue')
   },
   {
+    path: '/license-education',
+    name: 'LicenseEducation',
+    component: () => import('../pages/LicenseEducation.vue')
+  },
+  {
     path: '/community',
     name: 'Community',
     component: () => import('../pages/Community.vue')
@@ -98,6 +103,26 @@ const routes: RouteRecordRaw[] = [
     component: () => import('../pages/FreeBoard.vue')
   },
   {
+    path: '/community/review-board',
+    name: 'ReviewBoard',
+    component: () => import('../pages/ReviewBoard.vue')
+  },
+  {
+    path: '/community/crew-recruitment',
+    name: 'CrewRecruitment',
+    component: () => import('../pages/CrewRecruitment.vue')
+  },
+  {
+    path: '/crew-recruitment',
+    name: 'CrewRecruitmentDirect',
+    component: () => import('../pages/CrewRecruitment.vue')
+  },
+  {
+    path: '/review-board',
+    name: 'ReviewBoardDirect',
+    component: () => import('../pages/ReviewBoard.vue')
+  },
+  {
     path: '/notice/exemption',
     name: 'NoticeExemption',
     component: () => import('../pages/NoticeExemption.vue')
@@ -121,6 +146,61 @@ const routes: RouteRecordRaw[] = [
     path: '/notice/others',
     name: 'NoticeOthers',
     component: () => import('../pages/NoticeOthers.vue')
+  },
+  {
+    path: '/notice/exemption/:id',
+    name: 'NoticeExemptionDetail',
+    component: () => import('../pages/NoticeExemptionPage.vue')
+  },
+  {
+    path: '/notice/exemption/edit/:id',
+    name: 'NoticeExemptionEdit',
+    component: () => import('../pages/NoticeExemptionPage.vue'),
+    meta: { requiresAuth: true, requiresAdmin: true }
+  },
+  {
+    path: '/notice/cruise/:id',
+    name: 'NoticeCruiseDetail',
+    component: () => import('../pages/NoticeCruisePage.vue')
+  },
+  {
+    path: '/notice/cruise/edit/:id',
+    name: 'NoticeCruiseEdit',
+    component: () => import('../pages/NoticeCruisePage.vue'),
+    meta: { requiresAuth: true, requiresAdmin: true }
+  },
+  {
+    path: '/notice/dinghy/:id',
+    name: 'NoticeDinghyDetail',
+    component: () => import('../pages/NoticeDinghyPage.vue')
+  },
+  {
+    path: '/notice/dinghy/edit/:id',
+    name: 'NoticeDinghyEdit',
+    component: () => import('../pages/NoticeDinghyPage.vue'),
+    meta: { requiresAuth: true, requiresAdmin: true }
+  },
+  {
+    path: '/notice/recruitment/:id',
+    name: 'NoticeRecruitmentDetail',
+    component: () => import('../pages/NoticeRecruitmentPage.vue')
+  },
+  {
+    path: '/notice/recruitment/edit/:id',
+    name: 'NoticeRecruitmentEdit',
+    component: () => import('../pages/NoticeRecruitmentPage.vue'),
+    meta: { requiresAuth: true, requiresAdmin: true }
+  },
+  {
+    path: '/notice/others/:id',
+    name: 'NoticeOthersDetail',
+    component: () => import('../pages/NoticeOthersPage.vue')
+  },
+  {
+    path: '/notice/others/edit/:id',
+    name: 'NoticeOthersEdit',
+    component: () => import('../pages/NoticeOthersPage.vue'),
+    meta: { requiresAuth: true, requiresAdmin: true }
   },
   {
     path: '/login',
@@ -258,7 +338,7 @@ router.beforeEach((to, _from, next) => {
   // authStore 상태도 확인
   console.log('🏪 AuthStore state:', {
     storeAuthenticated: authStore.state?.isAuthenticated,
-    storeUser: authStore.state?.user?.username,
+    storeUser: (authStore.state?.user as any)?.username,
     storeToken: !!authStore.state?.token
   })
   

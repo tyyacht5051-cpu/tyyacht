@@ -36,24 +36,28 @@
                 </div>
 
                 <div class="photo-grid">
-                    <div 
-                        v-for="photo in filteredPhotos" 
-                        :key="photo.id"
+                    <div
+                        v-for="gallery in filteredPhotos"
+                        :key="gallery.id"
                         class="photo-card"
-                        @click="openModal(photo)"
+                        @click="openModal(gallery)"
                     >
                         <div class="photo-container">
-                            <div class="photo-placeholder">
+                            <img v-if="gallery.url" :src="`${API_BASE_URL}${gallery.url}`" :alt="gallery.title" class="photo-image" />
+                            <div v-else class="photo-placeholder">
                                 <div class="placeholder-icon">📷</div>
-                                <div class="placeholder-text">{{ photo.title }}</div>
+                                <div class="placeholder-text">사진 없음</div>
+                            </div>
+                            <div v-if="gallery.photo_count > 1" class="photo-count-badge">
+                                {{ gallery.photo_count }}장
                             </div>
                         </div>
                         <div class="photo-info">
-                            <h4>{{ photo.title }}</h4>
-                            <p>{{ photo.description }}</p>
+                            <h4>{{ gallery.title }}</h4>
+                            <p>{{ gallery.description }}</p>
                             <div class="photo-meta">
-                                <span class="date">{{ photo.date }}</span>
-                                <span class="category">{{ getCategoryName(photo.categoryId) }}</span>
+                                <span class="date">{{ gallery.date }}</span>
+                                <span class="category">{{ getCategoryName(gallery.categoryId) }}</span>
                             </div>
                         </div>
                     </div>
@@ -105,12 +109,26 @@
                         <div class="form-group">
                             <label>사진 파일</label>
                             <input type="file" accept="image/*" multiple @change="handleFileSelection" ref="photoFileInput" />
-                            <small>지원 형식: JPG, PNG, GIF (최대 10MB, 최대 5개 파일)</small>
+                            <small>지원 형식: JPG, PNG, GIF (최대 100MB, 최대 20개 파일)</small>
                         </div>
                         <div v-if="selectedFiles.length > 0" class="selected-files">
-                            <h4>선택된 파일:</h4>
+                            <h4>선택된 파일: <small>(드래그해서 순서 변경 가능)</small></h4>
                             <div class="file-list">
-                                <div v-for="(file, index) in selectedFiles" :key="index" class="file-item">
+                                <div
+                                    v-for="(file, index) in selectedFiles"
+                                    :key="`file-${index}-${file.name}`"
+                                    class="file-item"
+                                    draggable="true"
+                                    @dragstart="onDragStart(index, $event)"
+                                    @dragover="onDragOver($event)"
+                                    @dragenter="onDragEnter($event)"
+                                    @dragleave="onDragLeave($event)"
+                                    @drop="onDrop(index, $event)"
+                                    @dragend="onDragEnd"
+                                    :class="{ 'dragging': draggedIndex === index }"
+                                >
+                                    <div class="drag-handle">⋮⋮</div>
+                                    <div class="file-order">{{ index + 1 }}</div>
                                     <div class="file-preview">
                                         <img v-if="file.preview" :src="file.preview" :alt="file.name" />
                                         <div v-else class="no-preview">📷</div>
@@ -119,7 +137,23 @@
                                         <span class="file-name">{{ file.name }}</span>
                                         <span class="file-size">{{ formatFileSize(file.size) }}</span>
                                     </div>
-                                    <button type="button" @click="removeFile(index)" class="remove-file">✕</button>
+                                    <div class="file-controls">
+                                        <button
+                                            type="button"
+                                            @click="moveFile(index, 'up')"
+                                            :disabled="index === 0"
+                                            class="move-btn up-btn"
+                                            title="위로 이동"
+                                        >↑</button>
+                                        <button
+                                            type="button"
+                                            @click="moveFile(index, 'down')"
+                                            :disabled="index === selectedFiles.length - 1"
+                                            class="move-btn down-btn"
+                                            title="아래로 이동"
+                                        >↓</button>
+                                        <button type="button" @click="removeFile(index)" class="remove-file">✕</button>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -140,13 +174,56 @@
                 ← 커뮤니티로 돌아가기
             </button>
         </div>
+
+        <!-- 갤러리 모달 -->
+        <div v-if="showModal" class="modal-overlay" @click="closeModal">
+            <div class="modal-content" @click.stop>
+                <button class="modal-close" @click="closeModal">&times;</button>
+                <div class="modal-image-container">
+                    <div v-if="selectedGallery && selectedGallery.photos && selectedGallery.photos.length > 0" class="gallery-slider">
+                        <button v-if="selectedGallery.photos.length > 1" class="slider-btn prev-btn" @click="prevImage" :disabled="currentImageIndex === 0">‹</button>
+                        <img :src="`${API_BASE_URL}${selectedGallery.photos[currentImageIndex].url}`" :alt="selectedGallery.title" class="modal-image" />
+                        <button v-if="selectedGallery.photos.length > 1" class="slider-btn next-btn" @click="nextImage" :disabled="currentImageIndex === selectedGallery.photos.length - 1">›</button>
+                        <div v-if="selectedGallery.photos.length > 1" class="image-counter">
+                            {{ currentImageIndex + 1 }} / {{ selectedGallery.photos.length }}
+                        </div>
+                    </div>
+                    <div v-else class="no-images">
+                        <div class="no-images-icon">📷</div>
+                        <p>이 갤러리에는 이미지가 없습니다.</p>
+                    </div>
+                </div>
+                <div class="modal-info">
+                    <h3>{{ selectedGallery.title }}</h3>
+                    <p v-if="selectedGallery.description">{{ selectedGallery.description }}</p>
+                    <div class="modal-meta">
+                        <span class="modal-date">{{ selectedGallery.date }}</span>
+                        <span class="modal-category">{{ getCategoryName(selectedGallery.categoryId) }}</span>
+                        <span v-if="selectedGallery.photos" class="modal-count">{{ selectedGallery.photos.length }}장</span>
+                    </div>
+                </div>
+                <div v-if="selectedGallery && selectedGallery.photos && selectedGallery.photos.length > 1" class="modal-thumbnails">
+                    <div class="thumbnails-container">
+                        <div
+                            v-for="(photo, index) in selectedGallery.photos"
+                            :key="photo.id"
+                            :class="['thumbnail', { active: index === currentImageIndex }]"
+                            @click="setCurrentImage(index)"
+                        >
+                            <img :src="`${API_BASE_URL}${photo.url}`" :alt="`이미지 ${index + 1}`" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 </template>
 
 <script>
 import authStore from '../stores/auth.js'
-
+import axios from 'axios'
 import { useToast } from '../components/Toast.vue'
+import { API_BASE_URL } from '../config/env.js'
 
 export default {
     name: 'PhotoGallery',
@@ -157,6 +234,7 @@ export default {
     data() {
         return {
             authStore,
+            API_BASE_URL,
             activeCategory: 'all',
             showUploadForm: false,
             newPhoto: {
@@ -165,6 +243,7 @@ export default {
                 categoryId: ''
             },
             selectedFiles: [],
+            draggedIndex: null,
             categories: [
                 { id: 'all', name: '전체', count: 24 },
                 { id: 'cruise-education', name: '크루즈 요트 교육', count: 8 },
@@ -173,40 +252,10 @@ export default {
                 { id: 'dinghy-experience', name: '딩기 요트 체험', count: 3 },
                 { id: 'paddleboard', name: '패들보드 체험', count: 2 }
             ],
-            photos: [
-                {
-                    id: 1,
-                    title: '크루즈 요트 교육 현장',
-                    description: '참가자들이 열심히 요트 조종법을 배우고 있는 모습',
-                    categoryId: 'cruise-education',
-                    date: '2024-03-15',
-                    url: '/images/sample1.jpg'
-                },
-                {
-                    id: 2,
-                    title: '딩기 요트 실습',
-                    description: '딩기 요트로 실제 항해를 연습하는 교육생들',
-                    categoryId: 'dinghy-education',
-                    date: '2024-03-14',
-                    url: '/images/sample2.jpg'
-                },
-                {
-                    id: 3,
-                    title: '가족 요트 체험',
-                    description: '가족들이 함께 즐기는 요트 체험 시간',
-                    categoryId: 'cruise-experience',
-                    date: '2024-03-13',
-                    url: '/images/sample3.jpg'
-                },
-                {
-                    id: 4,
-                    title: '패들보드 체험',
-                    description: '청정 바다에서 즐기는 패들보드 체험',
-                    categoryId: 'paddleboard',
-                    date: '2024-03-12',
-                    url: '/images/sample4.jpg'
-                }
-            ]
+            photos: [],
+            selectedGallery: null,
+            currentImageIndex: 0,
+            showModal: false
         };
     },
     computed: {
@@ -228,59 +277,50 @@ export default {
             const category = this.categories.find(c => c.id === categoryId);
             return category ? category.name : '';
         },
-        openModal(photo) {
-            // 사진 확대 보기 모달 구현
-            console.log('Open photo modal:', photo);
+        async openModal(gallery) {
+            try {
+                // 갤러리 상세 정보 (사진들 포함) 로드
+                const response = await axios.get(`${API_BASE_URL}/api/photos/${gallery.id}`);
+                this.selectedGallery = response.data;
+                this.currentImageIndex = 0;
+                this.showModal = true;
+            } catch (error) {
+                console.error('Failed to load gallery details:', error);
+                this.toast.error('갤러리를 불러오는데 실패했습니다.', '❌ 로드 실패');
+            }
         },
-        uploadPhoto() {
-            if (this.selectedFiles.length === 0) {
-                this.toast.warning('사진을 선택해주세요.', '📷 사진 선택 필요');
-                return;
+        closeModal() {
+            this.selectedGallery = null;
+            this.currentImageIndex = 0;
+            this.showModal = false;
+        },
+        prevImage() {
+            if (this.currentImageIndex > 0) {
+                this.currentImageIndex--;
             }
-
-            if (!this.newPhoto.title || !this.newPhoto.categoryId) {
-                this.toast.warning('제목과 카테고리를 입력해주세요.', '✏️ 정보 입력 필요');
-                return;
+        },
+        nextImage() {
+            if (this.selectedGallery && this.currentImageIndex < this.selectedGallery.photos.length - 1) {
+                this.currentImageIndex++;
             }
-
-            // 각 선택된 파일에 대해 새 사진 항목 생성
-            this.selectedFiles.forEach((file, index) => {
-                const newPhotoItem = {
-                    id: Math.max(...this.photos.map(p => p.id)) + 1 + index,
-                    title: this.selectedFiles.length > 1 ? `${this.newPhoto.title} ${index + 1}` : this.newPhoto.title,
-                    description: this.newPhoto.description,
-                    categoryId: this.newPhoto.categoryId,
-                    date: new Date().toISOString().split('T')[0],
-                    url: file.preview || '/images/placeholder.jpg'
-                };
-                this.photos.unshift(newPhotoItem);
-            });
-
-            // 카테고리 개수 업데이트
-            this.updateCategoryCounts();
-
-            // 폼 초기화
-            this.showUploadForm = false;
-            this.newPhoto = { title: '', description: '', categoryId: '' };
-            this.selectedFiles = [];
-            this.$refs.photoFileInput.value = '';
-
-            this.toast.celebrate(`${this.selectedFiles.length > 1 ? this.selectedFiles.length + '개의 ' : ''}사진이 업로드되었습니다.`, '📸 사진 업로드 완료');
+        },
+        setCurrentImage(index) {
+            this.currentImageIndex = index;
         },
         handleFileSelection(event) {
             const files = Array.from(event.target.files);
-            
-            if (files.length > 5) {
-                this.toast.warning('최대 5개의 파일만 선택할 수 있습니다.', '📁 파일 수 제한');
+
+            if (files.length > 20) {
+                this.toast.warning('최대 20개의 파일만 선택할 수 있습니다.', '📁 파일 수 제한');
                 return;
             }
 
             this.selectedFiles = [];
 
             files.forEach(file => {
-                // 파일 크기 체크 (10MB)
-                if (file.size > 10 * 1024 * 1024) {
-                    this.toast.error(`${file.name}은(는) 파일 크기가 10MB를 초과합니다.`, '⚠️ 파일 크기 초과');
+                // 파일 크기 체크 (100MB)
+                if (file.size > 100 * 1024 * 1024) {
+                    this.toast.error(`${file.name}은(는) 파일 크기가 100MB를 초과합니다.`, '⚠️ 파일 크기 초과');
                     return;
                 }
 
@@ -306,6 +346,44 @@ export default {
         removeFile(index) {
             this.selectedFiles.splice(index, 1);
         },
+        moveFile(index, direction) {
+            if (direction === 'up' && index > 0) {
+                const temp = this.selectedFiles[index];
+                this.selectedFiles.splice(index, 1);
+                this.selectedFiles.splice(index - 1, 0, temp);
+            } else if (direction === 'down' && index < this.selectedFiles.length - 1) {
+                const temp = this.selectedFiles[index];
+                this.selectedFiles.splice(index, 1);
+                this.selectedFiles.splice(index + 1, 0, temp);
+            }
+        },
+        onDragStart(index, event) {
+            this.draggedIndex = index;
+            event.dataTransfer.effectAllowed = 'move';
+            event.dataTransfer.setData('text/plain', index.toString());
+        },
+        onDragEnter(event) {
+            event.preventDefault();
+        },
+        onDragOver(event) {
+            event.preventDefault();
+            event.dataTransfer.dropEffect = 'move';
+        },
+        onDragLeave(event) {
+            event.preventDefault();
+        },
+        onDrop(targetIndex, event) {
+            event.preventDefault();
+
+            if (this.draggedIndex !== null && this.draggedIndex !== targetIndex) {
+                const draggedFile = this.selectedFiles[this.draggedIndex];
+                this.selectedFiles.splice(this.draggedIndex, 1);
+                this.selectedFiles.splice(targetIndex, 0, draggedFile);
+            }
+        },
+        onDragEnd() {
+            this.draggedIndex = null;
+        },
         formatFileSize(bytes) {
             if (bytes === 0) return '0 Bytes';
             const k = 1024;
@@ -328,7 +406,115 @@ export default {
         },
         goBack() {
             this.$router.push('/community');
+        },
+
+        async loadPhotos() {
+            try {
+                console.log('Loading photos from:', `${API_BASE_URL}/api/photos`);
+                const response = await axios.get(`${API_BASE_URL}/api/photos`);
+                console.log('Photos response:', response.data);
+
+                // API 데이터를 프론트엔드 형식으로 변환
+                this.photos = (response.data || []).map(gallery => ({
+                    id: gallery.id,
+                    title: gallery.title,
+                    description: gallery.description,
+                    categoryId: gallery.category_id,
+                    date: gallery.created_at ? gallery.created_at.split('T')[0] : new Date().toISOString().split('T')[0],
+                    url: gallery.url,
+                    photo_count: gallery.photo_count || 0
+                }));
+                this.updateCategoryCounts();
+                console.log('Photos loaded:', this.photos.length);
+            } catch (error) {
+                console.error('Failed to load photos:', error);
+                // 일단 API 연결 실패 시에도 페이지가 로드되도록 함
+                this.photos = [];
+                this.updateCategoryCounts();
+                // Toast 에러는 API 서버가 꺼져있을 때 너무 방해가 될 수 있으므로 콘솔로만
+                console.warn('API server may not be running. Photos will be empty.');
+            }
+        },
+
+        async uploadPhoto() {
+            if (this.selectedFiles.length === 0) {
+                this.toast.warning('사진을 선택해주세요.', '📷 사진 선택 필요');
+                return;
+            }
+
+            if (!this.newPhoto.title || !this.newPhoto.categoryId) {
+                this.toast.warning('제목과 카테고리를 입력해주세요.', '✏️ 정보 입력 필요');
+                return;
+            }
+
+            try {
+                console.log('Starting photo upload...');
+                console.log('Selected files:', this.selectedFiles);
+                console.log('Form data:', this.newPhoto);
+
+                const formData = new FormData();
+                formData.append('title', this.newPhoto.title);
+                formData.append('description', this.newPhoto.description);
+                formData.append('category_id', this.newPhoto.categoryId);
+
+                this.selectedFiles.forEach(fileWrapper => {
+                    console.log('Adding file:', fileWrapper.name, fileWrapper.size, fileWrapper.file.type);
+                    formData.append('photos', fileWrapper.file);
+                });
+
+                // FormData 내용 확인
+                console.log('FormData entries:');
+                for (let [key, value] of formData.entries()) {
+                    console.log(key, ':', value);
+                }
+
+                const token = localStorage.getItem('token');
+                console.log('Token exists:', !!token);
+                console.log('Upload URL:', `${API_BASE_URL}/api/photos`);
+
+                const response = await axios.post(`${API_BASE_URL}/api/photos`, formData, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                console.log('Upload response:', response.data);
+
+                // 업로드 후 사진 목록 새로고침
+                await this.loadPhotos();
+
+                // 성공 메시지 (초기화 전에)
+                const uploadedCount = this.selectedFiles.length;
+                this.toast.celebrate(`${uploadedCount > 1 ? uploadedCount + '개의 ' : ''}사진이 업로드되었습니다.`, '📸 사진 업로드 완료');
+
+                // 폼 초기화
+                this.showUploadForm = false;
+                this.newPhoto = { title: '', description: '', categoryId: '' };
+                this.selectedFiles = [];
+                this.$refs.photoFileInput.value = '';
+            } catch (error) {
+                console.error('Upload error details:', error);
+                console.error('Error response:', error.response?.data);
+                console.error('Error status:', error.response?.status);
+
+                let errorMessage = '사진 업로드에 실패했습니다.';
+                if (error.response?.status === 401) {
+                    errorMessage = '로그인이 필요합니다.';
+                } else if (error.response?.status === 403) {
+                    errorMessage = '관리자 권한이 필요합니다.';
+                } else if (error.response?.status === 413) {
+                    errorMessage = '파일 크기가 너무 큽니다.';
+                } else if (error.response?.data?.error) {
+                    errorMessage = error.response.data.error;
+                }
+
+                this.toast.error(errorMessage, '❌ 업로드 실패');
+            }
         }
+    },
+
+    mounted() {
+        this.loadPhotos();
     }
 };
 </script>
@@ -485,7 +671,7 @@ export default {
 
 .photo-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
     gap: 25px;
     margin-bottom: 40px;
 }
@@ -506,8 +692,25 @@ export default {
 }
 
 .photo-container {
-    height: 200px;
+    height: 450px;
     overflow: hidden;
+    border-radius: 12px;
+    position: relative;
+    background: #f8f9fa;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.photo-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+}
+
+.photo-card:hover .photo-image {
+    transform: scale(1.05);
 }
 
 .photo-placeholder {
@@ -699,6 +902,7 @@ export default {
     display: flex;
     flex-direction: column;
     gap: 10px;
+    position: relative;
 }
 
 .file-item {
@@ -709,6 +913,51 @@ export default {
     background: white;
     border-radius: 8px;
     border: 1px solid #e0e0e0;
+    transition: all 0.2s ease;
+    cursor: grab;
+}
+
+.file-item:hover {
+    border-color: #2c5aa0;
+    box-shadow: 0 2px 8px rgba(44, 90, 160, 0.1);
+}
+
+.file-item.dragging {
+    opacity: 0.6;
+    cursor: grabbing;
+}
+
+.drag-handle {
+    color: #999;
+    font-size: 1.2rem;
+    cursor: grab;
+    padding: 5px;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+    user-select: none;
+}
+
+.drag-handle:hover {
+    background: #f0f0f0;
+    color: #2c5aa0;
+}
+
+.file-item.dragging .drag-handle {
+    cursor: grabbing;
+}
+
+.file-order {
+    background: #2c5aa0;
+    color: white;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.8rem;
+    font-weight: bold;
+    flex-shrink: 0;
 }
 
 .file-preview {
@@ -754,6 +1003,38 @@ export default {
     font-size: 0.9rem;
 }
 
+.file-controls {
+    display: flex;
+    gap: 5px;
+    align-items: center;
+}
+
+.move-btn {
+    background: #f8f9fa;
+    color: #2c5aa0;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    width: 24px;
+    height: 24px;
+    cursor: pointer;
+    font-size: 0.8rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+}
+
+.move-btn:hover:not(:disabled) {
+    background: #2c5aa0;
+    color: white;
+    border-color: #2c5aa0;
+}
+
+.move-btn:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+}
+
 .remove-file {
     background: #dc3545;
     color: white;
@@ -767,6 +1048,7 @@ export default {
     display: flex;
     align-items: center;
     justify-content: center;
+    transition: all 0.3s;
 }
 
 .remove-file:hover {
@@ -795,6 +1077,249 @@ export default {
     border-color: #2c5aa0;
 }
 
+/* 모달 스타일 */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: 10px;
+}
+
+.modal-content {
+    position: relative;
+    background: white;
+    border-radius: 15px;
+    width: 60vw;
+    height: 95vh;
+    overflow: hidden;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    display: flex;
+    flex-direction: column;
+}
+
+.modal-close {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    background: rgba(0, 0, 0, 0.5);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    font-size: 24px;
+    cursor: pointer;
+    z-index: 1001;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.3s;
+}
+
+.modal-close:hover {
+    background: rgba(0, 0, 0, 0.7);
+}
+
+.modal-image-container {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 0;
+    padding: 10px;
+    background: #f8f9fa;
+}
+
+.modal-image {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    border-radius: 8px;
+}
+
+.modal-info {
+    padding: 20px;
+    flex-shrink: 0;
+    border-top: 1px solid #f0f0f0;
+    background: white;
+    height: auto;
+    min-height: 120px;
+}
+
+.modal-info h3 {
+    color: #2c5aa0;
+    margin-bottom: 10px;
+    font-size: 1.5rem;
+}
+
+.modal-info p {
+    color: #666;
+    line-height: 1.6;
+    margin-bottom: 15px;
+}
+
+.modal-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.9rem;
+    color: #999;
+}
+
+.modal-category {
+    background: #f0f0f0;
+    padding: 5px 12px;
+    border-radius: 15px;
+    color: #666;
+}
+
+.modal-count {
+    background: #2c5aa0;
+    color: white;
+    padding: 5px 12px;
+    border-radius: 15px;
+    font-size: 0.8rem;
+}
+
+/* 갤러리 카운트 배지 */
+.photo-count-badge {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: rgba(44, 90, 160, 0.9);
+    color: white;
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    z-index: 2;
+}
+
+/* 갤러리 슬라이더 스타일 */
+.gallery-slider {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.slider-btn {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background: rgba(0, 0, 0, 0.6);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    font-size: 24px;
+    cursor: pointer;
+    z-index: 10;
+    transition: all 0.3s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.slider-btn:hover:not(:disabled) {
+    background: rgba(0, 0, 0, 0.8);
+    transform: translateY(-50%) scale(1.1);
+}
+
+.slider-btn:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+}
+
+.prev-btn {
+    left: 20px;
+}
+
+.next-btn {
+    right: 20px;
+}
+
+.image-counter {
+    position: absolute;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0, 0, 0, 0.7);
+    color: white;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+/* 썸네일 스타일 */
+.modal-thumbnails {
+    flex-shrink: 0;
+    padding: 20px;
+    border-top: 1px solid #f0f0f0;
+    background: white;
+    max-height: 120px;
+    overflow-y: auto;
+}
+
+.thumbnails-container {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.thumbnail {
+    width: 80px;
+    height: 60px;
+    border-radius: 8px;
+    overflow: hidden;
+    cursor: pointer;
+    border: 2px solid transparent;
+    transition: all 0.3s;
+}
+
+.thumbnail:hover {
+    border-color: #2c5aa0;
+    transform: scale(1.05);
+}
+
+.thumbnail.active {
+    border-color: #2c5aa0;
+    box-shadow: 0 0 10px rgba(44, 90, 160, 0.3);
+}
+
+.thumbnail img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* 이미지 없음 상태 */
+.no-images {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    color: #999;
+}
+
+.no-images-icon {
+    font-size: 4rem;
+    margin-bottom: 20px;
+}
+
 @media (max-width: 768px) {
     .hero-title {
         font-size: 2rem;
@@ -811,12 +1336,34 @@ export default {
         gap: 20px;
     }
 
+    .photo-container {
+        height: 380px;
+    }
+
     .admin-buttons {
         flex-direction: column;
     }
 
     .form-actions {
         flex-direction: column;
+    }
+
+    .modal-content {
+        width: 80vw;
+        height: 98vh;
+    }
+
+    .modal-image-container {
+        padding: 5px;
+    }
+
+    .modal-info {
+        padding: 15px;
+        min-height: 100px;
+    }
+
+    .modal-info h3 {
+        font-size: 1.3rem;
     }
 }
 </style>

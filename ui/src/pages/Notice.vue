@@ -19,22 +19,20 @@
                     </p>
                 </div>
 
-                <div class="notice-categories">
-                    <div class="categories-grid">
-                        <div class="category-card" v-for="category in categories" :key="category.id" @click="goToCategory(category.path)">
-                            <div class="category-icon">{{ category.icon }}</div>
-                            <h3>{{ category.title }}</h3>
-                            <p>{{ category.description }}</p>
-                            <div class="category-info">
-                                <span class="post-count">{{ category.count }}개 게시물</span>
-                                <span class="latest-date" v-if="category.latestDate">최근 {{ category.latestDate }}</span>
-                            </div>
-                        </div>
+                <div class="notice-filter">
+                    <div class="filter-buttons">
+                        <button
+                            v-for="category in filterCategories"
+                            :key="category.id"
+                            @click="setCurrentCategory(category.id)"
+                            :class="['filter-btn', { active: currentCategory === category.id }]">
+                            {{ category.icon }} {{ category.title }}
+                        </button>
                     </div>
                 </div>
 
-                <div class="recent-notices">
-                    <h2>최근 공지사항</h2>
+                <div class="notices-list">
+                    <h2>공지사항</h2>
                     <div class="notices-table">
                         <div class="table-header">
                             <div class="col-category">분류</div>
@@ -42,7 +40,10 @@
                             <div class="col-date">작성일</div>
                             <div class="col-views">조회</div>
                         </div>
-                        <div v-for="notice in recentNotices" :key="notice.id" class="table-row" @click="viewNotice(notice)">
+                        <div v-if="filteredNotices.length === 0" class="no-notices">
+                            <p>등록된 공지사항이 없습니다.</p>
+                        </div>
+                        <div v-for="notice in filteredNotices" :key="notice.id" class="table-row" @click="viewNotice(notice)">
                             <div class="col-category">
                                 <span class="category-badge" :class="notice.categoryClass">{{ notice.category }}</span>
                             </div>
@@ -73,75 +74,15 @@
                 <div class="admin-section" v-if="isAdmin">
                     <h2>관리자 기능</h2>
                     <div class="admin-buttons">
-                        <button class="admin-btn write-btn" @click="showWriteForm = true">
-                            ✏️ 공지사항 작성
-                        </button>
                         <button class="admin-btn manage-btn" @click="manageNotices">
                             🗂️ 공지사항 관리
                         </button>
                     </div>
+                    <p style="margin-top: 15px; color: #666; font-size: 0.9rem;">
+                        💡 공지사항 작성은 각 카테고리 페이지에서 진행할 수 있습니다.
+                    </p>
                 </div>
 
-                <!-- 공지사항 작성 폼 (관리자 전용) -->
-                <div v-if="showWriteForm && isAdmin" class="write-form">
-                    <div class="form-header">
-                        <h3>공지사항 작성</h3>
-                        <button class="close-btn" @click="showWriteForm = false">✕</button>
-                    </div>
-                    <form @submit.prevent="submitNotice">
-                        <div class="form-group">
-                            <label>분류</label>
-                            <select v-model="newNotice.categoryId" required>
-                                <option value="">분류 선택</option>
-                                <option v-for="category in categories" 
-                                        :key="category.id" :value="category.id">
-                                    {{ category.title }}
-                                </option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label>제목</label>
-                            <input v-model="newNotice.title" type="text" required />
-                        </div>
-                        <div class="form-group">
-                            <label>내용</label>
-                            <textarea v-model="newNotice.content" rows="10" required></textarea>
-                        </div>
-                        <div class="form-group">
-                            <label>이미지 첨부</label>
-                            <input type="file" accept="image/*" multiple @change="handleImageSelection" ref="imageFileInput" />
-                            <small>지원 형식: JPG, PNG, GIF (최대 5MB, 최대 3개 파일)</small>
-                        </div>
-                        <div v-if="selectedImages.length > 0" class="selected-images">
-                            <h4>선택된 이미지:</h4>
-                            <div class="image-list">
-                                <div v-for="(image, index) in selectedImages" :key="index" class="image-item">
-                                    <div class="image-preview">
-                                        <img :src="image.preview" :alt="image.name" />
-                                    </div>
-                                    <div class="image-info">
-                                        <span class="image-name">{{ image.name }}</span>
-                                        <span class="image-size">{{ formatFileSize(image.size) }}</span>
-                                    </div>
-                                    <button type="button" @click="removeImage(index)" class="remove-image">✕</button>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label class="checkbox-label">
-                                <input type="checkbox" v-model="newNotice.important" />
-                                <span class="checkmark"></span>
-                                중요 공지사항
-                            </label>
-                        </div>
-                        <div class="form-actions">
-                            <button type="button" class="cancel-btn" @click="showWriteForm = false">
-                                취소
-                            </button>
-                            <button type="submit" class="submit-btn">등록</button>
-                        </div>
-                    </form>
-                </div>
             </div>
         </section>
     </div>
@@ -149,7 +90,8 @@
 
 <script>
 import authStore from '../stores/auth.js'
-
+import { API_BASE_URL } from '../config/env.js'
+import axios from 'axios'
 import { useToast } from '../components/Toast.vue'
 
 export default {
@@ -161,22 +103,15 @@ export default {
     data() {
         return {
             authStore,
-            showWriteForm: false,
-            newNotice: {
-                title: '',
-                content: '',
-                categoryId: '',
-                important: false
-            },
-            selectedImages: [],
+            currentCategory: 'all',
             categories: [
                 {
                     id: 'exemption',
                     title: '면제교육',
                     description: '요트면허 면제교육 관련 공지사항',
                     icon: '📋',
-                    count: 8,
-                    latestDate: '2024-03-15',
+                    count: 0,
+                    latestDate: null,
                     path: '/notice/exemption'
                 },
                 {
@@ -184,8 +119,8 @@ export default {
                     title: '크루즈요트',
                     description: '크루즈요트 교육 및 체험 관련 공지',
                     icon: '⛵',
-                    count: 12,
-                    latestDate: '2024-03-14',
+                    count: 0,
+                    latestDate: null,
                     path: '/notice/cruise'
                 },
                 {
@@ -193,8 +128,8 @@ export default {
                     title: '딩기요트',
                     description: '딩기요트 교육 및 체험 관련 공지',
                     icon: '🚤',
-                    count: 6,
-                    latestDate: '2024-03-13',
+                    count: 0,
+                    latestDate: null,
                     path: '/notice/dinghy'
                 },
                 {
@@ -202,8 +137,8 @@ export default {
                     title: '채용',
                     description: '직원 채용 및 모집 공고',
                     icon: '👥',
-                    count: 3,
-                    latestDate: '2024-03-10',
+                    count: 0,
+                    latestDate: null,
                     path: '/notice/recruitment'
                 },
                 {
@@ -211,158 +146,87 @@ export default {
                     title: '기타',
                     description: '기타 일반 공지사항',
                     icon: '📢',
-                    count: 15,
-                    latestDate: '2024-03-16',
+                    count: 0,
+                    latestDate: null,
                     path: '/notice/others'
                 }
             ],
-            recentNotices: [
-                {
-                    id: 1,
-                    title: '2024년 상반기 요트면허 면제교육 일정 안내',
-                    content: '2024년 상반기 요트면허 면제교육 일정을 안내드립니다...',
-                    category: '면제교육',
-                    categoryClass: 'exemption',
-                    date: '2024-03-16',
-                    views: 156,
-                    important: true,
-                    images: []
-                },
-                {
-                    id: 2,
-                    title: '크루즈요트 체험 프로그램 요금 변경 안내',
-                    content: '2024년 4월부터 크루즈요트 체험 프로그램 요금이 조정됩니다...',
-                    category: '크루즈요트',
-                    categoryClass: 'cruise',
-                    date: '2024-03-15',
-                    views: 89,
-                    important: false
-                },
-                {
-                    id: 3,
-                    title: '딩기요트 교육 안전수칙 업데이트',
-                    content: '딩기요트 교육 시 준수해야 할 안전수칙이 업데이트되었습니다...',
-                    category: '딩기요트',
-                    categoryClass: 'dinghy',
-                    date: '2024-03-14',
-                    views: 67,
-                    important: false
-                },
-                {
-                    id: 4,
-                    title: '통영요트학교 강사 채용 공고',
-                    content: '통영요트학교에서 요트 교육 강사를 모집합니다...',
-                    category: '채용',
-                    categoryClass: 'recruitment',
-                    date: '2024-03-13',
-                    views: 234,
-                    important: true
-                },
-                {
-                    id: 5,
-                    title: '봄철 요트 체험 프로그램 운영 안내',
-                    content: '봄철을 맞이하여 특별 요트 체험 프로그램을 운영합니다...',
-                    category: '기타',
-                    categoryClass: 'others',
-                    date: '2024-03-12',
-                    views: 123,
-                    important: false
-                }
-            ]
+            allNotices: []
         };
     },
     computed: {
         isAdmin() {
             return this.authStore.state.isAuthenticated && this.authStore.state.user?.role === 'admin';
+        },
+        filterCategories() {
+            return [
+                { id: 'all', title: '전체', icon: '📋' },
+                ...this.categories
+            ];
+        },
+        filteredNotices() {
+            if (this.currentCategory === 'all') {
+                return this.allNotices;
+            }
+            return this.allNotices.filter(notice => notice.category_id === this.currentCategory);
         }
     },
+    async mounted() {
+        await this.loadData();
+    },
     methods: {
-        goToCategory(path) {
-            this.$router.push(path);
-        },
+        setCurrentCategory(categoryId) {
+      console.log('🔵 카테고리 클릭됨:', categoryId);
+      if (categoryId === 'all') {
+          this.currentCategory = categoryId;
+      } else {
+          const category = this.categories.find(c => c.id === categoryId);
+          console.log('🔍 찾은 카테고리:', category);
+          if (category && category.path) {
+              console.log('✅ 이동할 경로:', category.path);
+              this.$router.push(category.path);
+          } else {
+              console.log('❌ 카테고리 또는 경로 없음');
+          }
+      }
+  },
         viewNotice(notice) {
-            // 공지사항 상세보기 (추후 구현)
+            // 카테고리별 개별 페이지로 직접 이동
+            this.$router.push(`/notice/${notice.category_id}/${notice.id}`);
         },
-        submitNotice() {
-            if (!this.newNotice.title || !this.newNotice.content || !this.newNotice.categoryId) {
-                this.toast.warning('모든 필수 항목을 입력해주세요.', '✏️ 입력 확인');
-                return;
+        async loadData() {
+            try {
+                // 공지사항 목록 로드 (모든 공지사항)
+                const noticesRes = await axios.get(`${API_BASE_URL}/api/notices`, {
+                    params: { limit: 50 }
+                });
+                this.allNotices = noticesRes.data.map(notice => ({
+                    ...notice,
+                    category: this.getCategoryTitle(notice.category_id),
+                    categoryClass: notice.category_id,
+                    date: notice.created_at.split('T')[0]
+                }));
+
+                // 카테고리별 통계 로드
+                const statsRes = await axios.get(`${API_BASE_URL}/api/notices/stats/categories`);
+                this.updateCategoryStats(statsRes.data);
+            } catch (error) {
+                console.error('데이터 로드 중 오류:', error);
+                this.toast.error('공지사항을 불러오는데 실패했습니다.', '⚠️ 로드 오류');
             }
-
-            const category = this.categories.find(c => c.id === this.newNotice.categoryId);
-            const newNoticeItem = {
-                id: Math.max(...this.recentNotices.map(n => n.id)) + 1,
-                title: this.newNotice.title,
-                content: this.newNotice.content,
-                category: category.title,
-                categoryClass: this.newNotice.categoryId,
-                date: new Date().toISOString().split('T')[0],
-                views: 0,
-                important: this.newNotice.important,
-                images: this.selectedImages.map(img => img.preview)
-            };
-
-            this.recentNotices.unshift(newNoticeItem);
-            
-            // 카테고리 개수 업데이트
-            category.count++;
-            category.latestDate = newNoticeItem.date;
-
-            // 폼 초기화
-            this.showWriteForm = false;
-            this.newNotice = { title: '', content: '', categoryId: '', important: false };
-            this.selectedImages = [];
-            if (this.$refs.imageFileInput) {
-                this.$refs.imageFileInput.value = '';
-            }
-
-            this.toast.celebrate('공지사항이 등록되었습니다.', '📢 공지 등록 완료');
         },
-        handleImageSelection(event) {
-            const files = Array.from(event.target.files);
-            
-            if (files.length > 3) {
-                this.toast.warning('최대 3개의 이미지만 선택할 수 있습니다.', '🖼️ 이미지 제한');
-                return;
-            }
-
-            this.selectedImages = [];
-
-            files.forEach(file => {
-                // 파일 크기 체크 (5MB)
-                if (file.size > 5 * 1024 * 1024) {
-                    this.toast.error(`${file.name}은(는) 파일 크기가 5MB를 초과합니다.`, '⚠️ 파일 크기 초과');
-                    return;
+        getCategoryTitle(categoryId) {
+            const category = this.categories.find(c => c.id === categoryId);
+            return category ? category.title : '기타';
+        },
+        updateCategoryStats(stats) {
+            this.categories.forEach(category => {
+                const stat = stats.find(s => s.category_id === category.id);
+                if (stat) {
+                    category.count = stat.count;
+                    category.latestDate = stat.latest_date ? stat.latest_date.split('T')[0] : null;
                 }
-
-                // 이미지 파일 타입 체크
-                if (!file.type.startsWith('image/')) {
-                    this.toast.error(`${file.name}은(는) 이미지 파일이 아닙니다.`, '⚠️ 파일 형식 오류');
-                    return;
-                }
-
-                // 미리보기 생성
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    this.selectedImages.push({
-                        file: file,
-                        name: file.name,
-                        size: file.size,
-                        preview: e.target.result
-                    });
-                };
-                reader.readAsDataURL(file);
             });
-        },
-        removeImage(index) {
-            this.selectedImages.splice(index, 1);
-        },
-        formatFileSize(bytes) {
-            if (bytes === 0) return '0 Bytes';
-            const k = 1024;
-            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-            const i = Math.floor(Math.log(bytes) / Math.log(k));
-            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
         },
         manageNotices() {
             this.$router.push('/admin');
@@ -492,61 +356,44 @@ export default {
     margin: 0 auto;
 }
 
-.categories-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 30px;
+.notice-filter {
+    margin-bottom: 40px;
 }
 
-.category-card {
-    background: white;
-    border: 2px solid #f0f0f0;
-    border-radius: 20px;
-    padding: 30px;
-    text-align: center;
-    transition: all 0.3s;
-    cursor: pointer;
-}
-
-.category-card:hover {
-    border-color: #2c5aa0;
-    transform: translateY(-5px);
-    box-shadow: 0 15px 40px rgba(44, 90, 160, 0.1);
-}
-
-.category-icon {
-    font-size: 4rem;
-    margin-bottom: 20px;
-}
-
-.category-card h3 {
-    color: #2c5aa0;
-    font-size: 1.5rem;
-    margin-bottom: 15px;
-}
-
-.category-card p {
-    color: #666;
-    line-height: 1.6;
-    margin-bottom: 20px;
-}
-
-.category-info {
+.filter-buttons {
     display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding-top: 15px;
-    border-top: 1px solid #f0f0f0;
-    font-size: 0.9rem;
+    gap: 10px;
+    flex-wrap: wrap;
+    justify-content: center;
 }
 
-.post-count {
+.filter-btn {
+    padding: 10px 20px;
+    border: 2px solid #e0e0e0;
+    background: white;
+    color: #666;
+    border-radius: 25px;
+    cursor: pointer;
+    transition: all 0.3s;
+    font-weight: 500;
+}
+
+.filter-btn:hover {
+    border-color: #2c5aa0;
     color: #2c5aa0;
-    font-weight: 600;
 }
 
-.latest-date {
-    color: #999;
+.filter-btn.active {
+    background: #2c5aa0;
+    border-color: #2c5aa0;
+    color: white;
+}
+
+.no-notices {
+    text-align: center;
+    padding: 40px;
+    color: #666;
+    font-size: 1.1rem;
 }
 
 .notices-table {
@@ -689,172 +536,6 @@ export default {
     transform: translateY(-2px);
 }
 
-.write-form {
-    background: white;
-    border: 2px solid #2c5aa0;
-    border-radius: 15px;
-    padding: 30px;
-}
-
-.form-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 25px;
-}
-
-.form-header h3 {
-    color: #2c5aa0;
-    margin: 0;
-}
-
-.close-btn {
-    background: none;
-    border: none;
-    font-size: 1.5rem;
-    cursor: pointer;
-    color: #999;
-}
-
-.form-group {
-    margin-bottom: 20px;
-}
-
-.form-group label {
-    display: block;
-    margin-bottom: 8px;
-    font-weight: 600;
-    color: #333;
-}
-
-.form-group input,
-.form-group textarea,
-.form-group select {
-    width: 100%;
-    padding: 12px;
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    font-size: 1rem;
-    font-family: inherit;
-}
-
-.checkbox-label {
-    display: flex;
-    align-items: center;
-    cursor: pointer;
-    font-weight: 500 !important;
-}
-
-.checkbox-label input[type="checkbox"] {
-    width: auto;
-    margin-right: 10px;
-}
-
-.form-actions {
-    display: flex;
-    justify-content: flex-end;
-    gap: 15px;
-    margin-top: 30px;
-}
-
-.cancel-btn {
-    padding: 12px 24px;
-    border: 2px solid #ddd;
-    background: white;
-    color: #666;
-    border-radius: 25px;
-    cursor: pointer;
-}
-
-.submit-btn {
-    padding: 12px 24px;
-    background: #28a745;
-    color: white;
-    border: none;
-    border-radius: 25px;
-    cursor: pointer;
-    font-weight: 600;
-}
-
-.selected-images {
-    margin-top: 20px;
-    padding: 20px;
-    background: #f8f9fa;
-    border-radius: 8px;
-}
-
-.selected-images h4 {
-    color: #2c5aa0;
-    margin-bottom: 15px;
-    font-size: 1rem;
-}
-
-.image-list {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-}
-
-.image-item {
-    display: flex;
-    align-items: center;
-    gap: 15px;
-    padding: 10px;
-    background: white;
-    border-radius: 8px;
-    border: 1px solid #e0e0e0;
-}
-
-.image-preview {
-    width: 80px;
-    height: 80px;
-    border-radius: 8px;
-    overflow: hidden;
-    flex-shrink: 0;
-}
-
-.image-preview img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-}
-
-.image-info {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    gap: 5px;
-}
-
-.image-name {
-    font-weight: 500;
-    color: #333;
-    word-break: break-all;
-}
-
-.image-size {
-    color: #666;
-    font-size: 0.9rem;
-}
-
-.remove-image {
-    background: #dc3545;
-    color: white;
-    border: none;
-    border-radius: 50%;
-    width: 24px;
-    height: 24px;
-    cursor: pointer;
-    font-size: 0.8rem;
-    flex-shrink: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.remove-image:hover {
-    background: #c82333;
-}
 
 /* 사용자 안내 섹션 */
 .user-info-section {
@@ -899,9 +580,14 @@ export default {
         font-size: 1rem;
     }
 
-    .categories-grid {
-        grid-template-columns: 1fr;
-        gap: 20px;
+    .filter-buttons {
+        justify-content: flex-start;
+        gap: 8px;
+    }
+
+    .filter-btn {
+        padding: 8px 16px;
+        font-size: 0.9rem;
     }
 
     .table-header,
@@ -909,11 +595,6 @@ export default {
         grid-template-columns: 80px 1fr 80px 60px;
         font-size: 0.8rem;
         padding: 10px;
-    }
-
-    .category-info {
-        flex-direction: column;
-        gap: 8px;
     }
 
     .admin-buttons {

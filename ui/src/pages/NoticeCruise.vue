@@ -39,7 +39,7 @@
                         <button @click="searchNotices" class="search-btn">검색</button>
                     </div>
                     <div class="admin-controls" v-if="isAdmin">
-                        <button @click="openWriteForm" class="write-btn">✏️ 글쓰기</button>
+                        <button @click="createNewPage" class="write-btn">✏️ 글쓰기</button>
                     </div>
                 </div>
 
@@ -51,12 +51,14 @@
                         <div class="col-views">조회</div>
                     </div>
 
-                    <div v-for="notice in filteredNotices" :key="notice.id" class="table-row" @click="viewNotice(notice)">
+                    <div v-for="notice in paginatedNotices" :key="notice.id" class="table-row">
                         <div class="col-number">{{ notice.id }}</div>
                         <div class="col-title">
-                            <span class="title-text">{{ notice.title }}</span>
-                            <span v-if="isNewNotice(notice.date)" class="new-badge">NEW</span>
-                            <span v-if="notice.important" class="important-badge">중요</span>
+                            <router-link :to="`/notice/cruise/${notice.id}`" class="title-link">
+                                <span class="title-text">{{ notice.title }}</span>
+                                <span v-if="isNewNotice(notice.date)" class="new-badge">NEW</span>
+                                <span v-if="notice.important" class="important-badge">중요</span>
+                            </router-link>
                         </div>
                         <div class="col-date">{{ formatDate(notice.date) }}</div>
                         <div class="col-views">{{ notice.views }}</div>
@@ -119,6 +121,29 @@
                         </div>
                     </form>
                 </div>
+
+                <!-- 공지사항 상세보기 -->
+                <div v-if="selectedNotice" class="notice-detail">
+                    <div class="detail-header">
+                        <h3>{{ selectedNotice.title }}</h3>
+                        <button class="close-btn" @click="selectedNotice = null">✕</button>
+                    </div>
+                    <div class="detail-meta">
+                        <span>작성일: {{ formatDate(selectedNotice.date) }}</span>
+                        <span>조회수: {{ selectedNotice.views }}</span>
+                        <span v-if="selectedNotice.important" class="important-badge">중요</span>
+                    </div>
+                    <div class="detail-content">
+                        <div class="content-text">{{ selectedNotice.content }}</div>
+                        <div v-if="selectedNotice.images && selectedNotice.images.length > 0" class="content-images">
+                            <div class="images-gallery">
+                                <div v-for="image in selectedNotice.images" :key="image.id" class="image-item">
+                                    <img :src="`${API_BASE_URL}${image.url}`" :alt="image.original_name" @click="openImageModal(image)" />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </section>
 
@@ -126,13 +151,26 @@
         <div class="back-button">
             <button @click="goBack" class="back-btn">← 공지사항으로 돌아가기</button>
         </div>
+
+        <!-- 이미지 모달 -->
+        <div v-if="imageModal.show" class="image-modal" @click="closeImageModal">
+            <div class="modal-content" @click.stop>
+                <button class="modal-close" @click="closeImageModal">✕</button>
+                <img :src="`${API_BASE_URL}${imageModal.image.url}`"
+                     :alt="imageModal.image.original_name" />
+                <div class="modal-info">
+                    <p>{{ imageModal.image.original_name }}</p>
+                </div>
+            </div>
+        </div>
     </div>
 </template>
 
 <script>
-import noticeStore from '../services/noticeStore.js';
 import authStore from '../stores/auth.js';
 import { useToast } from '../components/Toast.vue';
+import { API_BASE_URL } from '../config/env.js';
+import axios from 'axios';
 
 export default {
     name: 'NoticeCruise',
@@ -148,30 +186,18 @@ export default {
             searchKeyword: '',
             newNotice: { title: '', content: '', images: [] },
             selectedImages: [],
-            notices: [
-                {
-                    id: 12,
-                    title: '크루즈요트 체험 프로그램 요금 변경 안내',
-                    content: '2024년 4월부터 크루즈요트 체험 프로그램 요금이 조정됩니다.',
-                    date: '2024-03-15',
-                    views: 89,
-                    important: true
-                },
-                {
-                    id: 11,
-                    title: '크루즈요트 교육 과정 추가 개설',
-                    content: '수요 증가에 따라 크루즈요트 교육 과정을 추가로 개설합니다.',
-                    date: '2024-03-12',
-                    views: 156,
-                    important: false
-                }
-            ]
+            selectedNotice: null,
+            imageModal: {
+                show: false,
+                image: null
+            },
+            notices: [],
+            API_BASE_URL
         };
     },
     
-    mounted() {
-        // 기존 데이터를 noticeStore에 로드
-        noticeStore.loadCategoryNotices('cruise', this.notices);
+    async mounted() {
+        await this.loadNotices();
     },
     computed: {
         isAdmin() {
@@ -179,7 +205,7 @@ export default {
         },
         filteredNotices() {
             if (!this.searchKeyword) return this.notices;
-            
+
             return this.notices.filter(notice => {
                 switch (this.searchType) {
                     case 'title':
@@ -187,21 +213,70 @@ export default {
                     case 'content':
                         return notice.content.includes(this.searchKeyword);
                     case 'all':
-                        return notice.title.includes(this.searchKeyword) || 
+                        return notice.title.includes(this.searchKeyword) ||
                                notice.content.includes(this.searchKeyword);
                     default:
                         return true;
                 }
             });
+        },
+        paginatedNotices() {
+            return this.filteredNotices;
         }
     },
     methods: {
-        viewNotice(notice) { notice.views++; },
+        viewNotice(notice) {
+            notice.views++;
+            this.selectedNotice = notice;
+        },
         openWriteForm() {
             this.showWriteForm = true;
         },
         searchNotices() {
             // 필터링은 computed에서 자동으로 처리됨
+        },
+        async loadNotices() {
+            try {
+                const response = await axios.get(`${API_BASE_URL}/api/notices`, {
+                    params: {
+                        category: 'cruise',
+                        limit: 100
+                    }
+                });
+                this.notices = response.data.map(notice => ({
+                    ...notice,
+                    date: notice.created_at.split('T')[0]
+                }));
+            } catch (error) {
+                console.error('크루즈요트 공지사항 로드 실패:', error);
+                this.toast.error('공지사항을 불러오는데 실패했습니다.', '⚠️ 로드 오류');
+            }
+        },
+        async createNewPage() {
+            try {
+                const response = await axios.post(`${API_BASE_URL}/api/notices/draft`, {
+                    category_id: 'cruise',
+                    title: '새 공지사항',
+                    content: '내용을 입력하세요...'
+                }, {
+                    headers: {
+                        'Authorization': `Bearer ${this.authStore.state.token}`
+                    }
+                });
+
+                const newPostId = response.data.id;
+                this.$router.push(`/notice/cruise/edit/${newPostId}`);
+            } catch (error) {
+                console.error('새 페이지 생성 실패:', error);
+                if (error.response?.status === 401) {
+                    this.toast.urgent('로그인이 필요합니다.', '🔐 로그인 필요');
+                    this.$router.push('/login');
+                } else if (error.response?.status === 403) {
+                    this.toast.urgent('관리자만 글을 작성할 수 있습니다.', '⚠️ 권한 없음');
+                } else {
+                    this.toast.error('새 페이지 생성에 실패했습니다.', '❌ 생성 실패');
+                }
+            }
         },
         handleImageSelection(event) {
             const files = Array.from(event.target.files);
@@ -249,49 +324,53 @@ export default {
             return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
         },
         
-        submitNotice() {
-            // 권한 체크 - 관리자만 공지사항 작성 가능
-            if (!this.authStore.state.isAuthenticated) {
-                this.toast.urgent('로그인이 필요합니다.', '🔐 로그인 필요');
-                this.$router.push('/login');
-                return;
-            }
-            
-            if (!this.isAdmin) {
-                this.toast.urgent('관리자만 공지사항을 작성할 수 있습니다.', '⚠️ 권한 없음');
-                return;
-            }
-
+        async submitNotice() {
             if (!this.newNotice.title || !this.newNotice.content) {
                 this.toast.warning('제목과 내용을 모두 입력해주세요.', '✏️ 입력 확인');
                 return;
             }
-            
-            const noticeData = {
-                id: Math.max(...this.notices.map(n => n.id)) + 1,
-                title: this.newNotice.title,
-                content: this.newNotice.content,
-                date: new Date().toISOString().split('T')[0],
-                views: 0,
-                important: false,
-                images: this.selectedImages.map(img => ({
-                    name: img.name,
-                    size: img.size,
-                    preview: img.preview
-                }))
-            };
-            
-            this.notices.unshift(noticeData);
-            
-            // noticeStore에 새 공지사항 추가
-            noticeStore.addNotice(noticeData, 'cruise');
-            
-            this.showWriteForm = false;
-            this.newNotice = { title: '', content: '', images: [] };
-            this.selectedImages = [];
-            
-            if (this.$refs.imageInput) {
-                this.$refs.imageInput.value = '';
+
+            try {
+                const formData = new FormData();
+                formData.append('title', this.newNotice.title);
+                formData.append('content', this.newNotice.content);
+                formData.append('category_id', 'cruise');
+                formData.append('important', 'false');
+
+                // 이미지 파일 추가
+                this.selectedImages.forEach(image => {
+                    formData.append('images', image.file);
+                });
+
+                const response = await axios.post(`${API_BASE_URL}/api/notices`, formData, {
+                    headers: {
+                        'Content-Type': 'multipart/form-data',
+                        'Authorization': `Bearer ${this.authStore.state.token}`
+                    }
+                });
+
+                // 폼 초기화
+                this.showWriteForm = false;
+                this.newNotice = { title: '', content: '', images: [] };
+                this.selectedImages = [];
+                if (this.$refs.imageInput) {
+                    this.$refs.imageInput.value = '';
+                }
+
+                // 데이터 새로고침
+                await this.loadNotices();
+
+                this.toast.success('공지사항이 등록되었습니다.', '등록 완료');
+            } catch (error) {
+                console.error('공지사항 등록 실패:', error);
+                if (error.response?.status === 401) {
+                    this.toast.urgent('로그인이 필요합니다.', '🔐 로그인 필요');
+                    this.$router.push('/login');
+                } else if (error.response?.status === 403) {
+                    this.toast.urgent('관리자만 공지사항을 작성할 수 있습니다.', '⚠️ 권한 없음');
+                } else {
+                    this.toast.error('공지사항 등록에 실패했습니다.', '❌ 등록 실패');
+                }
             }
         },
         formatDate(dateString) {
@@ -303,7 +382,15 @@ export default {
         isNewNotice(dateString) {
             return Math.floor((new Date() - new Date(dateString)) / (1000 * 60 * 60 * 24)) <= 3;
         },
-        goBack() { this.$router.push('/notice'); }
+        goBack() { this.$router.push('/notice'); },
+        openImageModal(image) {
+            this.imageModal.show = true;
+            this.imageModal.image = image;
+        },
+        closeImageModal() {
+            this.imageModal.show = false;
+            this.imageModal.image = null;
+        }
     }
 };
 </script>
@@ -381,8 +468,32 @@ export default {
 .total-count { color: #007bff; font-weight: 600; }
 .notices-table { background: white; border: 1px solid #f0f0f0; border-radius: 8px; overflow: hidden; margin-bottom: 30px; }
 .table-header { display: grid; grid-template-columns: 80px 1fr 120px 80px; background: #f8f9fa; padding: 15px; font-weight: 600; }
-.table-row { display: grid; grid-template-columns: 80px 1fr 120px 80px; padding: 15px; border-bottom: 1px solid #f9f9f9; cursor: pointer; }
+.table-row { display: grid; grid-template-columns: 80px 1fr 120px 80px; padding: 15px; border-bottom: 1px solid #f9f9f9; transition: background 0.3s; }
 .table-row:hover { background: #f8f9fa; }
+
+.col-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.title-link {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    text-decoration: none;
+    color: inherit;
+    width: 100%;
+}
+
+.title-link:hover {
+    color: #007bff;
+}
+
+.title-text {
+    color: #333;
+    flex: 1;
+}
 .new-badge { background: #dc3545; color: white; font-size: 0.7rem; padding: 2px 6px; border-radius: 10px; }
 .important-badge { background: #ffc107; color: #333; font-size: 0.7rem; padding: 2px 6px; border-radius: 10px; }
 .admin-controls { text-align: center; margin: 20px 0; }
@@ -622,5 +733,224 @@ export default {
         flex-direction: column;
         gap: 10px;
     }
+
+    .images-gallery {
+        grid-template-columns: 1fr;
+    }
+
+    .images-gallery .image-item img {
+        height: 200px;
+    }
+}
+
+/* 공지사항 상세보기 */
+.notice-detail {
+    background: white;
+    border: 2px solid #007bff;
+    border-radius: 15px;
+    padding: 30px;
+    margin-bottom: 30px;
+    position: relative;
+    z-index: 10;
+}
+
+.detail-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 25px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.detail-header h3 {
+    color: #007bff;
+    margin: 0;
+}
+
+.close-btn {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: #999;
+}
+
+.detail-meta {
+    display: flex;
+    gap: 20px;
+    margin-bottom: 20px;
+    padding: 15px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    color: #666;
+    flex-wrap: wrap;
+}
+
+.detail-content {
+    padding: 20px;
+    background: #fafafa;
+    border-radius: 8px;
+}
+
+.content-text {
+    line-height: 1.8;
+    color: #333;
+    white-space: pre-wrap;
+    margin-bottom: 20px;
+}
+
+.content-images {
+    margin-top: 20px;
+}
+
+.images-gallery {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 15px;
+}
+
+.images-gallery .image-item {
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.images-gallery .image-item img {
+    width: 100%;
+    height: 200px;
+    object-fit: cover;
+    cursor: pointer;
+    transition: transform 0.3s;
+}
+
+.images-gallery .image-item img:hover {
+    transform: scale(1.02);
+}
+
+/* 이미지 모달 */
+.image-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+}
+
+.modal-content {
+    position: relative;
+    max-width: 90vw;
+    max-height: 90vh;
+    background: white;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+}
+
+.modal-close {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: rgba(0, 0, 0, 0.7);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 30px;
+    height: 30px;
+    cursor: pointer;
+    font-size: 1rem;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-content img {
+    width: 100%;
+    height: auto;
+    max-height: 80vh;
+    object-fit: contain;
+}
+
+.modal-info {
+    padding: 15px;
+    background: #f8f9fa;
+    text-align: center;
+}
+
+.modal-info p {
+    margin: 0;
+    color: #333;
+    font-weight: 500;
+}
+
+/* 이미지 업로드 미리보기 스타일 수정 */
+.image-preview-container {
+    margin-top: 15px;
+}
+
+.image-preview {
+    width: 150px;
+    height: 100px;
+    border-radius: 8px;
+    overflow: hidden;
+    position: relative;
+}
+
+.image-preview img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.image-info {
+    margin-top: 8px;
+    text-align: center;
+}
+
+.image-name {
+    display: block;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #333;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 150px;
+}
+
+.image-size {
+    display: block;
+    font-size: 0.7rem;
+    color: #666;
+    margin-top: 2px;
+}
+
+.remove-image-btn {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    background: rgba(220, 53, 69, 0.8);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    cursor: pointer;
+    font-size: 0.7rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.3s;
+}
+
+.remove-image-btn:hover {
+    background: rgba(220, 53, 69, 1);
 }
 </style>

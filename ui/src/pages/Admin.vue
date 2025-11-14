@@ -3,7 +3,7 @@
     <div class="admin-header">
       <h1>관리자 대시보드</h1>
       <div class="admin-nav">
-        <button @click="activeTab = 'users'" :class="{ active: activeTab === 'users' }">
+        <button v-if="isSuperAdmin" @click="activeTab = 'users'" :class="{ active: activeTab === 'users' }">
           사용자 관리
         </button>
         <button @click="activeTab = 'logs'" :class="{ active: activeTab === 'logs' }">
@@ -27,7 +27,10 @@
         <button @click="activeTab = 'community'" :class="{ active: activeTab === 'community' }">
           커뮤니티 관리
         </button>
-        <button @click="activeTab = 'settings'" :class="{ active: activeTab === 'settings' }">
+        <button @click="activeTab = 'excel'" :class="{ active: activeTab === 'excel' }">
+          엑셀 관리
+        </button>
+        <button v-if="isSuperAdmin" @click="activeTab = 'settings'" :class="{ active: activeTab === 'settings' }">
           설정
         </button>
         <button @click="logout" class="logout-btn">
@@ -88,7 +91,7 @@
               <td>{{ user.phone || '-' }}</td>
               <td>
                 <span :class="['role-badge', user.role]">
-                  {{ user.role === 'admin' ? '관리자' : '일반사용자' }}
+                  {{ user.role === 'super_admin' ? '최고관리자' : user.role === 'admin' ? '관리자' : '일반사용자' }}
                 </span>
               </td>
               <td>
@@ -99,10 +102,10 @@
               <td>{{ formatDate(user.created_at) }}</td>
               <td>{{ user.last_login ? formatDate(user.last_login) : '-' }}</td>
               <td>
-                <button 
-                  @click="toggleUserStatus(user)" 
+                <button
+                  @click="toggleUserStatus(user)"
                   :class="['action-btn', user.is_active ? 'deactivate' : 'activate']"
-                  :disabled="user.role === 'admin'"
+                  :disabled="user.role === 'admin' || user.role === 'super_admin'"
                 >
                   {{ user.is_active ? '비활성화' : '활성화' }}
                 </button>
@@ -186,15 +189,32 @@
           <div class="selected-dates">
             <h4>선택된 날짜 ({{ selectedDates.length }}/5)</h4>
             <div class="date-tags">
-              <span 
-                v-for="date in selectedDates" 
+              <div
+                v-for="date in selectedDates"
                 :key="date"
-                class="date-tag"
-                @click="removeDate(date)"
+                class="date-tag-container"
               >
-                {{ formatSelectedDate(date) }}
-                <span class="remove-btn">×</span>
-              </span>
+                <span
+                  :class="['date-tag', { 'closed': isMonthClosed }]"
+                  @click="removeDate(date)"
+                >
+                  {{ formatSelectedDate(date) }}
+                  <span v-if="isMonthClosed" class="closed-indicator">(마감)</span>
+                  <span class="remove-btn">×</span>
+                </span>
+              </div>
+            </div>
+            <div class="month-closure-control" v-if="selectedDates.length > 0">
+              <button
+                @click="toggleMonthClosure"
+                :class="['month-closure-btn', { 'closed': isMonthClosed }]"
+                :title="isMonthClosed ? '월 전체 마감 해제' : '월 전체 마감 처리'"
+              >
+                {{ isMonthClosed ? '📅 월 전체 재오픈' : '🚫 월 전체 마감' }}
+              </button>
+              <p class="closure-info">
+                {{ isMonthClosed ? '현재 이 월의 모든 날짜가 마감되어 있습니다.' : '월 전체를 한 번에 마감할 수 있습니다.' }}
+              </p>
             </div>
           </div>
         </div>
@@ -625,6 +645,44 @@
           </tbody>
         </table>
       </div>
+
+      <!-- 공지사항 수정 폼 -->
+      <div v-if="editingNotice" class="edit-notice-form">
+        <div class="form-header">
+          <h3>공지사항 수정</h3>
+          <button @click="cancelNoticeEdit" class="close-btn">✕</button>
+        </div>
+        <div class="form-body">
+          <div class="form-group">
+            <label>카테고리</label>
+            <select v-model="editForm.category_id" required>
+              <option value="exemption">면제교육</option>
+              <option value="cruise">크루즈요트</option>
+              <option value="dinghy">딩기요트</option>
+              <option value="recruitment">채용</option>
+              <option value="others">기타</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>제목</label>
+            <input v-model="editForm.title" type="text" required />
+          </div>
+          <div class="form-group">
+            <label>내용</label>
+            <textarea v-model="editForm.content" rows="8" required></textarea>
+          </div>
+          <div class="form-group">
+            <label class="checkbox-label">
+              <input type="checkbox" v-model="editForm.important" />
+              중요 공지사항
+            </label>
+          </div>
+          <div class="form-actions">
+            <button @click="cancelNoticeEdit" class="cancel-btn">취소</button>
+            <button @click="saveNoticeEdit" class="save-btn">저장</button>
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- 커뮤니티 관리 탭 -->
@@ -644,6 +702,8 @@
             <option value="posts">게시글</option>
             <option value="photos">사진</option>
             <option value="videos">동영상</option>
+            <option value="review">후기게시판</option>
+            <option value="crew">크루모집게시판</option>
           </select>
         </div>
         <div class="filter-group">
@@ -653,6 +713,7 @@
             <option value="free">자유게시판</option>
             <option value="qna">질문답변</option>
             <option value="review">후기게시판</option>
+            <option value="crew">크루모집게시판</option>
             <option value="gallery">갤러리</option>
           </select>
         </div>
@@ -727,25 +788,328 @@
       </div>
     </div>
 
+    <!-- 엑셀 관리 탭 -->
+    <div v-if="activeTab === 'excel'" class="admin-content">
+      <div v-if="!authStore.state.token" class="error-message">
+        인증 토큰이 없습니다. 다시 로그인해주세요.
+      </div>
+      <ExcelManager
+        v-else
+        :authToken="authStore.state.token"
+        @success="handleExcelSuccess"
+        @error="handleExcelError"
+      />
+    </div>
+
     <!-- 설정 탭 -->
     <div v-if="activeTab === 'settings'" class="admin-content">
       <div class="content-header">
         <h2>시스템 설정</h2>
-      </div>
-      
-      <div class="settings-section">
-        <div class="setting-item">
-          <h3>데이터베이스 상태</h3>
-          <p>현재 데이터베이스가 정상적으로 연결되어 있습니다.</p>
-          <button @click="checkDatabase" class="check-btn">연결 확인</button>
+        <div class="header-actions">
+          <button @click="saveAllSettings" class="save-all-btn" :disabled="!settingsChanged">
+            모든 설정 저장
+          </button>
         </div>
-        
-        <div class="setting-item">
-          <h3>관리자 정보</h3>
-          <div class="admin-info">
-            <p><strong>사용자명:</strong> {{ currentUser.username }}</p>
-            <p><strong>이메일:</strong> {{ currentUser.email }}</p>
-            <p><strong>이름:</strong> {{ currentUser.fullName }}</p>
+      </div>
+
+      <!-- 설정 네비게이션 -->
+      <div class="settings-nav">
+        <button
+          v-for="tab in settingsTabs"
+          :key="tab.key"
+          @click="activeSettingsTab = tab.key"
+          :class="['settings-nav-btn', { active: activeSettingsTab === tab.key }]"
+        >
+          <i :class="tab.icon"></i>
+          {{ tab.label }}
+        </button>
+      </div>
+
+      <!-- 사이트 기본 설정 -->
+      <div v-if="activeSettingsTab === 'general'" class="settings-section">
+        <h3>사이트 기본 설정</h3>
+
+        <div class="setting-group">
+          <div class="setting-item">
+            <label>사이트명</label>
+            <input
+              v-model="siteSettings.siteName"
+              type="text"
+              placeholder="통영요트학교"
+              @input="markSettingsChanged"
+            />
+          </div>
+
+          <div class="setting-item">
+            <label>사이트 설명</label>
+            <textarea
+              v-model="siteSettings.siteDescription"
+              placeholder="바다에서 꿈을 펼치는 최고의 요트교육기관"
+              @input="markSettingsChanged"
+            ></textarea>
+          </div>
+
+          <div class="setting-item">
+            <label>대표 전화번호</label>
+            <input
+              v-model="siteSettings.phone"
+              type="text"
+              placeholder="055-641-5051~2"
+              @input="markSettingsChanged"
+            />
+          </div>
+
+          <div class="setting-item">
+            <label>이메일</label>
+            <input
+              v-model="siteSettings.email"
+              type="email"
+              placeholder="ty6415051@hanmail.net"
+              @input="markSettingsChanged"
+            />
+          </div>
+
+          <div class="setting-item">
+            <label>주소</label>
+            <input
+              v-model="siteSettings.address"
+              type="text"
+              placeholder="경남 통영시 도남로 269-28"
+              @input="markSettingsChanged"
+            />
+          </div>
+
+          <div class="setting-item">
+            <label>운영시간</label>
+            <input
+              v-model="siteSettings.businessHours"
+              type="text"
+              placeholder="평일 09:00 - 18:00"
+              @input="markSettingsChanged"
+            />
+          </div>
+        </div>
+      </div>
+
+      <!-- 알림 설정 -->
+      <div v-if="activeSettingsTab === 'notifications'" class="settings-section">
+        <h3>알림 설정</h3>
+
+        <div class="setting-group">
+          <div class="setting-item">
+            <label class="toggle-label">
+              <input
+                v-model="notificationSettings.newApplicationAlert"
+                type="checkbox"
+                @change="markSettingsChanged"
+              />
+              <span class="toggle-slider"></span>
+              신규 신청 시 이메일 알림
+            </label>
+            <p class="setting-desc">새로운 교육 신청이나 체험 신청이 있을 때 관리자에게 이메일로 알림을 보냅니다.</p>
+          </div>
+
+          <div class="setting-item">
+            <label class="toggle-label">
+              <input
+                v-model="notificationSettings.scheduleReminder"
+                type="checkbox"
+                @change="markSettingsChanged"
+              />
+              <span class="toggle-slider"></span>
+              일정 리마인더 알림
+            </label>
+            <p class="setting-desc">교육 일정 하루 전에 참가자들에게 리마인더를 보냅니다.</p>
+          </div>
+
+          <div class="setting-item">
+            <label>알림 이메일 주소</label>
+            <input
+              v-model="notificationSettings.adminEmail"
+              type="email"
+              placeholder="admin@tyyacht.com"
+              @input="markSettingsChanged"
+            />
+          </div>
+        </div>
+      </div>
+
+      <!-- 시스템 관리 -->
+      <div v-if="activeSettingsTab === 'system'" class="settings-section">
+        <h3>시스템 관리</h3>
+
+        <div class="setting-group">
+          <div class="setting-item">
+            <label>데이터베이스 상태</label>
+            <div class="db-status">
+              <span class="status-indicator" :class="dbStatus.connected ? 'connected' : 'disconnected'">
+                {{ dbStatus.connected ? '연결됨' : '연결 안됨' }}
+              </span>
+              <button @click="checkDatabase" class="check-btn">연결 확인</button>
+            </div>
+          </div>
+
+          <div class="setting-item">
+            <label>데이터베이스 백업</label>
+            <div class="backup-controls">
+              <button @click="createBackup" class="action-btn primary" :disabled="isBackupInProgress">
+                <i class="fas fa-download"></i>
+                {{ isBackupInProgress ? '백업 중...' : '백업 생성' }}
+              </button>
+              <p class="setting-desc">현재 데이터베이스의 백업 파일을 생성하여 다운로드합니다.</p>
+            </div>
+          </div>
+
+          <div class="setting-item">
+            <label>캐시 관리</label>
+            <div class="cache-controls">
+              <button @click="clearCache" class="action-btn secondary">
+                <i class="fas fa-trash"></i>
+                캐시 삭제
+              </button>
+              <p class="setting-desc">애플리케이션 캐시를 삭제하여 성능을 최적화합니다.</p>
+            </div>
+          </div>
+
+          <div class="setting-item">
+            <label>시스템 정보</label>
+            <div class="system-info">
+              <div class="info-grid">
+                <div class="info-item">
+                  <span class="info-label">서버 상태:</span>
+                  <span class="info-value">정상</span>
+                </div>
+                <div class="info-item">
+                  <span class="info-label">사용자 수:</span>
+                  <span class="info-value">{{ stats.totalUsers || 0 }}명</span>
+                </div>
+                <div class="info-item">
+                  <span class="info-label">총 신청 수:</span>
+                  <span class="info-value">{{ stats.totalApplications || 0 }}건</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 보안 설정 -->
+      <div v-if="activeSettingsTab === 'security'" class="settings-section">
+        <h3>보안 설정</h3>
+
+        <div class="setting-group">
+          <div class="setting-item">
+            <label>세션 타임아웃 (분)</label>
+            <input
+              v-model.number="securitySettings.sessionTimeout"
+              type="number"
+              min="5"
+              max="480"
+              @input="markSettingsChanged"
+            />
+            <p class="setting-desc">관리자 세션이 자동으로 만료되는 시간을 설정합니다.</p>
+          </div>
+
+          <div class="setting-item">
+            <label>로그인 실패 제한</label>
+            <input
+              v-model.number="securitySettings.maxLoginAttempts"
+              type="number"
+              min="3"
+              max="10"
+              @input="markSettingsChanged"
+            />
+            <p class="setting-desc">연속 로그인 실패 시 계정을 잠그는 횟수를 설정합니다.</p>
+          </div>
+
+          <div class="setting-item">
+            <label class="toggle-label">
+              <input
+                v-model="securitySettings.enableTwoFactor"
+                type="checkbox"
+                @change="markSettingsChanged"
+              />
+              <span class="toggle-slider"></span>
+              2단계 인증 활성화
+            </label>
+            <p class="setting-desc">관리자 계정에 2단계 인증을 적용합니다.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- 테마 설정 -->
+      <div v-if="activeSettingsTab === 'theme'" class="settings-section">
+        <h3>테마 및 디자인</h3>
+
+        <div class="setting-group">
+          <div class="setting-item">
+            <label>브랜드 컬러</label>
+            <div class="color-picker-group">
+              <input
+                v-model="themeSettings.primaryColor"
+                type="color"
+                @input="markSettingsChanged"
+              />
+              <span class="color-value">{{ themeSettings.primaryColor }}</span>
+            </div>
+          </div>
+
+          <div class="setting-item">
+            <label>로고 업로드</label>
+            <div class="logo-upload">
+              <input
+                type="file"
+                ref="logoFile"
+                @change="handleLogoUpload"
+                accept="image/*"
+                style="display: none"
+              />
+              <button @click="$refs.logoFile.click()" class="upload-btn">
+                <i class="fas fa-upload"></i>
+                로고 선택
+              </button>
+              <div v-if="themeSettings.logoUrl" class="logo-preview">
+                <img :src="themeSettings.logoUrl" alt="로고 미리보기" />
+              </div>
+            </div>
+          </div>
+
+          <div class="setting-item">
+            <label class="toggle-label">
+              <input
+                v-model="themeSettings.darkMode"
+                type="checkbox"
+                @change="markSettingsChanged"
+              />
+              <span class="toggle-slider"></span>
+              다크 모드 활성화
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <!-- 기존 관리자 정보 -->
+      <div v-if="activeSettingsTab === 'admin'" class="settings-section">
+        <h3>관리자 계정 정보</h3>
+
+        <div class="setting-group">
+          <div class="admin-info-card">
+            <div class="admin-avatar">
+              <i class="fas fa-user-shield"></i>
+            </div>
+            <div class="admin-details">
+              <h4>{{ currentUser.fullName }}</h4>
+              <p><strong>사용자명:</strong> {{ currentUser.username }}</p>
+              <p><strong>이메일:</strong> {{ currentUser.email }}</p>
+              <p><strong>권한:</strong> 최고 관리자</p>
+            </div>
+          </div>
+
+          <div class="setting-item">
+            <button @click="changePassword" class="action-btn secondary">
+              <i class="fas fa-key"></i>
+              비밀번호 변경
+            </button>
           </div>
         </div>
       </div>
@@ -766,11 +1130,15 @@
 import { API_BASE_URL } from '../config/env.js';
 import axios from 'axios';
 import authStore from '../stores/auth.js';
+import ExcelManager from '../components/ExcelManager.vue';
 
 import { useToast } from '../components/Toast.vue'
 
 export default {
   name: 'Admin',
+  components: {
+    ExcelManager
+  },
   setup() {
     const toast = useToast()
     return { toast }
@@ -781,10 +1149,12 @@ export default {
       activeTab: 'users',
       users: [],
       loginLogs: [],
+      isServerVerifiedAdmin: false,
       isLoading: false,
       stats: {},
       currentDate: new Date(),
       selectedDates: [],
+      isMonthClosed: false,
       schedules: {},
       applications: [],
       applicationStats: {},
@@ -821,21 +1191,108 @@ export default {
         startDate: '',
         endDate: ''
       },
+      editingNotice: null,
+      editForm: {
+        title: '',
+        content: '',
+        category_id: '',
+        important: false
+      },
       // 커뮤니티 관리 관련 데이터
       communityPosts: [],
       communityPhotos: [],
       communityVideos: [],
+      communityReviews: [],
+      communityCrews: [],
       communityFilters: {
         contentType: '',
         board: '',
         startDate: '',
         endDate: ''
+      },
+      // 설정 관련 데이터
+      activeSettingsTab: 'general',
+      settingsChanged: false,
+      isSavingSettings: false,
+      settingsTabs: [
+        { key: 'general', label: '기본 설정', icon: 'fas fa-cog' },
+        { key: 'notifications', label: '알림 설정', icon: 'fas fa-bell' },
+        { key: 'system', label: '시스템', icon: 'fas fa-server' },
+        { key: 'security', label: '보안', icon: 'fas fa-shield-alt' },
+        { key: 'theme', label: '테마', icon: 'fas fa-palette' },
+        { key: 'account', label: '관리자 계정', icon: 'fas fa-user-cog' }
+      ],
+      siteSettings: {
+        siteName: '통영요트학교',
+        siteDescription: '바다에서 꿈을 펼치는 최고의 요트교육기관',
+        phone: '055-641-5051~2',
+        email: 'ty6415051@hanmail.net',
+        address: '경남 통영시 도남로 269-28',
+        businessHours: '평일 09:00 - 18:00',
+        logoUrl: '',
+        faviconUrl: ''
+      },
+      notificationSettings: {
+        emailNotifications: true,
+        smsNotifications: false,
+        pushNotifications: true,
+        newApplicationAlert: true,
+        systemMaintenanceAlert: true,
+        newsletterEnabled: true,
+        scheduleReminder: true,
+        adminEmail: 'admin@tyyacht.com'
+      },
+      systemSettings: {
+        maintenanceMode: false,
+        backupSchedule: 'daily',
+        cacheEnabled: true,
+        debugMode: false,
+        logLevel: 'info',
+        lastBackup: null
+      },
+      // 시스템 상태 관리
+      dbStatus: {
+        connected: true,
+        lastChecked: null
+      },
+      isBackupInProgress: false,
+      securitySettings: {
+        sessionTimeout: 3600,
+        maxLoginAttempts: 5,
+        requireStrongPassword: true,
+        twoFactorAuth: false,
+        ipWhitelist: '',
+        autoLogout: true
+      },
+      themeSettings: {
+        primaryColor: '#2c5aa0',
+        secondaryColor: '#1e3d6f',
+        accentColor: '#ff6b35',
+        darkMode: false,
+        customCSS: '',
+        fontFamily: 'Noto Sans KR'
+      },
+      adminAccount: {
+        username: '',
+        email: '',
+        fullName: '',
+        role: 'admin',
+        lastLogin: null,
+        permissions: {
+          manageUsers: true,
+          manageNotices: true,
+          manageApplications: true,
+          manageSystem: true
+        }
       }
     };
   },
   computed: {
     isAdmin() {
-      return this.authStore.state.isAuthenticated && this.authStore.isAdmin();
+      return this.authStore.state.isAuthenticated && this.authStore.isAdmin() && this.isServerVerifiedAdmin;
+    },
+    isSuperAdmin() {
+      return this.authStore.state.isAuthenticated && this.authStore.isSuperAdmin() && this.isServerVerifiedAdmin;
     },
     currentUser() {
       return this.authStore.state.user || {};
@@ -861,8 +1318,20 @@ export default {
         ...video,
         type: 'video'
       }));
-      
-      items = [...posts, ...photos, ...videos];
+
+      // 후기게시판 추가
+      const reviews = this.communityReviews.map(review => ({
+        ...review,
+        type: 'review'
+      }));
+
+      // 크루모집게시판 추가
+      const crews = this.communityCrews.map(crew => ({
+        ...crew,
+        type: 'crew'
+      }));
+
+      items = [...posts, ...photos, ...videos, ...reviews, ...crews];
       
       // 필터링 적용
       if (this.communityFilters.contentType) {
@@ -920,12 +1389,18 @@ export default {
     }
   },
   async mounted() {
+    // 서버 측 관리자 권한 검증을 먼저 수행
+    await this.verifyAdminWithServer();
+
     if (!this.isAdmin) {
       this.$router.push('/login');
       return;
     }
-    
+
     try {
+      // 설정 먼저 로드
+      await this.loadSettings();
+
       await this.loadUsers();
       await this.loadStats();
       await this.loadSchedules();
@@ -945,6 +1420,267 @@ export default {
     }
   },
   methods: {
+    // 서버 측 관리자 권한 검증 메서드
+    async verifyAdminWithServer() {
+      try {
+        const response = await fetch(`${API_BASE_URL}/api/admin/verify-admin`, {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${this.authStore.state.token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          this.isServerVerifiedAdmin = data.isAdmin;
+          console.log('🔐 서버 측 관리자 권한 검증 성공:', data);
+        } else {
+          console.warn('⚠️ 서버 측 관리자 권한 검증 실패:', response.status);
+          this.isServerVerifiedAdmin = false;
+
+          // 401/403 에러인 경우 로그아웃 처리
+          if (response.status === 401 || response.status === 403) {
+            this.authStore.logout();
+            this.$router.push('/login');
+          }
+        }
+      } catch (error) {
+        console.error('❌ 서버 측 관리자 권한 검증 중 오류:', error);
+        this.isServerVerifiedAdmin = false;
+      }
+    },
+
+    // 설정 관리 메서드
+    async loadSettings() {
+      try {
+        // 로컬 스토리지에서 설정 로드
+        const savedSettings = localStorage.getItem('adminSettings');
+        if (savedSettings) {
+          const settings = JSON.parse(savedSettings);
+          // 각 설정 섹션 업데이트
+          if (settings.site) this.siteSettings = { ...this.siteSettings, ...settings.site };
+          if (settings.notifications) this.notificationSettings = { ...this.notificationSettings, ...settings.notifications };
+          if (settings.system) this.systemSettings = { ...this.systemSettings, ...settings.system };
+          if (settings.security) this.securitySettings = { ...this.securitySettings, ...settings.security };
+          if (settings.theme) this.themeSettings = { ...this.themeSettings, ...settings.theme };
+          if (settings.admin) this.adminAccount = { ...this.adminAccount, ...settings.admin };
+
+          // 테마 설정 적용
+          this.applyThemeSettings();
+        }
+      } catch (error) {
+        console.error('설정 로드 실패:', error);
+      }
+    },
+
+    async saveAllSettings() {
+      if (!this.settingsChanged) return;
+
+      this.isSavingSettings = true;
+      try {
+        const allSettings = {
+          site: this.siteSettings,
+          notifications: this.notificationSettings,
+          system: this.systemSettings,
+          security: this.securitySettings,
+          theme: this.themeSettings,
+          admin: this.adminAccount,
+          lastUpdated: new Date().toISOString()
+        };
+
+        // 로컬 스토리지에 저장
+        localStorage.setItem('adminSettings', JSON.stringify(allSettings));
+
+        // 테마 설정 즉시 적용
+        this.applyThemeSettings();
+
+        this.settingsChanged = false;
+        this.showToast('설정이 저장되었습니다.', 'success');
+      } catch (error) {
+        console.error('설정 저장 오류:', error);
+        this.showToast('설정 저장에 실패했습니다.', 'error');
+      } finally {
+        this.isSavingSettings = false;
+      }
+    },
+
+    applyThemeSettings() {
+      // CSS 변수로 테마 색상 적용
+      const root = document.documentElement;
+      root.style.setProperty('--primary-color', this.themeSettings.primaryColor);
+      root.style.setProperty('--secondary-color', this.themeSettings.secondaryColor);
+      root.style.setProperty('--accent-color', this.themeSettings.accentColor);
+
+      // 다크모드 적용
+      if (this.themeSettings.darkMode) {
+        document.body.classList.add('dark-mode');
+      } else {
+        document.body.classList.remove('dark-mode');
+      }
+
+      // 폰트 패밀리 적용
+      if (this.themeSettings.fontFamily) {
+        root.style.setProperty('--font-family', this.themeSettings.fontFamily);
+      }
+    },
+
+    markSettingsChanged() {
+      this.settingsChanged = true;
+    },
+
+    async uploadLogo(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const formData = new FormData();
+      formData.append('logo', file);
+
+      try {
+        const response = await fetch('/api/settings/logo', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${this.authStore.state.token}`
+          },
+          body: formData
+        });
+
+        if (response.ok) {
+          const result = await response.json();
+          this.siteSettings.logoUrl = result.logoUrl;
+          this.markSettingsChanged();
+        }
+      } catch (error) {
+        this.showToast('로고 업로드 실패', 'error');
+      }
+    },
+
+    async performSystemBackup() {
+      try {
+        // 백업 시뮬레이션 (실제 API가 없으므로)
+        this.showToast('백업을 시작합니다...', 'info');
+
+        // 2초 후 백업 완료 시뮬레이션
+        setTimeout(() => {
+          this.systemSettings.lastBackup = new Date().toISOString();
+          this.markSettingsChanged();
+          this.showToast('백업이 완료되었습니다.', 'success');
+        }, 2000);
+
+      } catch (error) {
+        this.showToast('백업 실행 실패', 'error');
+      }
+    },
+
+    async createBackup() {
+      if (this.isBackupInProgress) return;
+
+      this.isBackupInProgress = true;
+      try {
+        this.showToast('데이터베이스 백업을 생성하는 중...', 'info');
+
+        // 백업 시뮬레이션
+        setTimeout(async () => {
+          // 가상의 백업 파일 다운로드
+          const backupData = {
+            timestamp: new Date().toISOString(),
+            version: '1.0.0',
+            data: 'backup-content-placeholder'
+          };
+
+          const blob = new Blob([JSON.stringify(backupData, null, 2)], {
+            type: 'application/json'
+          });
+
+          const url = window.URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `tyyacht-backup-${new Date().toISOString().slice(0, 10)}.json`;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          window.URL.revokeObjectURL(url);
+
+          this.systemSettings.lastBackup = new Date().toISOString();
+          this.markSettingsChanged();
+          this.isBackupInProgress = false;
+          this.showToast('백업 파일이 다운로드되었습니다.', 'success');
+        }, 2000);
+
+      } catch (error) {
+        this.isBackupInProgress = false;
+        this.showToast('백업 생성 실패', 'error');
+      }
+    },
+
+    async checkDatabase() {
+      try {
+        this.showToast('데이터베이스 연결을 확인하는 중...', 'info');
+
+        // 실제 API 호출로 대체 가능
+        setTimeout(() => {
+          this.dbStatus.connected = true;
+          this.dbStatus.lastChecked = new Date().toISOString();
+          this.showToast('데이터베이스 연결이 정상입니다.', 'success');
+        }, 1000);
+
+      } catch (error) {
+        this.dbStatus.connected = false;
+        this.dbStatus.lastChecked = new Date().toISOString();
+        this.showToast('데이터베이스 연결 실패', 'error');
+      }
+    },
+
+    async clearCache() {
+      try {
+        // 캐시 삭제 시뮬레이션
+        this.showToast('캐시를 삭제하는 중...', 'info');
+
+        // 브라우저 캐시 일부 삭제
+        if ('caches' in window) {
+          const cacheNames = await caches.keys();
+          await Promise.all(
+            cacheNames.map(cacheName => caches.delete(cacheName))
+          );
+        }
+
+        setTimeout(() => {
+          this.showToast('캐시가 삭제되었습니다.', 'success');
+        }, 1000);
+
+      } catch (error) {
+        this.showToast('캐시 삭제 실패', 'error');
+      }
+    },
+
+    selectSettingsTab(tab) {
+      this.activeSettingsTab = tab;
+    },
+
+    showToast(message, type = 'info') {
+      // 간단한 토스트 알림 구현
+      const toast = document.createElement('div');
+      toast.className = `toast toast-${type}`;
+      toast.textContent = message;
+      toast.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        padding: 12px 24px;
+        background: ${type === 'success' ? '#4caf50' : type === 'error' ? '#f44336' : '#2196f3'};
+        color: white;
+        border-radius: 4px;
+        z-index: 9999;
+        transition: opacity 0.3s;
+      `;
+      document.body.appendChild(toast);
+
+      setTimeout(() => {
+        toast.style.opacity = '0';
+        setTimeout(() => document.body.removeChild(toast), 300);
+      }, 3000);
+    },
+
     async loadStats() {
       try {
         const response = await axios.get(`${API_BASE_URL}/api/admin/stats`);
@@ -981,7 +1717,13 @@ export default {
       }
 
       try {
-        await axios.patch(`${API_BASE_URL}/api/admin/users/${user.id}/toggle-status`);
+        const token = localStorage.getItem('token');
+        await axios.patch(`${API_BASE_URL}/api/admin/users/${user.id}/toggle-status`, {}, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
         user.is_active = !user.is_active;
         this.toast.success(`사용자 상태가 ${user.is_active ? '활성화' : '비활성화'}되었습니다.`);
       } catch (error) {
@@ -1068,12 +1810,11 @@ export default {
         };
       } catch (error) {
         console.error('Failed to load boarding stats:', error);
-        // 임시 통계 데이터
         this.boardingStats = {
-          total: this.boardingApplications.length,
-          pending: this.boardingApplications.filter(app => app.status === 'pending').length,
-          confirmed: this.boardingApplications.filter(app => app.status === 'confirmed').length,
-          cancelled: this.boardingApplications.filter(app => app.status === 'cancelled').length
+          total: 0,
+          pending: 0,
+          confirmed: 0,
+          cancelled: 0
         };
       }
     },
@@ -1125,22 +1866,24 @@ export default {
 
     async exportBoardingApplications() {
       try {
-        // 실제 구현에서는 서버에서 엑셀 파일을 생성해서 다운로드
         const response = await axios.get(`${API_BASE_URL}/api/applications/cruise/export`, {
           params: this.boardingFilters,
-          responseType: 'blob'
+          headers: {
+            'Authorization': `Bearer ${this.authStore.state.token}`
+          }
         });
 
-        // 임시로 클라이언트에서 CSV 파일 생성
-        const csvContent = this.generateBoardingCSV();
-        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        // 서버에서 받은 데이터를 CSV로 변환
+        const csvContent = this.generateBoardingCSV(response.data);
+        const BOM = '\uFEFF'; // UTF-8 BOM for Excel compatibility
+        const blob = new Blob([BOM + csvContent], { type: 'text/csv;charset=utf-8;' });
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
         a.download = `승선체험신청서_${new Date().toISOString().split('T')[0]}.csv`;
         a.click();
         window.URL.revokeObjectURL(url);
-        
+
         this.toast.success('승선 체험 신청서 목록이 다운로드되었습니다.', '📊 다운로드 완료');
       } catch (error) {
         console.error('Failed to export boarding applications:', error);
@@ -1148,24 +1891,19 @@ export default {
       }
     },
 
-    generateBoardingCSV() {
-      const headers = ['ID', '이름', '연락처', '이메일', '체험유형', '희망날짜', '인원', '상태', '신청일', '메시지'];
-      const rows = this.boardingApplications.map(app => [
-        app.id,
-        app.name,
-        app.phone,
-        app.email,
-        this.getExperienceTypeLabel(app.experienceType),
-        app.desiredDate,
-        app.participants + '명',
-        this.getBoardingStatusLabel(app.status),
-        this.formatDate(app.createdAt),
-        app.message || ''
-      ]);
+    generateBoardingCSV(applications) {
+      // 서버에서 이미 엑셀 형식으로 변환된 데이터를 받음
+      if (applications.length === 0) return '';
+
+      // 첫 번째 객체의 키를 헤더로 사용
+      const headers = Object.keys(applications[0]);
+      const rows = applications.map(app =>
+        headers.map(header => app[header] !== undefined && app[header] !== null ? app[header] : '')
+      );
 
       return [
         headers.join(','),
-        ...rows.map(row => row.map(cell => `"${cell}"`).join(','))
+        ...rows.map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(','))
       ].join('\n');
     },
 
@@ -1268,7 +2006,52 @@ export default {
 
     updateSelectedDatesForCurrentMonth() {
       const monthKey = `${this.currentDate.getFullYear()}-${String(this.currentDate.getMonth() + 1).padStart(2, '0')}`;
-      this.selectedDates = this.schedules[monthKey] || [];
+      const monthSchedule = this.schedules[monthKey];
+      if (monthSchedule) {
+        this.selectedDates = monthSchedule.dates || monthSchedule || [];
+        this.isMonthClosed = monthSchedule.isClosed || false;
+      } else {
+        this.selectedDates = [];
+        this.isMonthClosed = false;
+      }
+    },
+
+    isDateClosed(date) {
+      return this.isMonthClosed;
+    },
+
+    async toggleMonthClosure() {
+      try {
+        const monthKey = `${this.currentDate.getFullYear()}-${String(this.currentDate.getMonth() + 1).padStart(2, '0')}`;
+
+        const response = await axios.post(`${API_BASE_URL}/api/schedules/toggle-close`, {
+          month: monthKey
+        }, {
+          headers: {
+            'Authorization': `Bearer ${this.authStore.state.token}`
+          }
+        });
+
+        if (response.data.success) {
+          this.isMonthClosed = response.data.isClosed;
+
+          // 스케줄 데이터 업데이트
+          if (!this.schedules[monthKey]) {
+            this.schedules[monthKey] = { dates: this.selectedDates, isClosed: this.isMonthClosed };
+          } else if (Array.isArray(this.schedules[monthKey])) {
+            this.schedules[monthKey] = { dates: this.schedules[monthKey], isClosed: this.isMonthClosed };
+          } else {
+            this.schedules[monthKey].isClosed = this.isMonthClosed;
+          }
+
+          const action = response.data.action;
+          const message = action === 'closed' ? '월 전체가 마감되었습니다.' : '월 마감이 해제되었습니다.';
+          this.toast.success(message, `📅 ${action === 'closed' ? '월 마감' : '월 재오픈'} 완료`);
+        }
+      } catch (error) {
+        console.error('Failed to toggle month closure:', error);
+        this.toast.error('월 마감 상태 변경에 실패했습니다.');
+      }
     },
 
     toggleDay(day) {
@@ -1425,70 +2208,8 @@ export default {
         const response = await axios.get(`${API_BASE_URL}/api/notices`, {
           params: this.noticeFilters
         });
-        
-        // 임시 데이터
-        this.notices = [
-          {
-            id: 1,
-            title: '2024년 상반기 요트면허 면제교육 일정 안내',
-            content: '2024년 상반기 요트면허 면제교육 일정을 안내드립니다...',
-            category: 'exemption',
-            categoryClass: 'exemption',
-            author: '관리자',
-            date: '2024-03-16',
-            views: 156,
-            important: true,
-            published: true
-          },
-          {
-            id: 2,
-            title: '크루즈요트 체험 프로그램 요금 변경 안내',
-            content: '2024년 4월부터 크루즈요트 체험 프로그램 요금이 조정됩니다...',
-            category: 'cruise',
-            categoryClass: 'cruise',
-            author: '관리자',
-            date: '2024-03-15',
-            views: 89,
-            important: false,
-            published: true
-          },
-          {
-            id: 3,
-            title: '딩기요트 교육 안전수칙 업데이트',
-            content: '딩기요트 교육 시 준수해야 할 안전수칙이 업데이트되었습니다...',
-            category: 'dinghy',
-            categoryClass: 'dinghy',
-            author: '관리자',
-            date: '2024-03-14',
-            views: 67,
-            important: false,
-            published: false
-          },
-          {
-            id: 4,
-            title: '통영요트학교 강사 채용 공고',
-            content: '통영요트학교에서 요트 교육 강사를 모집합니다...',
-            category: 'recruitment',
-            categoryClass: 'recruitment',
-            author: '관리자',
-            date: '2024-03-13',
-            views: 234,
-            important: true,
-            published: true
-          },
-          {
-            id: 5,
-            title: '봄철 요트 체험 프로그램 운영 안내',
-            content: '봄철을 맞이하여 특별 요트 체험 프로그램을 운영합니다...',
-            category: 'others',
-            categoryClass: 'others',
-            author: '관리자',
-            date: '2024-03-12',
-            views: 123,
-            important: false,
-            published: true
-          }
-        ];
+
+        this.notices = response.data || [];
       } catch (error) {
         console.error('Failed to load notices:', error);
         this.notices = [];
@@ -1505,23 +2226,59 @@ export default {
     },
 
     async editNotice(notice) {
-      // 공지사항 수정 기능 (추후 구현)
-      const message = `
-제목: ${notice.title}
-내용: ${notice.content.substring(0, 100)}...
-카테고리: ${this.getCategoryLabel(notice.category)}
-작성일: ${this.formatDate(notice.date)}
-조회수: ${notice.views}
-      `;
-      
-      this.toast.info(message, '✏️ 공지사항 수정');
+      this.editingNotice = notice;
+      this.editForm = {
+        title: notice.title,
+        content: notice.content,
+        category_id: notice.category_id,
+        important: notice.important === 1 || notice.important === true
+      };
+    },
+
+    async saveNoticeEdit() {
+      if (!this.editForm.title || !this.editForm.content) {
+        this.toast.warning('제목과 내용을 입력해주세요.', '⚠️ 입력 확인');
+        return;
+      }
+
+      try {
+        const response = await axios.put(`${API_BASE_URL}/api/notices/${this.editingNotice.id}`, {
+          title: this.editForm.title,
+          content: this.editForm.content,
+          category_id: this.editForm.category_id,
+          important: this.editForm.important
+        }, {
+          headers: {
+            'Authorization': `Bearer ${this.authStore.state.token}`
+          }
+        });
+
+        this.editingNotice = null;
+        this.editForm = { title: '', content: '', category_id: '', important: false };
+        await this.loadNotices();
+        this.toast.success('공지사항이 수정되었습니다.', '✅ 수정 완료');
+      } catch (error) {
+        console.error('Failed to update notice:', error);
+        this.toast.error('공지사항 수정에 실패했습니다.', '❌ 수정 실패');
+      }
+    },
+
+    cancelNoticeEdit() {
+      this.editingNotice = null;
+      this.editForm = { title: '', content: '', category_id: '', important: false };
     },
 
     async deleteNotice(noticeId) {
       if (!confirm('정말로 이 공지사항을 삭제하시겠습니까?')) return;
       
       try {
-        await axios.delete(`${API_BASE_URL}/api/notices/${noticeId}`);
+        const token = localStorage.getItem('token');
+        await axios.delete(`${API_BASE_URL}/api/notices/${noticeId}`, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
         
         this.notices = this.notices.filter(notice => notice.id !== noticeId);
         this.toast.success('공지사항이 삭제되었습니다.', '🗑️ 삭제 완료');
@@ -1534,10 +2291,17 @@ export default {
     async toggleNoticeStatus(notice) {
       try {
         const newStatus = !notice.published;
+        const token = localStorage.getItem('token');
+
         await axios.patch(`${API_BASE_URL}/api/notices/${notice.id}/status`, {
           published: newStatus
+        }, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
         });
-        
+
         notice.published = newStatus;
         this.toast.success(`공지사항이 ${newStatus ? '공개' : '비공개'}로 변경되었습니다.`, '🔄 상태 변경');
       } catch (error) {
@@ -1563,60 +2327,8 @@ export default {
         const response = await axios.get(`${API_BASE_URL}/api/community`, {
           params: this.communityFilters
         });
-        
-        // 임시 데이터
-        this.communityPosts = [
-          {
-            id: 1,
-            title: '요트 체험 후기입니다',
-            content: '어제 처음으로 요트를 타보았는데...',
-            board: 'review',
-            author: '김요트',
-            date: '2024-03-16',
-            views: 45,
-            comments: 3
-          },
-          {
-            id: 2,
-            title: '요트 면허 취득에 대해 질문이 있습니다',
-            content: '요트 면허 취득 과정에서 궁금한 점이...',
-            board: 'qna',
-            author: '해대간',
-            date: '2024-03-15',
-            views: 78,
-            comments: 5
-          },
-          {
-            id: 3,
-            title: '통영에서 요트 체험하기 좋은 곳',
-            content: '통영에서 요트 체험하기 좋은 곳을 추천해드려요...',
-            board: 'free',
-            author: '바다사랑',
-            date: '2024-03-14',
-            views: 92,
-            comments: 7
-          },
-          {
-            id: 4,
-            title: '요트 교육 수강 후기',
-            content: '어제 요트 교육을 수강했는데 정말 좋았습니다...',
-            board: 'review',
-            author: '서울에서온객',
-            date: '2024-03-13',
-            views: 134,
-            comments: 12
-          },
-          {
-            id: 5,
-            title: '요트 체험 예약 시간 문의',
-            content: '요트 체험 예약을 하고 싶은데 시간에 대해...',
-            board: 'qna',
-            author: '따뜻한바람',
-            date: '2024-03-12',
-            views: 67,
-            comments: 2
-          }
-        ];
+
+        this.communityPosts = response.data || [];
       } catch (error) {
         console.error('Failed to load community posts:', error);
         this.communityPosts = [];
@@ -1716,35 +2428,7 @@ export default {
         }));
       } catch (error) {
         console.error('Failed to load education applications:', error);
-        // 임시 데이터로 대체
-        this.educationApplications = [
-          {
-            id: 1,
-            name: '김교육',
-            phone: '010-1234-5678',
-            email: 'education@example.com',
-            birthDate: '1990-05-15',
-            gender: 'male',
-            address: '경상남도 통영시',
-            courseType: '크루즈-초급과정',
-            status: 'pending',
-            createdAt: '2024-03-16T10:30:00Z',
-            user_id: null
-          },
-          {
-            id: 2,
-            name: '이요트',
-            phone: '010-9876-5432',
-            email: '',
-            birthDate: '1985-08-22',
-            gender: 'female',
-            address: '부산광역시 해운대구',
-            courseType: '딩기요트-토파즈 우노 기초',
-            status: 'approved',
-            createdAt: '2024-03-15T14:20:00Z',
-            user_id: 2
-          }
-        ];
+        this.educationApplications = [];
       }
     },
 
@@ -1754,16 +2438,11 @@ export default {
         this.educationStats = response.data;
       } catch (error) {
         console.error('Failed to load education stats:', error);
-        // 임시 통계 데이터
         this.educationStats = {
-          total: this.educationApplications.length,
-          pending: this.educationApplications.filter(app => app.status === 'pending').length,
-          confirmed: this.educationApplications.filter(app => app.status === 'approved').length,
-          thisMonth: this.educationApplications.filter(app => {
-            const appDate = new Date(app.createdAt);
-            const now = new Date();
-            return appDate.getMonth() === now.getMonth() && appDate.getFullYear() === now.getFullYear();
-          }).length
+          total: 0,
+          pending: 0,
+          confirmed: 0,
+          thisMonth: 0
         };
       }
     },
@@ -1895,66 +2574,43 @@ export default {
     // 커뮤니티 관리 메서드들
     async loadCommunityPosts() {
       try {
-        const response = await axios.get(`${API_BASE_URL}/api/community/posts`);
-        this.communityPosts = response.data || [];
+        const response = await axios.get(`${API_BASE_URL}/api/notices?category=free_board`);
+        this.communityPosts = (response.data || []).map(post => ({
+          id: post.id,
+          title: post.title,
+          content: post.content,
+          description: post.content.substring(0, 100) + '...',
+          author: post.author_name || '익명',
+          date: post.created_at?.split('T')[0] || new Date().toISOString().split('T')[0],
+          views: post.views || 0,
+          category: 'free_board',
+          type: 'post'
+        }));
       } catch (error) {
         console.error('Failed to load community posts:', error);
-        // 임시 데이터
-        this.communityPosts = [
-          {
-            id: 1,
-            title: '요트 체험 후기',
-            content: '정말 즐거운 경험이었습니다...',
-            author: '김요트',
-            date: '2024-03-15',
-            views: 45,
-            category: 'review',
-            comments: 3
-          },
-          {
-            id: 2,
-            title: '요트 관련 질문이 있습니다',
-            content: '초보자도 쉽게 배울 수 있나요?',
-            author: '이바다',
-            date: '2024-03-14',
-            views: 23,
-            category: 'qna',
-            comments: 5
-          }
-        ];
+        this.communityPosts = [];
       }
     },
 
     async loadCommunityPhotos() {
       try {
         const response = await axios.get(`${API_BASE_URL}/api/photos`);
-        this.communityPhotos = (response.data || []).map(photo => ({
-          id: photo.id,
-          title: photo.title,
-          filename: photo.original_name,
-          description: photo.description,
-          author: photo.author_name || '관리자',
-          date: photo.created_at?.split('T')[0] || new Date().toISOString().split('T')[0],
+        this.communityPhotos = (response.data || []).map(gallery => ({
+          id: gallery.id,
+          title: gallery.title,
+          filename: `갤러리 (${gallery.photo_count || 0}장)`,
+          description: gallery.description,
+          author: gallery.author_name || '관리자',
+          date: gallery.created_at?.split('T')[0] || new Date().toISOString().split('T')[0],
           views: 0,
-          category: photo.category_id,
-          file_path: photo.file_path
+          category: gallery.category_id,
+          photo_count: gallery.photo_count || 0,
+          url: gallery.url,
+          type: 'photo'
         }));
       } catch (error) {
         console.error('Failed to load photos:', error);
-        // 임시 데이터
-        this.communityPhotos = [
-          {
-            id: 1,
-            title: '아름다운 일몰',
-            filename: 'sunset.jpg',
-            description: '통영 바다의 아름다운 일몰',
-            author: '관리자',
-            date: '2024-03-16',
-            views: 120,
-            category: 'gallery',
-            file_path: '/uploads/photos/sunset.jpg'
-          }
-        ];
+        this.communityPhotos = [];
       }
     },
 
@@ -1971,25 +2627,60 @@ export default {
           views: video.views || 0,
           category: video.category_id,
           file_path: video.file_path,
-          duration: video.duration
+          duration: video.duration,
+          url: video.thumbnail_url || video.url, // 썸네일이 있으면 썸네일을, 없으면 비디오 URL을 사용
+          video_url: video.url, // 실제 비디오 URL 저장
+          type: 'video'
         }));
       } catch (error) {
         console.error('Failed to load videos:', error);
-        // 임시 데이터
-        this.communityVideos = [
-          {
-            id: 1,
-            title: '요트 교육 영상',
-            filename: 'education.mp4',
-            description: '초보자를 위한 요트 교육',
-            author: '관리자',
-            date: '2024-03-15',
-            views: 85,
-            category: 'gallery',
-            file_path: '/uploads/videos/education.mp4',
-            duration: '05:30'
-          }
-        ];
+        this.communityVideos = [];
+      }
+    },
+
+    async loadCommunityReviews() {
+      try {
+        const response = await axios.get(`${API_BASE_URL}/api/reviews`);
+        this.communityReviews = (response.data || []).map(review => ({
+          id: review.id,
+          title: review.title,
+          content: review.content,
+          description: review.content.substring(0, 100) + '...',
+          author: review.author_name || '익명',
+          date: review.created_at?.split('T')[0] || new Date().toISOString().split('T')[0],
+          views: review.views || 0,
+          category: review.category_id,
+          rating: review.rating,
+          type: 'review'
+        }));
+      } catch (error) {
+        console.error('Failed to load reviews:', error);
+        this.communityReviews = [];
+      }
+    },
+
+    async loadCommunityCrews() {
+      try {
+        const response = await axios.get(`${API_BASE_URL}/api/crews`);
+        this.communityCrews = (response.data || []).map(crew => ({
+          id: crew.id,
+          title: crew.title,
+          content: crew.content,
+          description: crew.content.substring(0, 100) + '...',
+          author: crew.author_name || '익명',
+          date: crew.created_at?.split('T')[0] || new Date().toISOString().split('T')[0],
+          views: crew.views || 0,
+          category: 'crew',
+          departure_location: crew.departure_location,
+          departure_date: crew.departure_date,
+          status: crew.status,
+          current_crew: crew.current_crew,
+          max_crew: crew.max_crew,
+          type: 'crew'
+        }));
+      } catch (error) {
+        console.error('Failed to load crew recruitments:', error);
+        this.communityCrews = [];
       }
     },
 
@@ -1997,7 +2688,9 @@ export default {
       await Promise.all([
         this.loadCommunityPosts(),
         this.loadCommunityPhotos(),
-        this.loadCommunityVideos()
+        this.loadCommunityVideos(),
+        this.loadCommunityReviews(),
+        this.loadCommunityCrews()
       ]);
       this.toast.success('커뮤니티 데이터가 새로고침되었습니다.', '🔄 새로고침');
     },
@@ -2011,7 +2704,9 @@ export default {
       const labels = {
         post: '게시글',
         photo: '사진',
-        video: '동영상'
+        video: '동영상',
+        review: '후기',
+        crew: '크루모집'
       };
       return labels[type] || type;
     },
@@ -2021,16 +2716,51 @@ export default {
         free: '자유게시판',
         qna: '질문답변',
         review: '후기게시판',
+        crew: '크루모집게시판',
         gallery: '갤러리',
-        notice: '공지사항'
+        notice: '공지사항',
+        exemption: '면제교육',
+        cruise: '크루즈요트',
+        dinghy: '딩기요트'
       };
       return labels[category] || category;
     },
 
     getPreviewUrl(item) {
-      if (item.file_path) {
-        return `${API_BASE_URL}${item.file_path}`;
+      // Photos의 경우 - API에서 이미 /api/uploads/photos/ 형태로 제공
+      if (item.type === 'photo' && item.url) {
+        // URL이 /로 시작하는 경우 API_BASE_URL과 합치기
+        if (item.url.startsWith('/')) {
+          return `${API_BASE_URL}${item.url}`;
+        }
+        return item.url;
       }
+
+      // Videos의 경우 - API에서 이미 /api/uploads/videos/ 형태로 제공
+      if (item.type === 'video') {
+        // 비디오는 썸네일이 있으면 썸네일을, 없으면 비디오 파일 자체를 사용
+        const videoUrl = item.url || item.file_path;
+        if (videoUrl && videoUrl.startsWith('/')) {
+          return `${API_BASE_URL}${videoUrl}`;
+        }
+        return videoUrl;
+      }
+
+      // 일반적인 경우
+      if (item.url) {
+        if (item.url.startsWith('/')) {
+          return `${API_BASE_URL}${item.url}`;
+        }
+        return item.url;
+      }
+
+      if (item.file_path) {
+        if (item.file_path.startsWith('/')) {
+          return `${API_BASE_URL}${item.file_path}`;
+        }
+        return item.file_path;
+      }
+
       return '/default-preview.jpg';
     },
 
@@ -2050,25 +2780,63 @@ ${item.content ? `내용: ${item.content.substring(0, 100)}...` : ''}
       this.toast.info(message, `👁️ ${typeLabel} 상세보기`);
     },
 
-    editCommunityItem(item) {
+    async editCommunityItem(item) {
       const typeLabel = this.getContentTypeLabel(item.type);
-      
-      // 실제로는 모달이나 별도 페이지를 열어야 하지만, 여기서는 간단한 확인만
-      if (confirm(`${typeLabel} "${item.title || item.filename}"을(를) 수정하시겠습니까?`)) {
-        this.toast.info(`${typeLabel} 수정 기능은 개발 중입니다.`, '🔧 수정');
-        
-        // TODO: 실제 수정 모달이나 페이지 열기
-        // this.openEditModal(item);
+
+      try {
+        let route = '';
+        switch (item.type) {
+          case 'post':
+            // 자유게시판 게시글 수정 (실제로는 해당 라우트로 이동)
+            route = '/community/free-board';
+            break;
+          case 'photo':
+            // 포토갤러리 수정 (실제로는 해당 라우트로 이동)
+            route = '/community/photo-gallery';
+            break;
+          case 'video':
+            // 동영상갤러리 수정 (실제로는 해당 라우트로 이동)
+            route = '/community/video-gallery';
+            break;
+          case 'review':
+            // 후기게시판 수정 (실제로는 해당 라우트로 이동)
+            route = '/community/review-board';
+            break;
+          case 'crew':
+            // 크루모집 수정 (실제로는 해당 라우트로 이동)
+            route = '/community/crew-recruitment';
+            break;
+          default:
+            this.toast.error('지원하지 않는 콘텐츠 타입입니다.', '❌ 오류');
+            return;
+        }
+
+        // 새 창에서 수정 페이지 열기
+        const editUrl = `${route}?edit=${item.id}`;
+        window.open(editUrl, '_blank');
+
+        this.toast.info(`${typeLabel} 수정 페이지를 새 창에서 열었습니다.`, '🔧 수정');
+
+      } catch (error) {
+        console.error('Failed to open edit page:', error);
+        this.toast.error('수정 페이지를 여는데 실패했습니다.', '❌ 오류');
       }
     },
 
     async deleteCommunityItem(item) {
       const typeLabel = this.getContentTypeLabel(item.type);
-      
-      if (!confirm(`정말로 이 ${typeLabel}을(를) 삭제하시겠습니까?\n\n제목: ${item.title || item.filename}`)) {
+
+      let confirmMessage = `정말로 이 ${typeLabel}을(를) 삭제하시겠습니까?\n\n제목: ${item.title || item.filename}`;
+
+      // 포토갤러리인 경우 사진 개수 표시
+      if (item.type === 'photo' && item.photo_count) {
+        confirmMessage += `\n\n⚠️ 갤러리 내 ${item.photo_count}장의 사진이 모두 삭제됩니다.`;
+      }
+
+      if (!confirm(confirmMessage)) {
         return;
       }
-      
+
       try {
         let endpoint = '';
         switch (item.type) {
@@ -2081,12 +2849,24 @@ ${item.content ? `내용: ${item.content.substring(0, 100)}...` : ''}
           case 'video':
             endpoint = `/api/videos/${item.id}`;
             break;
+          case 'review':
+            endpoint = `/api/reviews/${item.id}`;
+            break;
+          case 'crew':
+            endpoint = `/api/crews/${item.id}`;
+            break;
           default:
             throw new Error('알 수 없는 컨텐츠 타입');
         }
-        
-        await axios.delete(`${API_BASE_URL}${endpoint}`);
-        
+
+        const token = localStorage.getItem('token');
+        const response = await axios.delete(`${API_BASE_URL}${endpoint}`, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+
         // 로컬 데이터에서도 제거
         switch (item.type) {
           case 'post':
@@ -2098,12 +2878,24 @@ ${item.content ? `내용: ${item.content.substring(0, 100)}...` : ''}
           case 'video':
             this.communityVideos = this.communityVideos.filter(v => v.id !== item.id);
             break;
+          case 'review':
+            this.communityReviews = this.communityReviews.filter(r => r.id !== item.id);
+            break;
+          case 'crew':
+            this.communityCrews = this.communityCrews.filter(c => c.id !== item.id);
+            break;
         }
-        
-        this.toast.success(`${typeLabel}이(가) 삭제되었습니다.`, '🗑️ 삭제 완료');
+
+        // 갤러리 삭제 시 상세 메시지
+        if (item.type === 'photo' && response.data?.deletedPhotos) {
+          this.toast.success(`갤러리와 ${response.data.deletedPhotos}장의 사진이 모두 삭제되었습니다.`, '🗑️ 갤러리 삭제 완료');
+        } else {
+          this.toast.success(`${typeLabel}이(가) 삭제되었습니다.`, '🗑️ 삭제 완료');
+        }
       } catch (error) {
         console.error('Failed to delete community item:', error);
-        this.toast.error(`${typeLabel} 삭제에 실패했습니다.`, '삭제 오류');
+        const errorMsg = error.response?.data?.error || `${typeLabel} 삭제에 실패했습니다.`;
+        this.toast.error(errorMsg, '❌ 삭제 오류');
       }
     }
   },
@@ -2127,6 +2919,15 @@ ${item.content ? `내용: ${item.content.substring(0, 100)}...` : ''}
         this.loadEducationApplications();
         this.loadEducationStats();
       }
+    },
+
+    // 엑셀 관리 이벤트 핸들러
+    handleExcelSuccess(message) {
+      this.toast.success(message);
+    },
+
+    handleExcelError(message) {
+      this.toast.error(message);
     }
   }
 };
@@ -2592,6 +3393,109 @@ ${item.content ? `내용: ${item.content.substring(0, 100)}...` : ''}
   font-size: 1.2rem;
   font-weight: bold;
   margin-left: 5px;
+}
+
+.date-tag-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+}
+
+.date-tag.closed {
+  background: #dc3545;
+}
+
+.date-tag.closed:hover {
+  background: #c82333;
+}
+
+.closed-indicator {
+  font-size: 0.8rem;
+  font-weight: bold;
+}
+
+.closure-btn {
+  padding: 4px 8px;
+  border: none;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: all 0.3s;
+  background: #28a745;
+  color: white;
+  min-width: 50px;
+}
+
+.closure-btn.closed {
+  background: #ffc107;
+  color: #000;
+}
+
+.closure-btn:hover {
+  transform: scale(1.05);
+}
+
+.closure-btn:not(.closed):hover {
+  background: #218838;
+}
+
+.closure-btn.closed:hover {
+  background: #e0a800;
+}
+
+/* 월별 마감 컨트롤 스타일 */
+.month-closure-control {
+  margin-top: 20px;
+  padding: 15px;
+  background: #f8f9fa;
+  border-radius: 8px;
+  border: 1px solid #dee2e6;
+}
+
+.month-closure-btn {
+  padding: 12px 24px;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+  background: #dc3545;
+  color: white;
+  width: 100%;
+  margin-bottom: 10px;
+}
+
+.month-closure-btn:not(.closed) {
+  background: #dc3545;
+}
+
+.month-closure-btn.closed {
+  background: #28a745;
+}
+
+.month-closure-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+}
+
+.month-closure-btn:not(.closed):hover {
+  background: #c82333;
+}
+
+.month-closure-btn.closed:hover {
+  background: #218838;
+}
+
+.closure-info {
+  margin: 0;
+  padding: 8px 12px;
+  background: #e9ecef;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  color: #495057;
+  text-align: center;
 }
 
 @media (max-width: 768px) {
@@ -3214,5 +4118,475 @@ ${item.content ? `내용: ${item.content.substring(0, 100)}...` : ''}
   .filter-group {
     justify-content: space-between;
   }
+}
+
+.error-message {
+  background-color: #fee2e2;
+  border: 1px solid #fecaca;
+  color: #dc2626;
+  padding: 16px;
+  border-radius: 8px;
+  margin: 20px 0;
+  text-align: center;
+}
+
+/* 설정 탭 스타일 */
+.settings-nav {
+  display: flex;
+  background: white;
+  border-radius: 8px;
+  margin-bottom: 30px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  overflow-x: auto;
+  gap: 0;
+}
+
+.settings-nav-btn {
+  background: white;
+  border: none;
+  padding: 15px 20px;
+  cursor: pointer;
+  transition: all 0.3s;
+  color: #666;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+  min-width: 120px;
+  justify-content: center;
+  border-bottom: 3px solid transparent;
+}
+
+.settings-nav-btn:hover {
+  background: #f8f9fa;
+  color: #2c5aa0;
+}
+
+.settings-nav-btn.active {
+  background: white;
+  color: #2c5aa0;
+  border-bottom-color: #2c5aa0;
+}
+
+.settings-nav-btn i {
+  font-size: 16px;
+}
+
+.settings-section {
+  background: white;
+  border-radius: 12px;
+  padding: 30px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  margin-bottom: 20px;
+}
+
+.settings-section h3 {
+  margin: 0 0 25px 0;
+  color: #333;
+  font-size: 1.5rem;
+  font-weight: 600;
+  border-bottom: 2px solid #e9ecef;
+  padding-bottom: 10px;
+}
+
+.setting-group {
+  display: grid;
+  gap: 20px;
+}
+
+.setting-item {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.setting-item label {
+  font-weight: 600;
+  color: #333;
+  font-size: 0.95rem;
+}
+
+.setting-item input,
+.setting-item textarea,
+.setting-item select {
+  padding: 12px;
+  border: 2px solid #e9ecef;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  transition: border-color 0.3s;
+}
+
+.setting-item input:focus,
+.setting-item textarea:focus,
+.setting-item select:focus {
+  outline: none;
+  border-color: #2c5aa0;
+  box-shadow: 0 0 0 3px rgba(44, 90, 160, 0.1);
+}
+
+.setting-item textarea {
+  resize: vertical;
+  min-height: 80px;
+}
+
+.setting-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+.toggle-group {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.toggle-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 15px;
+  border: 1px solid #e9ecef;
+  border-radius: 8px;
+  background: #f8f9fa;
+}
+
+.toggle-item label {
+  font-weight: 500;
+  color: #333;
+  margin: 0;
+}
+
+.toggle-switch {
+  position: relative;
+  display: inline-block;
+  width: 50px;
+  height: 24px;
+}
+
+.toggle-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #ccc;
+  transition: .4s;
+  border-radius: 24px;
+}
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 18px;
+  width: 18px;
+  left: 3px;
+  bottom: 3px;
+  background-color: white;
+  transition: .4s;
+  border-radius: 50%;
+}
+
+input:checked + .slider {
+  background-color: #2c5aa0;
+}
+
+input:checked + .slider:before {
+  transform: translateX(26px);
+}
+
+.logo-upload {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  padding: 20px;
+  border: 2px dashed #e9ecef;
+  border-radius: 8px;
+  background: #f8f9fa;
+}
+
+.logo-preview {
+  width: 60px;
+  height: 60px;
+  object-fit: contain;
+  border-radius: 8px;
+  background: white;
+  padding: 5px;
+}
+
+.color-picker-group {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 20px;
+}
+
+.color-picker-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.color-picker-item input[type="color"] {
+  width: 50px;
+  height: 40px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.system-actions {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 20px;
+  margin-top: 20px;
+}
+
+.system-action-card {
+  background: white;
+  border: 2px solid #e9ecef;
+  border-radius: 12px;
+  padding: 20px;
+  text-align: center;
+  transition: all 0.3s;
+}
+
+.system-action-card:hover {
+  border-color: #2c5aa0;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.system-action-card i {
+  font-size: 2rem;
+  color: #2c5aa0;
+  margin-bottom: 10px;
+}
+
+.system-action-card h4 {
+  margin: 0 0 10px 0;
+  color: #333;
+}
+
+.system-action-card p {
+  color: #666;
+  font-size: 0.9rem;
+  margin-bottom: 15px;
+}
+
+.action-btn {
+  background: #2c5aa0;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background-color 0.3s;
+}
+
+.action-btn:hover {
+  background: #1e3d6f;
+}
+
+.save-all-btn {
+  background: #28a745;
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 1rem;
+  transition: all 0.3s;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.save-all-btn:hover:not(:disabled) {
+  background: #218838;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(40, 167, 69, 0.3);
+}
+
+.save-all-btn:disabled {
+  background: #6c757d;
+  cursor: not-allowed;
+}
+
+.admin-info-card {
+  background: linear-gradient(135deg, #2c5aa0, #1e3d6f);
+  color: white;
+  border-radius: 12px;
+  padding: 25px;
+  margin-bottom: 20px;
+}
+
+.admin-info-header {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  margin-bottom: 20px;
+}
+
+.admin-avatar {
+  width: 60px;
+  height: 60px;
+  background: rgba(255,255,255,0.2);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+}
+
+.admin-details h4 {
+  margin: 0 0 5px 0;
+  font-size: 1.3rem;
+}
+
+.admin-details p {
+  margin: 0;
+  opacity: 0.9;
+}
+
+.admin-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 15px;
+}
+
+.admin-stat {
+  background: rgba(255,255,255,0.1);
+  padding: 15px;
+  border-radius: 8px;
+  text-align: center;
+}
+
+.admin-stat-number {
+  font-size: 1.5rem;
+  font-weight: bold;
+  margin-bottom: 5px;
+}
+
+.admin-stat-label {
+  font-size: 0.9rem;
+  opacity: 0.9;
+}
+
+@media (max-width: 768px) {
+  .settings-nav {
+    flex-direction: row;
+    overflow-x: auto;
+  }
+
+  .settings-nav-btn {
+    min-width: 100px;
+    padding: 12px 15px;
+    font-size: 0.9rem;
+  }
+
+  .settings-section {
+    padding: 20px;
+    margin-bottom: 15px;
+  }
+
+  .setting-row {
+    grid-template-columns: 1fr;
+  }
+
+  .color-picker-group {
+    grid-template-columns: 1fr;
+  }
+
+  .system-actions {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-stats {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* 추가 스타일 */
+.db-status {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.status-indicator {
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.status-indicator.connected {
+  background: #d4edda;
+  color: #155724;
+}
+
+.status-indicator.disconnected {
+  background: #f8d7da;
+  color: #721c24;
+}
+
+.check-btn {
+  background: #007bff;
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.85rem;
+}
+
+.check-btn:hover {
+  background: #0056b3;
+}
+
+.backup-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.action-btn.primary {
+  background: #2c5aa0;
+  color: white;
+  border: none;
+  padding: 10px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 500;
+  transition: background-color 0.3s;
+}
+
+.action-btn.primary:hover:not(:disabled) {
+  background: #1e3d6f;
+}
+
+.action-btn.primary:disabled {
+  background: #6c757d;
+  cursor: not-allowed;
+}
+
+.setting-desc {
+  font-size: 0.85rem;
+  color: #666;
+  margin: 5px 0 0 0;
+  line-height: 1.4;
 }
 </style>

@@ -182,7 +182,12 @@ const authStore = {
 
   // 관리자 권한 확인
   isAdmin() {
-    return this.state.user?.role === 'admin'
+    return this.state.user?.role === 'admin' || this.state.user?.role === 'super_admin'
+  },
+
+  // 최고 관리자 권한 확인
+  isSuperAdmin() {
+    return this.state.user?.role === 'super_admin'
   }
 }
 
