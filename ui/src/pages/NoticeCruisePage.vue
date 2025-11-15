@@ -95,6 +95,35 @@
                         </div>
 
                         <div class="form-section">
+                            <label class="form-label">파일 첨부</label>
+                            <input
+                                type="file"
+                                accept=".pdf,.doc,.docx,.xls,.xlsx,.zip"
+                                multiple
+                                @change="handleFileSelection"
+                                ref="fileInput"
+                                class="file-input"
+                            />
+                            <div class="file-info">지원 형식: PDF, DOC, DOCX, XLS, XLSX, ZIP (최대 10MB, 최대 5개 파일)</div>
+                        </div>
+
+                        <div v-if="selectedFiles.length > 0" class="selected-files">
+                            <h4>선택된 파일:</h4>
+                            <div class="file-list">
+                                <div v-for="(file, index) in selectedFiles" :key="index" class="file-item">
+                                    <div class="file-icon">
+                                        <span>{{ getFileIcon(file.name) }}</span>
+                                    </div>
+                                    <div class="file-info-detail">
+                                        <span class="file-name">{{ file.name }}</span>
+                                        <span class="file-size">{{ formatFileSize(file.size) }}</span>
+                                    </div>
+                                    <button type="button" @click="removeFile(index)" class="remove-file">✕</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-section">
                             <label class="checkbox-label">
                                 <input
                                     type="checkbox"
@@ -140,6 +169,27 @@
                             <div v-if="notice.images && notice.images.length > 0" class="content-images">
                                 <div v-for="(image, index) in notice.images" :key="index" class="image-wrapper">
                                     <img :src="`${API_BASE_URL}${image.url}`" :alt="image.original_name" />
+                                </div>
+                            </div>
+
+                            <div v-if="notice.files && notice.files.length > 0" class="content-files">
+                                <h3>📎 첨부 파일</h3>
+                                <div class="files-list">
+                                    <a
+                                        v-for="(file, index) in notice.files"
+                                        :key="index"
+                                        :href="`${API_BASE_URL}${file.file_path}`"
+                                        :download="file.original_name"
+                                        class="file-download-item"
+                                        target="_blank"
+                                    >
+                                        <span class="file-icon-large">{{ getFileIcon(file.original_name) }}</span>
+                                        <div class="file-download-info">
+                                            <span class="file-download-name">{{ file.original_name }}</span>
+                                            <span class="file-download-size">{{ formatFileSize(file.file_size) }}</span>
+                                        </div>
+                                        <span class="download-icon">⬇️</span>
+                                    </a>
                                 </div>
                             </div>
                         </div>
@@ -222,9 +272,11 @@ export default {
                 author_name: '',
                 created_at: '',
                 views: 0,
-                images: []
+                images: [],
+                files: []
             },
             selectedImages: [],
+            selectedFiles: [],
             API_BASE_URL
         };
     },
@@ -271,7 +323,8 @@ export default {
                     author_name: noticeData.author_name,
                     created_at: noticeData.created_at,
                     views: noticeData.views,
-                    images: noticeData.images || []
+                    images: noticeData.images || [],
+                    files: noticeData.files || []
                 };
             } catch (error) {
                 console.error('공지사항 로드 실패:', error);
@@ -310,6 +363,10 @@ export default {
 
                 this.selectedImages.forEach(image => {
                     formData.append('images', image.file);
+                });
+
+                this.selectedFiles.forEach(file => {
+                    formData.append('images', file.file);
                 });
 
                 await axios.put(`${API_BASE_URL}/api/notices/${this.noticeId}`, formData, {
@@ -390,6 +447,55 @@ export default {
         removeImage(index) {
             this.selectedImages.splice(index, 1);
             this.onContentChange();
+        },
+        handleFileSelection(event) {
+            const files = Array.from(event.target.files);
+
+            if (files.length > 5) {
+                this.toast.warning('최대 5개의 파일만 선택할 수 있습니다.', '📎 파일 제한');
+                return;
+            }
+
+            this.selectedFiles = [];
+
+            files.forEach(file => {
+                if (file.size > 10 * 1024 * 1024) {
+                    this.toast.error(`${file.name}은(는) 파일 크기가 10MB를 초과합니다.`, '⚠️ 파일 크기 초과');
+                    return;
+                }
+
+                const allowedExtensions = ['.pdf', '.doc', '.docx', '.xls', '.xlsx', '.zip'];
+                const fileExtension = file.name.toLowerCase().substring(file.name.lastIndexOf('.'));
+
+                if (!allowedExtensions.includes(fileExtension)) {
+                    this.toast.error(`${file.name}은(는) 지원하지 않는 파일 형식입니다.`, '⚠️ 파일 형식 오류');
+                    return;
+                }
+
+                this.selectedFiles.push({
+                    file: file,
+                    name: file.name,
+                    size: file.size
+                });
+            });
+
+            this.onContentChange();
+        },
+        removeFile(index) {
+            this.selectedFiles.splice(index, 1);
+            this.onContentChange();
+        },
+        getFileIcon(filename) {
+            const extension = filename.toLowerCase().substring(filename.lastIndexOf('.'));
+            const icons = {
+                '.pdf': '📄',
+                '.doc': '📝',
+                '.docx': '📝',
+                '.xls': '📊',
+                '.xlsx': '📊',
+                '.zip': '🗜️'
+            };
+            return icons[extension] || '📎';
         },
         formatFileSize(bytes) {
             if (bytes === 0) return '0 Bytes';
@@ -736,6 +842,150 @@ export default {
 
 .remove-image:hover {
     background: #c82333;
+}
+
+.selected-files {
+    margin-top: 20px;
+    padding: 20px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    border: 2px solid #e0e0e0;
+}
+
+.selected-files h4 {
+    color: #007bff;
+    margin-bottom: 15px;
+    font-size: 1rem;
+}
+
+.file-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.file-item {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 10px;
+    background: white;
+    border-radius: 8px;
+    border: 1px solid #e0e0e0;
+}
+
+.file-icon {
+    width: 50px;
+    height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    flex-shrink: 0;
+}
+
+.file-info-detail {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.file-name {
+    font-weight: 500;
+    color: #333;
+    word-break: break-all;
+}
+
+.file-size {
+    color: #666;
+    font-size: 0.9rem;
+}
+
+.remove-file {
+    background: #dc3545;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 24px;
+    height: 24px;
+    cursor: pointer;
+    font-size: 0.8rem;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.remove-file:hover {
+    background: #c82333;
+}
+
+.content-files {
+    margin-top: 40px;
+    padding-top: 30px;
+    border-top: 2px solid #f0f0f0;
+}
+
+.content-files h3 {
+    color: #007bff;
+    margin-bottom: 20px;
+    font-size: 1.3rem;
+    font-weight: 600;
+}
+
+.files-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.file-download-item {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 15px;
+    background: #f8f9fa;
+    border: 2px solid #e0e0e0;
+    border-radius: 10px;
+    text-decoration: none;
+    transition: all 0.3s;
+}
+
+.file-download-item:hover {
+    background: #e9ecef;
+    border-color: #007bff;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 123, 255, 0.2);
+}
+
+.file-icon-large {
+    font-size: 2.5rem;
+    flex-shrink: 0;
+}
+
+.file-download-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.file-download-name {
+    color: #333;
+    font-weight: 600;
+    font-size: 1rem;
+    word-break: break-all;
+}
+
+.file-download-size {
+    color: #666;
+    font-size: 0.9rem;
+}
+
+.download-icon {
+    font-size: 1.5rem;
+    flex-shrink: 0;
 }
 
 .edit-actions {
