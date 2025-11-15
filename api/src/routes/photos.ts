@@ -12,7 +12,7 @@ const router = express.Router();
 // 파일 업로드 설정
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    const uploadDir = path.join(process.cwd(), config.UPLOAD_PATH, 'photos');
+    const uploadDir = path.join(config.UPLOAD_PATH, 'photos');
     ensureDirectory(uploadDir);
     cb(null, uploadDir);
   },

@@ -11,7 +11,7 @@ const router = express.Router();
 // 동영상 파일 업로드 설정
 const videoStorage = multer.diskStorage({
     destination: (req, file, cb) => {
-        const uploadDir = path.join(process.cwd(), config.UPLOAD_PATH, 'videos');
+        const uploadDir = path.join(config.UPLOAD_PATH, 'videos');
         ensureDirectory(uploadDir);
         cb(null, uploadDir);
     },
@@ -24,7 +24,7 @@ const videoStorage = multer.diskStorage({
 // 썸네일 이미지 업로드 설정
 const thumbnailStorage = multer.diskStorage({
     destination: (req, file, cb) => {
-        const uploadDir = path.join(process.cwd(), config.UPLOAD_PATH, 'thumbnails');
+        const uploadDir = path.join(config.UPLOAD_PATH, 'thumbnails');
         ensureDirectory(uploadDir);
         cb(null, uploadDir);
     },
