@@ -50,7 +50,6 @@
                             <div class="col-title">
                                 <span class="title-text" :class="{ 'important-title': notice.important }">{{ notice.title }}</span>
                                 <span v-if="isNewNotice(notice.date)" class="new-badge">NEW</span>
-                                <span v-if="notice.important" class="important-badge">📌 중요</span>
                             </div>
                             <div class="col-date">{{ formatDate(notice.date) }}</div>
                             <div class="col-views">{{ notice.views }}</div>
@@ -495,25 +494,6 @@ export default {
     font-weight: 600;
 }
 
-.important-badge {
-    background: linear-gradient(135deg, #ffc107 0%, #ffb300 100%);
-    color: #000;
-    font-size: 0.75rem;
-    padding: 4px 10px;
-    border-radius: 12px;
-    font-weight: 700;
-    box-shadow: 0 2px 4px rgba(255, 193, 7, 0.3);
-    animation: pulse 2s infinite;
-}
-
-@keyframes pulse {
-    0%, 100% {
-        opacity: 1;
-    }
-    50% {
-        opacity: 0.85;
-    }
-}
 
 .col-date,
 .col-views {

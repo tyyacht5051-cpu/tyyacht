@@ -56,7 +56,6 @@
                         <div class="col-title">
                             <span class="title-text" :class="{ 'important-title': notice.important }">{{ notice.title }}</span>
                             <span v-if="isNewNotice(notice.date)" class="new-badge">NEW</span>
-                            <span v-if="notice.important" class="important-badge">📌 중요</span>
                         </div>
                         <div class="col-date">{{ formatDate(notice.date) }}</div>
                         <div class="col-views">{{ notice.views }}</div>
@@ -450,8 +449,6 @@ export default {
 .title-link:hover { color: inherit; }
 .title-text.important-title { color: #d97706; font-weight: 600; }
 .new-badge { background: #dc3545; color: white; font-size: 0.7rem; padding: 2px 6px; border-radius: 10px; }
-.important-badge { background: linear-gradient(135deg, #ffc107 0%, #ffb300 100%); color: #000; font-size: 0.75rem; padding: 4px 10px; border-radius: 12px; font-weight: 700; box-shadow: 0 2px 4px rgba(255, 193, 7, 0.3); animation: pulse 2s infinite; }
-@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.85; } }
 .admin-controls { text-align: center; margin: 20px 0; }
 .write-btn { padding: 10px 20px; background: #17a2b8; color: white; border: none; border-radius: 8px; cursor: pointer; }
 .write-form { background: white; border: 2px solid #17a2b8; border-radius: 15px; padding: 30px; margin-top: 30px; }

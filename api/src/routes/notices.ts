@@ -237,18 +237,21 @@ router.get('/:id/adjacent', (req, res) => {
 // 드래프트 공지사항 생성 (관리자만)
 router.post('/draft', authenticateToken, requireAdmin, (req: AuthenticatedRequest, res) => {
   try {
-    const { title = '새 공지사항', content = '내용을 입력하세요...', category_id, important = false } = req.body;
+    const { title = '새 공지사항', content = '내용을 입력하세요...', category_id, important } = req.body;
     const author_id = req.user?.id;
 
     if (!category_id) {
       return res.status(400).json({ error: 'Category is required' });
     }
 
+    // important 값을 boolean으로 명시적 변환 (문자열 "false"도 제대로 처리)
+    const importantValue = important === 'true' || important === true ? 1 : 0;
+
     // 드래프트 공지사항 생성
     const result = db.prepare(`
       INSERT INTO notices (title, content, category_id, important, author_id)
       VALUES (?, ?, ?, ?, ?)
-    `).run(title, content, category_id, important ? 1 : 0, author_id);
+    `).run(title, content, category_id, importantValue, author_id);
 
     const noticeId = result.lastInsertRowid;
 
@@ -262,18 +265,21 @@ router.post('/draft', authenticateToken, requireAdmin, (req: AuthenticatedReques
 // 공지사항 작성 (관리자만)
 router.post('/', authenticateToken, requireAdmin, upload.array('images', 3), (req: AuthenticatedRequest, res) => {
   try {
-    const { title, content, category_id, important = false } = req.body;
+    const { title, content, category_id, important } = req.body;
     const author_id = req.user?.id;
-    
+
     if (!title || !content || !category_id) {
       return res.status(400).json({ error: 'Title, content, and category are required' });
     }
-    
+
+    // important 값을 boolean으로 명시적 변환 (문자열 "false"도 제대로 처리)
+    const importantValue = important === 'true' || important === true ? 1 : 0;
+
     // 공지사항 생성
     const result = db.prepare(`
       INSERT INTO notices (title, content, category_id, important, author_id)
       VALUES (?, ?, ?, ?, ?)
-    `).run(title, content, category_id, important ? 1 : 0, author_id);
+    `).run(title, content, category_id, importantValue, author_id);
     
     const noticeId = result.lastInsertRowid;
     
@@ -315,18 +321,21 @@ router.post('/', authenticateToken, requireAdmin, upload.array('images', 3), (re
 router.put('/:id', authenticateToken, requireAdmin, upload.array('images', 3), (req: AuthenticatedRequest, res) => {
   try {
     const noticeId = parseInt(req.params.id);
-    const { title, content, category_id, important = false } = req.body;
-    
+    const { title, content, category_id, important } = req.body;
+
     if (!title || !content || !category_id) {
       return res.status(400).json({ error: 'Title, content, and category are required' });
     }
-    
+
+    // important 값을 boolean으로 명시적 변환 (문자열 "false"도 제대로 처리)
+    const importantValue = important === 'true' || important === true ? 1 : 0;
+
     // 공지사항 수정
     const result = db.prepare(`
-      UPDATE notices 
+      UPDATE notices
       SET title = ?, content = ?, category_id = ?, important = ?, updated_at = CURRENT_TIMESTAMP
       WHERE id = ?
-    `).run(title, content, category_id, important ? 1 : 0, noticeId);
+    `).run(title, content, category_id, importantValue, noticeId);
     
     if (result.changes === 0) {
       return res.status(404).json({ error: 'Notice not found' });
