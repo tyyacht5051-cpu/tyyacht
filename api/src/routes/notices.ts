@@ -283,6 +283,8 @@ router.post('/', authenticateToken, requireAdmin, upload.array('images', 3), (re
         for (const file of files) {
           // 이미지 파일인지 확인
           const isImage = file.mimetype.startsWith('image/');
+          // 한글 파일명 인코딩 수정 (multer는 latin1로 인코딩하므로 utf-8로 변환)
+          const originalName = Buffer.from(file.originalname, 'latin1').toString('utf8');
 
           if (isImage) {
             // 이미지는 notice_images 테이블에 저장
@@ -290,14 +292,14 @@ router.post('/', authenticateToken, requireAdmin, upload.array('images', 3), (re
               INSERT INTO notice_images (notice_id, filename, original_name,
   file_path, file_size)
               VALUES (?, ?, ?, ?, ?)
-            `).run(noticeId, file.filename, file.originalname, file.path, file.size);    
+            `).run(noticeId, file.filename, originalName, file.path, file.size);
           } else {
             // 일반 파일은 notice_files 테이블에 저장
             db.prepare(`
               INSERT INTO notice_files (notice_id, filename, original_name,
   file_path, file_size, file_type)
               VALUES (?, ?, ?, ?, ?, ?)
-            `).run(noticeId, file.filename, file.originalname, file.path, file.size,     
+            `).run(noticeId, file.filename, originalName, file.path, file.size,
   file.mimetype);
           }
         }
@@ -335,19 +337,21 @@ router.put('/:id', authenticateToken, requireAdmin, upload.array('images', 3), (
       if (files && files.length > 0) {
         for (const file of files) {
           const isImage = file.mimetype.startsWith('image/');
+          // 한글 파일명 인코딩 수정 (multer는 latin1로 인코딩하므로 utf-8로 변환)
+          const originalName = Buffer.from(file.originalname, 'latin1').toString('utf8');
 
           if (isImage) {
             db.prepare(`
               INSERT INTO notice_images (notice_id, filename, original_name,
   file_path, file_size)
               VALUES (?, ?, ?, ?, ?)
-            `).run(noticeId, file.filename, file.originalname, file.path, file.size);    
+            `).run(noticeId, file.filename, originalName, file.path, file.size);
           } else {
             db.prepare(`
               INSERT INTO notice_files (notice_id, filename, original_name,
   file_path, file_size, file_type)
               VALUES (?, ?, ?, ?, ?, ?)
-            `).run(noticeId, file.filename, file.originalname, file.path, file.size,     
+            `).run(noticeId, file.filename, originalName, file.path, file.size,
   file.mimetype);
           }
         }
