@@ -1273,6 +1273,8 @@ export default {
     color: #666;
     line-height: 1.6;
     margin-bottom: 15px;
+    white-space: pre-wrap;
+    word-wrap: break-word;
 }
 
 .modal-meta {
