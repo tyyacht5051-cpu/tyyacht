@@ -398,23 +398,48 @@ router.delete('/:id', authenticateToken, requireAdmin, (req: AuthenticatedReques
 router.delete('/images/:imageId', authenticateToken, requireAdmin, (req: AuthenticatedRequest, res) => {
   try {
     const imageId = parseInt(req.params.imageId);
-    
+
     const image = db.prepare('SELECT * FROM notice_images WHERE id = ?').get(imageId) as NoticeImage;
-    
+
     if (!image) {
       return res.status(404).json({ error: 'Image not found' });
     }
-    
+
     // 파일 삭제
     safeDeleteFile(image.file_path);
-    
+
     // 데이터베이스에서 삭제
     db.prepare('DELETE FROM notice_images WHERE id = ?').run(imageId);
-    
+
     res.json({ message: 'Image deleted successfully' });
   } catch (error) {
     console.error('Failed to delete image:', error);
     res.status(500).json({ error: 'Failed to delete image' });
+  }
+});
+
+// 파일 삭제 (관리자만)
+router.delete('/:noticeId/files/:fileId', authenticateToken, requireAdmin, (req: AuthenticatedRequest, res) => {
+  try {
+    const fileId = parseInt(req.params.fileId);
+    const noticeId = parseInt(req.params.noticeId);
+
+    const file = db.prepare('SELECT * FROM notice_files WHERE id = ? AND notice_id = ?').get(fileId, noticeId) as any;
+
+    if (!file) {
+      return res.status(404).json({ error: 'File not found' });
+    }
+
+    // 파일 삭제
+    safeDeleteFile(file.file_path);
+
+    // 데이터베이스에서 삭제
+    db.prepare('DELETE FROM notice_files WHERE id = ?').run(fileId);
+
+    res.json({ message: 'File deleted successfully' });
+  } catch (error) {
+    console.error('Failed to delete file:', error);
+    res.status(500).json({ error: 'Failed to delete file' });
   }
 });
 

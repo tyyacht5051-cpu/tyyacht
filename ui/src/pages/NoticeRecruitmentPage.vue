@@ -96,6 +96,22 @@
 
                         <div class="form-section">
                             <label class="form-label">파일 첨부</label>
+                            <!-- 기존 업로드된 파일 목록 -->
+                            <div v-if="notice.files && notice.files.length > 0" class="existing-files">
+                                <h4>기존 파일:</h4>
+                                <div class="file-list">
+                                    <div v-for="(file, index) in notice.files" :key="'existing-' + file.id" class="file-item">
+                                        <div class="file-icon">
+                                            <span>{{ getFileIcon(file.original_name) }}</span>
+                                        </div>
+                                        <div class="file-info-detail">
+                                            <span class="file-name">{{ file.original_name }}</span>
+                                            <span class="file-size">{{ formatFileSize(file.file_size) }}</span>
+                                        </div>
+                                        <button type="button" @click="deleteExistingFile(file.id)" class="remove-file">🗑️ 삭제</button>
+                                    </div>
+                                </div>
+                            </div>
                             <input
                                 type="file"
                                 accept=".pdf,.doc,.docx,.xls,.xlsx,.zip,.hwp,.hwpx"
@@ -484,6 +500,26 @@ export default {
         removeFile(index) {
             this.selectedFiles.splice(index, 1);
             this.onContentChange();
+        },
+        async deleteExistingFile(fileId) {
+            if (!confirm('이 파일을 삭제하시겠습니까?')) {
+                return;
+            }
+
+            try {
+                await axios.delete(`${API_BASE_URL}/api/notices/${this.noticeId}/files/${fileId}`, {
+                    headers: {
+                        'Authorization': `Bearer ${this.authStore.state.token}`
+                    }
+                });
+
+                // 삭제 성공 시 로컬 상태 업데이트
+                this.notice.files = this.notice.files.filter(f => f.id !== fileId);
+                this.toast.success('파일이 삭제되었습니다.', '삭제 완료');
+            } catch (error) {
+                console.error('파일 삭제 실패:', error);
+                this.toast.error('파일 삭제에 실패했습니다.', '삭제 실패');
+            }
         },
         getFileIcon(filename) {
             const extension = filename.toLowerCase().substring(filename.lastIndexOf('.'));
@@ -921,6 +957,20 @@ export default {
 
 .remove-file:hover {
     background: #c82333;
+}
+
+.existing-files {
+    margin-bottom: 20px;
+    padding: 20px;
+    background: #fff3cd;
+    border-radius: 8px;
+    border: 2px solid #ffc107;
+}
+
+.existing-files h4 {
+    color: #856404;
+    margin-bottom: 15px;
+    font-size: 1rem;
 }
 
 .content-files {
