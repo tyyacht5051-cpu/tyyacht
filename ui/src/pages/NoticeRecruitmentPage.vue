@@ -98,13 +98,13 @@
                             <label class="form-label">파일 첨부</label>
                             <input
                                 type="file"
-                                accept=".pdf,.doc,.docx,.xls,.xlsx,.zip"
+                                accept=".pdf,.doc,.docx,.xls,.xlsx,.zip,.hwp,.hwpx"
                                 multiple
                                 @change="handleFileSelection"
                                 ref="fileInput"
                                 class="file-input"
                             />
-                            <div class="file-info">지원 형식: PDF, DOC, DOCX, XLS, XLSX, ZIP (최대 10MB, 최대 5개 파일)</div>
+                            <div class="file-info">지원 형식: PDF, DOC, DOCX, XLS, XLSX, ZIP, HWP, HWPX (최대 10MB, 최대 5개 파일)</div>
                         </div>
 
                         <div v-if="selectedFiles.length > 0" class="selected-files">
@@ -464,7 +464,7 @@ export default {
                     return;
                 }
 
-                const allowedExtensions = ['.pdf', '.doc', '.docx', '.xls', '.xlsx', '.zip'];
+                const allowedExtensions = ['.pdf', '.doc', '.docx', '.xls', '.xlsx', '.zip', '.hwp', '.hwpx'];
                 const fileExtension = file.name.toLowerCase().substring(file.name.lastIndexOf('.'));
 
                 if (!allowedExtensions.includes(fileExtension)) {
@@ -493,7 +493,9 @@ export default {
                 '.docx': '📝',
                 '.xls': '📊',
                 '.xlsx': '📊',
-                '.zip': '🗜️'
+                '.zip': '🗜️',
+                '.hwp': '📘',
+                '.hwpx': '📘'
             };
             return icons[extension] || '📎';
         },
