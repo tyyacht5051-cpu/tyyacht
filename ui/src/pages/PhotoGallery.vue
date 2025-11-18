@@ -79,33 +79,50 @@
                     </div>
                 </div>
 
-                <!-- 클릭 후: 2단 레이아웃 (왼쪽: 갤러리 리스트 + 오른쪽: 이미지 뷰어) -->
+                <!-- 클릭 후: 2단 레이아웃 (왼쪽: 갤러리 정보 + 오른쪽: 이미지 뷰어) -->
                 <div v-else class="gallery-layout">
-                    <!-- 왼쪽: 갤러리 리스트 -->
-                    <div class="gallery-list-card">
-                        <div class="list-header">
+                    <!-- 왼쪽: 갤러리 정보 (이미지, 내용, 썸네일) -->
+                    <div class="gallery-info-card">
+                        <div class="info-header">
                             <button class="back-to-grid-btn" @click="closeViewer">← 전체 갤러리로 돌아가기</button>
                         </div>
-                        <div class="photo-grid-compact">
-                            <div
-                                v-for="gallery in filteredPhotos"
-                                :key="gallery.id"
-                                :class="['photo-card-compact', { selected: selectedGallery.id === gallery.id }]"
-                                @click="selectGallery(gallery)"
-                            >
-                                <div class="photo-container-compact">
-                                    <img v-if="gallery.url" :src="`${API_BASE_URL}${gallery.url}`" :alt="gallery.title" class="photo-image" />
-                                    <div v-else class="photo-placeholder">
-                                        <div class="placeholder-icon">📷</div>
-                                    </div>
-                                    <div v-if="gallery.photo_count > 1" class="photo-count-badge-compact">
-                                        {{ gallery.photo_count }}장
-                                    </div>
+
+                        <div class="info-content">
+                            <!-- 대표 이미지 (작게) -->
+                            <div class="info-image-preview">
+                                <img v-if="selectedGallery.photos && selectedGallery.photos.length > 0"
+                                     :src="`${API_BASE_URL}${selectedGallery.photos[currentImageIndex].url}`"
+                                     :alt="selectedGallery.title"
+                                     class="preview-image" />
+                            </div>
+
+                            <!-- 상세 정보 -->
+                            <div class="info-details">
+                                <h3>{{ selectedGallery.title }}</h3>
+                                <div class="info-meta">
+                                    <span class="info-date">📅 {{ selectedGallery.date }}</span>
+                                    <span class="info-category">{{ getCategoryName(selectedGallery.categoryId) }}</span>
+                                    <span v-if="selectedGallery.photos" class="info-count">{{ selectedGallery.photos.length }}장</span>
                                 </div>
-                                <div class="photo-info-compact">
-                                    <h5>{{ gallery.title }}</h5>
-                                    <div class="photo-meta-compact">
-                                        <span class="date">{{ gallery.date }}</span>
+                                <div class="info-description">
+                                    <h4>상세 설명</h4>
+                                    <p v-if="selectedGallery.description">{{ selectedGallery.description }}</p>
+                                    <p v-else class="no-description">설명이 없습니다.</p>
+                                </div>
+                            </div>
+
+                            <!-- 이미지 썸네일 리스트 -->
+                            <div v-if="selectedGallery.photos && selectedGallery.photos.length > 0" class="info-thumbnails">
+                                <h4>이미지 목록 ({{ selectedGallery.photos.length }}장)</h4>
+                                <div class="thumbnails-grid">
+                                    <div
+                                        v-for="(photo, index) in selectedGallery.photos"
+                                        :key="photo.id"
+                                        :class="['thumbnail-item', { active: index === currentImageIndex }]"
+                                        @click="setCurrentImage(index)"
+                                    >
+                                        <img :src="`${API_BASE_URL}${photo.url}`" :alt="`이미지 ${index + 1}`" />
+                                        <div class="thumbnail-number">{{ index + 1 }}</div>
                                     </div>
                                 </div>
                             </div>
@@ -114,35 +131,21 @@
 
                     <!-- 오른쪽: 이미지 뷰어 -->
                     <div class="viewer-card">
-                        <div class="viewer-content">
-                            <div class="viewer-image-container">
-                                <button v-if="selectedGallery.photos && selectedGallery.photos.length > 1" class="viewer-btn prev-btn" @click="prevImage" :disabled="currentImageIndex === 0">‹</button>
-                                <img v-if="selectedGallery.photos && selectedGallery.photos.length > 0" :src="`${API_BASE_URL}${selectedGallery.photos[currentImageIndex].url}`" :alt="selectedGallery.title" class="viewer-image" />
-                                <button v-if="selectedGallery.photos && selectedGallery.photos.length > 1" class="viewer-btn next-btn" @click="nextImage" :disabled="currentImageIndex === selectedGallery.photos.length - 1">›</button>
-                                <div v-if="selectedGallery.photos && selectedGallery.photos.length > 1" class="viewer-counter">
-                                    {{ currentImageIndex + 1 }} / {{ selectedGallery.photos.length }}
-                                </div>
-                            </div>
-                            <div class="viewer-info">
-                                <h3>{{ selectedGallery.title }}</h3>
-                                <div class="viewer-meta">
-                                    <span class="viewer-date">📅 {{ selectedGallery.date }}</span>
-                                    <span class="viewer-category">{{ getCategoryName(selectedGallery.categoryId) }}</span>
-                                    <span v-if="selectedGallery.photos" class="viewer-count">{{ selectedGallery.photos.length }}장</span>
-                                </div>
-                                <p v-if="selectedGallery.description" class="viewer-description">{{ selectedGallery.description }}</p>
-                            </div>
-                            <!-- 썸네일 -->
-                            <div v-if="selectedGallery.photos && selectedGallery.photos.length > 1" class="viewer-thumbnails">
-                                <div
-                                    v-for="(photo, index) in selectedGallery.photos"
-                                    :key="photo.id"
-                                    :class="['viewer-thumbnail', { active: index === currentImageIndex }]"
-                                    @click="setCurrentImage(index)"
-                                >
-                                    <img :src="`${API_BASE_URL}${photo.url}`" :alt="`이미지 ${index + 1}`" />
-                                    <div class="thumbnail-num">{{ index + 1 }}</div>
-                                </div>
+                        <div class="viewer-image-container">
+                            <button v-if="selectedGallery.photos && selectedGallery.photos.length > 1"
+                                    class="viewer-btn prev-btn"
+                                    @click="prevImage"
+                                    :disabled="currentImageIndex === 0">‹</button>
+                            <img v-if="selectedGallery.photos && selectedGallery.photos.length > 0"
+                                 :src="`${API_BASE_URL}${selectedGallery.photos[currentImageIndex].url}`"
+                                 :alt="selectedGallery.title"
+                                 class="viewer-image" />
+                            <button v-if="selectedGallery.photos && selectedGallery.photos.length > 1"
+                                    class="viewer-btn next-btn"
+                                    @click="nextImage"
+                                    :disabled="currentImageIndex === selectedGallery.photos.length - 1">›</button>
+                            <div v-if="selectedGallery.photos && selectedGallery.photos.length > 1" class="viewer-counter">
+                                {{ currentImageIndex + 1 }} / {{ selectedGallery.photos.length }}
                             </div>
                         </div>
                     </div>
@@ -762,39 +765,33 @@ export default {
     margin-bottom: 40px;
 }
 
-/* 왼쪽 뷰어 카드 */
+/* 오른쪽 뷰어 카드 */
 .viewer-card {
-    background: white;
+    background: #1a1a1a;
     border-radius: 15px;
-    border: 2px solid #f0f0f0;
     overflow: hidden;
     position: sticky;
     top: 90px;
     height: fit-content;
     max-height: calc(100vh - 120px);
     display: flex;
-    flex-direction: column;
-}
-
-.viewer-content {
-    display: flex;
-    flex-direction: column;
-    height: 100%;
+    align-items: center;
+    justify-content: center;
 }
 
 .viewer-image-container {
     position: relative;
-    background: #1a1a1a;
-    min-height: 500px;
+    width: 100%;
+    min-height: 600px;
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 20px;
+    padding: 40px;
 }
 
 .viewer-image {
     max-width: 100%;
-    max-height: 600px;
+    max-height: 80vh;
     width: auto;
     height: auto;
     object-fit: contain;
@@ -852,142 +849,23 @@ export default {
     font-weight: 500;
 }
 
-.viewer-info {
-    padding: 25px;
-    border-bottom: 1px solid #f0f0f0;
-}
 
-.viewer-info h3 {
-    color: #2c5aa0;
-    font-size: 1.5rem;
-    margin-bottom: 12px;
-}
-
-.viewer-meta {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-    margin-bottom: 15px;
-}
-
-.viewer-date {
-    color: #666;
-    font-size: 0.9rem;
-}
-
-.viewer-category {
-    background: #f0f0f0;
-    padding: 4px 12px;
-    border-radius: 12px;
-    color: #666;
-    font-size: 0.85rem;
-}
-
-.viewer-count {
-    background: #2c5aa0;
-    color: white;
-    padding: 4px 12px;
-    border-radius: 12px;
-    font-size: 0.85rem;
-}
-
-.viewer-description {
-    color: #666;
-    line-height: 1.8;
-    white-space: pre-wrap;
-}
-
-.viewer-thumbnails {
-    padding: 20px;
-    background: #f8f9fa;
-    display: flex;
-    gap: 10px;
-    overflow-x: auto;
-    flex-shrink: 0;
-}
-
-.viewer-thumbnail {
-    position: relative;
-    width: 100px;
-    height: 75px;
-    border-radius: 8px;
+/* 왼쪽 갤러리 정보 카드 */
+.gallery-info-card {
+    background: white;
+    border-radius: 15px;
+    border: 2px solid #f0f0f0;
     overflow: hidden;
-    cursor: pointer;
-    border: 3px solid transparent;
-    transition: all 0.3s;
-    flex-shrink: 0;
-}
-
-.viewer-thumbnail:hover {
-    border-color: #2c5aa0;
-    transform: scale(1.05);
-}
-
-.viewer-thumbnail.active {
-    border-color: #2c5aa0;
-    box-shadow: 0 0 15px rgba(44, 90, 160, 0.4);
-}
-
-.viewer-thumbnail img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-}
-
-.thumbnail-num {
-    position: absolute;
-    top: 4px;
-    left: 4px;
-    background: rgba(0, 0, 0, 0.7);
-    color: white;
-    padding: 2px 6px;
-    border-radius: 8px;
-    font-size: 0.7rem;
-    font-weight: 600;
-}
-
-.viewer-placeholder {
-    min-height: 600px;
     display: flex;
     flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    color: #999;
-    padding: 40px;
-    text-align: center;
-}
-
-.viewer-placeholder .placeholder-icon {
-    font-size: 5rem;
-    margin-bottom: 20px;
-    opacity: 0.5;
-}
-
-.viewer-placeholder h3 {
-    color: #666;
-    margin-bottom: 10px;
-}
-
-.viewer-placeholder p {
-    color: #999;
-}
-
-/* 왼쪽 갤러리 리스트 카드 */
-.gallery-list-card {
-    display: flex;
-    flex-direction: column;
-    height: fit-content;
     max-height: calc(100vh - 120px);
-    overflow-y: auto;
 }
 
-.list-header {
+.info-header {
     padding: 15px;
     border-bottom: 2px solid #f0f0f0;
-    position: sticky;
-    top: 0;
     background: white;
-    z-index: 10;
+    flex-shrink: 0;
 }
 
 .back-to-grid-btn {
@@ -1006,63 +884,135 @@ export default {
     background: #1e3d6f;
 }
 
-.photo-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-    gap: 30px;
+.info-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px;
 }
 
-.photo-grid-compact {
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-    padding: 15px;
+/* 대표 이미지 (작게) */
+.info-image-preview {
+    margin-bottom: 20px;
 }
 
-.photo-card-compact {
-    display: flex;
-    gap: 15px;
-    background: white;
-    border: 2px solid #f0f0f0;
+.preview-image {
+    width: 100%;
+    max-height: 200px;
+    object-fit: cover;
     border-radius: 12px;
+}
+
+/* 상세 정보 */
+.info-details {
+    margin-bottom: 25px;
+}
+
+.info-details h3 {
+    color: #2c5aa0;
+    font-size: 1.5rem;
+    margin-bottom: 12px;
+}
+
+.info-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 15px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.info-date {
+    color: #666;
+    font-size: 0.9rem;
+}
+
+.info-category {
+    background: #f0f0f0;
+    padding: 4px 12px;
+    border-radius: 12px;
+    color: #666;
+    font-size: 0.85rem;
+}
+
+.info-count {
+    background: #2c5aa0;
+    color: white;
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 0.85rem;
+}
+
+.info-description h4 {
+    color: #333;
+    font-size: 1rem;
+    margin-bottom: 10px;
+}
+
+.info-description p {
+    color: #666;
+    line-height: 1.8;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.no-description {
+    color: #999;
+    font-style: italic;
+}
+
+/* 썸네일 리스트 */
+.info-thumbnails {
+    margin-top: 25px;
+    padding-top: 20px;
+    border-top: 2px solid #f0f0f0;
+}
+
+.info-thumbnails h4 {
+    color: #333;
+    font-size: 1rem;
+    margin-bottom: 15px;
+}
+
+.thumbnails-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+    gap: 10px;
+}
+
+.thumbnail-item {
+    position: relative;
+    aspect-ratio: 4/3;
+    border-radius: 8px;
     overflow: hidden;
     cursor: pointer;
+    border: 3px solid transparent;
     transition: all 0.3s;
 }
 
-.photo-card-compact:hover {
+.thumbnail-item:hover {
     border-color: #2c5aa0;
-    box-shadow: 0 4px 12px rgba(44, 90, 160, 0.2);
+    transform: scale(1.05);
 }
 
-.photo-card-compact.selected {
+.thumbnail-item.active {
     border-color: #2c5aa0;
-    background: #f0f7ff;
-    box-shadow: 0 4px 12px rgba(44, 90, 160, 0.3);
+    box-shadow: 0 0 15px rgba(44, 90, 160, 0.4);
 }
 
-.photo-container-compact {
-    width: 120px;
-    height: 90px;
-    flex-shrink: 0;
-    position: relative;
-    background: #f8f9fa;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.photo-container-compact .photo-image {
+.thumbnail-item img {
     width: 100%;
     height: 100%;
     object-fit: cover;
 }
 
-.photo-count-badge-compact {
+.thumbnail-number {
     position: absolute;
-    top: 5px;
-    right: 5px;
-    background: rgba(44, 90, 160, 0.9);
+    top: 4px;
+    left: 4px;
+    background: rgba(0, 0, 0, 0.7);
     color: white;
     padding: 2px 6px;
     border-radius: 8px;
@@ -1070,31 +1020,10 @@ export default {
     font-weight: 600;
 }
 
-.photo-info-compact {
-    flex: 1;
-    padding: 10px;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    min-width: 0;
-}
-
-.photo-info-compact h5 {
-    color: #2c5aa0;
-    font-size: 0.95rem;
-    margin: 0 0 5px 0;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-.photo-meta-compact {
-    color: #999;
-    font-size: 0.8rem;
-}
-
-.photo-meta-compact .date {
-    color: #666;
+.photo-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 30px;
 }
 
 .photo-card {
@@ -1861,7 +1790,7 @@ export default {
         gap: 20px;
     }
 
-    .gallery-list-card {
+    .gallery-info-card {
         order: 2;
         max-height: none;
     }
@@ -1873,11 +1802,16 @@ export default {
     }
 
     .viewer-image-container {
-        min-height: 300px;
+        min-height: 400px;
+        padding: 20px;
     }
 
     .viewer-image {
         max-height: 400px;
+    }
+
+    .thumbnails-grid {
+        grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
     }
 
     .photo-grid {
