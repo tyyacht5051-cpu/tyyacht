@@ -1042,7 +1042,7 @@ export default {
 }
 
 .photo-container {
-    height: 200px;
+    height: 300px;
     overflow: hidden;
     border-radius: 12px;
     position: relative;
@@ -1055,7 +1055,7 @@ export default {
 .photo-image {
     width: 100%;
     height: 100%;
-    object-fit: cover;
+    object-fit: contain;
     transition: transform 0.3s ease;
 }
 
