@@ -43,14 +43,14 @@
                         <div v-if="filteredNotices.length === 0" class="no-notices">
                             <p>등록된 공지사항이 없습니다.</p>
                         </div>
-                        <div v-for="notice in filteredNotices" :key="notice.id" class="table-row" @click="viewNotice(notice)">
+                        <div v-for="notice in filteredNotices" :key="notice.id" class="table-row" :class="{ 'important-row': notice.important }" @click="viewNotice(notice)">
                             <div class="col-category">
                                 <span class="category-badge" :class="notice.categoryClass">{{ notice.category }}</span>
                             </div>
                             <div class="col-title">
-                                <span class="title-text">{{ notice.title }}</span>
+                                <span class="title-text" :class="{ 'important-title': notice.important }">{{ notice.title }}</span>
                                 <span v-if="isNewNotice(notice.date)" class="new-badge">NEW</span>
-                                <span v-if="notice.important" class="important-badge">중요</span>
+                                <span v-if="notice.important" class="important-badge">📌 중요</span>
                             </div>
                             <div class="col-date">{{ formatDate(notice.date) }}</div>
                             <div class="col-views">{{ notice.views }}</div>
@@ -419,11 +419,22 @@ export default {
     padding: 15px;
     border-bottom: 1px solid #f9f9f9;
     cursor: pointer;
-    transition: background 0.3s;
+    transition: all 0.3s;
 }
 
 .table-row:hover {
     background: #f8f9fa;
+}
+
+.table-row.important-row {
+    background: linear-gradient(to right, #fff9e6, #ffffff);
+    border-left: 4px solid #ffc107;
+    font-weight: 500;
+}
+
+.table-row.important-row:hover {
+    background: linear-gradient(to right, #fff3cd, #f8f9fa);
+    box-shadow: 0 2px 8px rgba(255, 193, 7, 0.2);
 }
 
 .col-category {
@@ -470,6 +481,11 @@ export default {
     flex: 1;
 }
 
+.title-text.important-title {
+    color: #d97706;
+    font-weight: 600;
+}
+
 .new-badge {
     background: #dc3545;
     color: white;
@@ -480,12 +496,23 @@ export default {
 }
 
 .important-badge {
-    background: #ffc107;
-    color: #333;
-    font-size: 0.7rem;
-    padding: 2px 6px;
-    border-radius: 10px;
-    font-weight: 600;
+    background: linear-gradient(135deg, #ffc107 0%, #ffb300 100%);
+    color: #000;
+    font-size: 0.75rem;
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-weight: 700;
+    box-shadow: 0 2px 4px rgba(255, 193, 7, 0.3);
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.85;
+    }
 }
 
 .col-date,

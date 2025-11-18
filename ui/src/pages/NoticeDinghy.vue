@@ -51,12 +51,12 @@
                         <div class="col-views">조회</div>
                     </div>
 
-                    <router-link v-for="notice in paginatedNotices" :key="notice.id" :to="`/notice/dinghy/${notice.id}`" class="table-row title-link">
+                    <router-link v-for="notice in paginatedNotices" :key="notice.id" :to="`/notice/dinghy/${notice.id}`" class="table-row title-link" :class="{ 'important-row': notice.important }">
                         <div class="col-number">{{ notice.id }}</div>
                         <div class="col-title">
-                            <span class="title-text">{{ notice.title }}</span>
+                            <span class="title-text" :class="{ 'important-title': notice.important }">{{ notice.title }}</span>
                             <span v-if="isNewNotice(notice.date)" class="new-badge">NEW</span>
-                            <span v-if="notice.important" class="important-badge">중요</span>
+                            <span v-if="notice.important" class="important-badge">📌 중요</span>
                         </div>
                         <div class="col-date">{{ formatDate(notice.date) }}</div>
                         <div class="col-views">{{ notice.views }}</div>
@@ -442,12 +442,16 @@ export default {
 .total-count { color: #17a2b8; font-weight: 600; }
 .notices-table { background: white; border: 1px solid #f0f0f0; border-radius: 8px; overflow: hidden; margin-bottom: 30px; }
 .table-header { display: grid; grid-template-columns: 80px 1fr 120px 80px; background: #f8f9fa; padding: 15px; font-weight: 600; }
-.table-row { display: grid; grid-template-columns: 80px 1fr 120px 80px; padding: 15px; border-bottom: 1px solid #f9f9f9; cursor: pointer; }
+.table-row { display: grid; grid-template-columns: 80px 1fr 120px 80px; padding: 15px; border-bottom: 1px solid #f9f9f9; cursor: pointer; transition: all 0.3s; }
 .table-row:hover { background: #f8f9fa; }
+.table-row.important-row { background: linear-gradient(to right, #fff9e6, #ffffff); border-left: 4px solid #ffc107; font-weight: 500; }
+.table-row.important-row:hover { background: linear-gradient(to right, #fff3cd, #f8f9fa); box-shadow: 0 2px 8px rgba(255, 193, 7, 0.2); }
 .title-link { color: inherit; text-decoration: none; }
 .title-link:hover { color: inherit; }
+.title-text.important-title { color: #d97706; font-weight: 600; }
 .new-badge { background: #dc3545; color: white; font-size: 0.7rem; padding: 2px 6px; border-radius: 10px; }
-.important-badge { background: #ffc107; color: #333; font-size: 0.7rem; padding: 2px 6px; border-radius: 10px; }
+.important-badge { background: linear-gradient(135deg, #ffc107 0%, #ffb300 100%); color: #000; font-size: 0.75rem; padding: 4px 10px; border-radius: 12px; font-weight: 700; box-shadow: 0 2px 4px rgba(255, 193, 7, 0.3); animation: pulse 2s infinite; }
+@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.85; } }
 .admin-controls { text-align: center; margin: 20px 0; }
 .write-btn { padding: 10px 20px; background: #17a2b8; color: white; border: none; border-radius: 8px; cursor: pointer; }
 .write-form { background: white; border: 2px solid #17a2b8; border-radius: 15px; padding: 30px; margin-top: 30px; }
