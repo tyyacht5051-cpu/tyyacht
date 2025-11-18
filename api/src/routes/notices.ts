@@ -25,7 +25,17 @@ const upload = multer({
   storage: storage,
   limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
  fileFilter: (req, file, cb) => {
-      // 이미지와 문서 파일 모두 허용
+      // 허용된 파일 확장자 (한글 파일의 MIME 타입이 브라우저마다 다를 수 있어 확장자로도 체크)
+      const allowedExtensions = ['.pdf', '.doc', '.docx', '.xls', '.xlsx', '.zip', '.hwp', '.hwpx', '.jpg', '.jpeg', '.png', '.gif', '.webp'];
+      const ext = path.extname(file.originalname).toLowerCase();
+
+      // 확장자로 먼저 체크
+      if (allowedExtensions.includes(ext)) {
+        cb(null, true);
+        return;
+      }
+
+      // MIME 타입으로도 체크
       const allowedMimes = [
         'image/',
         'application/pdf',
@@ -40,10 +50,10 @@ const upload = multer({
         'application/vnd.hancom.hwpx'
       ];
 
-      if (allowedMimes.some(type => file.mimetype.startsWith(type) || file.mimetype      
-  === type)) {
+      if (allowedMimes.some(type => file.mimetype.startsWith(type) || file.mimetype === type)) {
         cb(null, true);
       } else {
+        console.error(`File type not allowed: ${file.originalname}, MIME: ${file.mimetype}, Extension: ${ext}`);
         cb(new Error('File type not allowed'));
       }
     }
