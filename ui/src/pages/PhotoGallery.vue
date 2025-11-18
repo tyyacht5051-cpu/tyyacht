@@ -35,51 +35,8 @@
                     </div>
                 </div>
 
-                <!-- 2단 레이아웃: 왼쪽 뷰어 + 오른쪽 갤러리 -->
-                <div class="gallery-layout">
-                    <!-- 왼쪽: 이미지 뷰어 -->
-                    <div class="viewer-card">
-                        <div v-if="selectedGallery && selectedGallery.photos && selectedGallery.photos.length > 0" class="viewer-content">
-                            <div class="viewer-image-container">
-                                <button v-if="selectedGallery.photos.length > 1" class="viewer-btn prev-btn" @click="prevImage" :disabled="currentImageIndex === 0">‹</button>
-                                <img :src="`${API_BASE_URL}${selectedGallery.photos[currentImageIndex].url}`" :alt="selectedGallery.title" class="viewer-image" />
-                                <button v-if="selectedGallery.photos.length > 1" class="viewer-btn next-btn" @click="nextImage" :disabled="currentImageIndex === selectedGallery.photos.length - 1">›</button>
-                                <div v-if="selectedGallery.photos.length > 1" class="viewer-counter">
-                                    {{ currentImageIndex + 1 }} / {{ selectedGallery.photos.length }}
-                                </div>
-                            </div>
-                            <div class="viewer-info">
-                                <h3>{{ selectedGallery.title }}</h3>
-                                <div class="viewer-meta">
-                                    <span class="viewer-date">📅 {{ selectedGallery.date }}</span>
-                                    <span class="viewer-category">{{ getCategoryName(selectedGallery.categoryId) }}</span>
-                                    <span class="viewer-count">{{ selectedGallery.photos.length }}장</span>
-                                </div>
-                                <p v-if="selectedGallery.description" class="viewer-description">{{ selectedGallery.description }}</p>
-                            </div>
-                            <!-- 썸네일 -->
-                            <div v-if="selectedGallery.photos.length > 1" class="viewer-thumbnails">
-                                <div
-                                    v-for="(photo, index) in selectedGallery.photos"
-                                    :key="photo.id"
-                                    :class="['viewer-thumbnail', { active: index === currentImageIndex }]"
-                                    @click="setCurrentImage(index)"
-                                >
-                                    <img :src="`${API_BASE_URL}${photo.url}`" :alt="`이미지 ${index + 1}`" />
-                                    <div class="thumbnail-num">{{ index + 1 }}</div>
-                                </div>
-                            </div>
-                        </div>
-                        <div v-else class="viewer-placeholder">
-                            <div class="placeholder-icon">📷</div>
-                            <h3>사진을 선택하세요</h3>
-                            <p>오른쪽 갤러리에서 사진을 클릭하면 여기에 크게 표시됩니다</p>
-                        </div>
-                    </div>
-
-                    <!-- 오른쪽: 갤러리 목록 -->
-                    <div class="gallery-list-card">
-                        <div class="photo-grid">
+                <!-- 기본 상태: 그리드 뷰 -->
+                <div v-if="!selectedGallery" class="photo-grid">
                     <div
                         v-for="gallery in filteredPhotos"
                         :key="gallery.id"
@@ -114,13 +71,79 @@
                             </div>
                         </div>
                     </div>
+
+                    <div class="empty-state" v-if="filteredPhotos.length === 0">
+                        <div class="empty-icon">📸</div>
+                        <h3>아직 사진이 없습니다</h3>
+                        <p>관리자가 곧 멋진 사진들을 업로드할 예정입니다.</p>
+                    </div>
                 </div>
 
-                        <div class="empty-state" v-if="filteredPhotos.length === 0">
-                            <div class="empty-icon">📸</div>
-                            <h3>아직 사진이 없습니다</h3>
-                            <p>관리자가 곧 멋진 사진들을 업로드할 예정입니다.</p>
+                <!-- 클릭 후: 2단 레이아웃 (왼쪽: 갤러리 리스트 + 오른쪽: 이미지 뷰어) -->
+                <div v-else class="gallery-layout">
+                    <!-- 왼쪽: 갤러리 리스트 -->
+                    <div class="gallery-list-card">
+                        <div class="list-header">
+                            <button class="back-to-grid-btn" @click="closeViewer">← 전체 갤러리로 돌아가기</button>
                         </div>
+                        <div class="photo-grid-compact">
+                            <div
+                                v-for="gallery in filteredPhotos"
+                                :key="gallery.id"
+                                :class="['photo-card-compact', { selected: selectedGallery.id === gallery.id }]"
+                                @click="selectGallery(gallery)"
+                            >
+                                <div class="photo-container-compact">
+                                    <img v-if="gallery.url" :src="`${API_BASE_URL}${gallery.url}`" :alt="gallery.title" class="photo-image" />
+                                    <div v-else class="photo-placeholder">
+                                        <div class="placeholder-icon">📷</div>
+                                    </div>
+                                    <div v-if="gallery.photo_count > 1" class="photo-count-badge-compact">
+                                        {{ gallery.photo_count }}장
+                                    </div>
+                                </div>
+                                <div class="photo-info-compact">
+                                    <h5>{{ gallery.title }}</h5>
+                                    <div class="photo-meta-compact">
+                                        <span class="date">{{ gallery.date }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 오른쪽: 이미지 뷰어 -->
+                    <div class="viewer-card">
+                        <div class="viewer-content">
+                            <div class="viewer-image-container">
+                                <button v-if="selectedGallery.photos && selectedGallery.photos.length > 1" class="viewer-btn prev-btn" @click="prevImage" :disabled="currentImageIndex === 0">‹</button>
+                                <img v-if="selectedGallery.photos && selectedGallery.photos.length > 0" :src="`${API_BASE_URL}${selectedGallery.photos[currentImageIndex].url}`" :alt="selectedGallery.title" class="viewer-image" />
+                                <button v-if="selectedGallery.photos && selectedGallery.photos.length > 1" class="viewer-btn next-btn" @click="nextImage" :disabled="currentImageIndex === selectedGallery.photos.length - 1">›</button>
+                                <div v-if="selectedGallery.photos && selectedGallery.photos.length > 1" class="viewer-counter">
+                                    {{ currentImageIndex + 1 }} / {{ selectedGallery.photos.length }}
+                                </div>
+                            </div>
+                            <div class="viewer-info">
+                                <h3>{{ selectedGallery.title }}</h3>
+                                <div class="viewer-meta">
+                                    <span class="viewer-date">📅 {{ selectedGallery.date }}</span>
+                                    <span class="viewer-category">{{ getCategoryName(selectedGallery.categoryId) }}</span>
+                                    <span v-if="selectedGallery.photos" class="viewer-count">{{ selectedGallery.photos.length }}장</span>
+                                </div>
+                                <p v-if="selectedGallery.description" class="viewer-description">{{ selectedGallery.description }}</p>
+                            </div>
+                            <!-- 썸네일 -->
+                            <div v-if="selectedGallery.photos && selectedGallery.photos.length > 1" class="viewer-thumbnails">
+                                <div
+                                    v-for="(photo, index) in selectedGallery.photos"
+                                    :key="photo.id"
+                                    :class="['viewer-thumbnail', { active: index === currentImageIndex }]"
+                                    @click="setCurrentImage(index)"
+                                >
+                                    <img :src="`${API_BASE_URL}${photo.url}`" :alt="`이미지 ${index + 1}`" />
+                                    <div class="thumbnail-num">{{ index + 1 }}</div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -297,13 +320,6 @@ export default {
                 const response = await axios.get(`${API_BASE_URL}/api/photos/${gallery.id}`);
                 this.selectedGallery = response.data;
                 this.currentImageIndex = 0;
-                // 뷰어로 스크롤
-                this.$nextTick(() => {
-                    const viewer = document.querySelector('.viewer-card');
-                    if (viewer) {
-                        viewer.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                    }
-                });
             } catch (error) {
                 console.error('Failed to load gallery details:', error);
                 this.toast.error('갤러리를 불러오는데 실패했습니다.', '❌ 로드 실패');
@@ -321,6 +337,10 @@ export default {
         },
         setCurrentImage(index) {
             this.currentImageIndex = index;
+        },
+        closeViewer() {
+            this.selectedGallery = null;
+            this.currentImageIndex = 0;
         },
         handleFileSelection(event) {
             const files = Array.from(event.target.files);
@@ -734,10 +754,10 @@ export default {
     border-color: #2c5aa0;
 }
 
-/* 2단 레이아웃 */
+/* 2단 레이아웃: 왼쪽 갤러리 리스트 + 오른쪽 뷰어 */
 .gallery-layout {
     display: grid;
-    grid-template-columns: 1.5fr 1fr;
+    grid-template-columns: 1fr 1.5fr;
     gap: 30px;
     margin-bottom: 40px;
 }
@@ -952,16 +972,129 @@ export default {
     color: #999;
 }
 
-/* 오른쪽 갤러리 리스트 카드 */
+/* 왼쪽 갤러리 리스트 카드 */
 .gallery-list-card {
     display: flex;
     flex-direction: column;
+    height: fit-content;
+    max-height: calc(100vh - 120px);
+    overflow-y: auto;
+}
+
+.list-header {
+    padding: 15px;
+    border-bottom: 2px solid #f0f0f0;
+    position: sticky;
+    top: 0;
+    background: white;
+    z-index: 10;
+}
+
+.back-to-grid-btn {
+    padding: 10px 15px;
+    background: #2c5aa0;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: all 0.3s;
+    width: 100%;
+}
+
+.back-to-grid-btn:hover {
+    background: #1e3d6f;
 }
 
 .photo-grid {
     display: grid;
-    grid-template-columns: 1fr;
-    gap: 20px;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 30px;
+}
+
+.photo-grid-compact {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    padding: 15px;
+}
+
+.photo-card-compact {
+    display: flex;
+    gap: 15px;
+    background: white;
+    border: 2px solid #f0f0f0;
+    border-radius: 12px;
+    overflow: hidden;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.photo-card-compact:hover {
+    border-color: #2c5aa0;
+    box-shadow: 0 4px 12px rgba(44, 90, 160, 0.2);
+}
+
+.photo-card-compact.selected {
+    border-color: #2c5aa0;
+    background: #f0f7ff;
+    box-shadow: 0 4px 12px rgba(44, 90, 160, 0.3);
+}
+
+.photo-container-compact {
+    width: 120px;
+    height: 90px;
+    flex-shrink: 0;
+    position: relative;
+    background: #f8f9fa;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.photo-container-compact .photo-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.photo-count-badge-compact {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    background: rgba(44, 90, 160, 0.9);
+    color: white;
+    padding: 2px 6px;
+    border-radius: 8px;
+    font-size: 0.7rem;
+    font-weight: 600;
+}
+
+.photo-info-compact {
+    flex: 1;
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-width: 0;
+}
+
+.photo-info-compact h5 {
+    color: #2c5aa0;
+    font-size: 0.95rem;
+    margin: 0 0 5px 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.photo-meta-compact {
+    color: #999;
+    font-size: 0.8rem;
+}
+
+.photo-meta-compact .date {
+    color: #666;
 }
 
 .photo-card {
@@ -1728,7 +1861,13 @@ export default {
         gap: 20px;
     }
 
+    .gallery-list-card {
+        order: 2;
+        max-height: none;
+    }
+
     .viewer-card {
+        order: 1;
         position: static;
         max-height: none;
     }
