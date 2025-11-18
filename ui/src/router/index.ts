@@ -93,6 +93,11 @@ const routes: RouteRecordRaw[] = [
     component: () => import('../pages/PhotoGallery.vue')
   },
   {
+    path: '/community/photo-gallery/edit/:id',
+    name: 'PhotoGalleryEdit',
+    component: () => import('../pages/PhotoGalleryEdit.vue')
+  },
+  {
     path: '/community/video-gallery',
     name: 'VideoGallery',
     component: () => import('../pages/VideoGallery.vue')

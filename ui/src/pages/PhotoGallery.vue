@@ -40,9 +40,8 @@
                         v-for="gallery in filteredPhotos"
                         :key="gallery.id"
                         class="photo-card"
-                        @click="openModal(gallery)"
                     >
-                        <div class="photo-container">
+                        <div class="photo-container" @click="openModal(gallery)">
                             <img v-if="gallery.url" :src="`${API_BASE_URL}${gallery.url}`" :alt="gallery.title" class="photo-image" />
                             <div v-else class="photo-placeholder">
                                 <div class="placeholder-icon">📷</div>
@@ -53,11 +52,21 @@
                             </div>
                         </div>
                         <div class="photo-info">
-                            <h4>{{ gallery.title }}</h4>
-                            <p>{{ gallery.description }}</p>
-                            <div class="photo-meta">
-                                <span class="date">{{ gallery.date }}</span>
-                                <span class="category">{{ getCategoryName(gallery.categoryId) }}</span>
+                            <div @click="openModal(gallery)" style="cursor: pointer;">
+                                <h4>{{ gallery.title }}</h4>
+                                <p class="description-text">{{ truncateDescription(gallery.description) }}</p>
+                                <div class="photo-meta">
+                                    <span class="date">{{ gallery.date }}</span>
+                                    <span class="category">{{ getCategoryName(gallery.categoryId) }}</span>
+                                </div>
+                            </div>
+                            <div v-if="isAdmin" class="admin-actions">
+                                <button @click.stop="editGallery(gallery)" class="edit-btn" title="편집">
+                                    ✏️ 편집
+                                </button>
+                                <button @click.stop="deleteGallery(gallery)" class="delete-btn" title="삭제">
+                                    🗑️ 삭제
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -404,6 +413,56 @@ export default {
             // 사진 관리 페이지로 이동
             console.log('Manage photos');
         },
+        truncateDescription(text) {
+            if (!text) return '';
+
+            // 줄바꿈으로 분리
+            const lines = text.split('\n');
+
+            // 상위 2줄만 가져오기
+            const firstTwoLines = lines.slice(0, 2).join('\n');
+
+            // 2줄보다 많으면 ... 추가
+            if (lines.length > 2) {
+                return firstTwoLines + '...';
+            }
+
+            // 2줄 이하지만 길이가 긴 경우도 처리 (100자 제한)
+            if (firstTwoLines.length > 100) {
+                return firstTwoLines.substring(0, 100) + '...';
+            }
+
+            return firstTwoLines;
+        },
+        async editGallery(gallery) {
+            // 편집 모달 또는 페이지로 이동
+            this.$router.push(`/community/photo-gallery/edit/${gallery.id}`);
+        },
+        async deleteGallery(gallery) {
+            if (!confirm(`"${gallery.title}" 갤러리를 삭제하시겠습니까?\n포함된 모든 사진이 함께 삭제됩니다.`)) {
+                return;
+            }
+
+            try {
+                await axios.delete(`${API_BASE_URL}/api/photos/${gallery.id}`, {
+                    headers: {
+                        'Authorization': `Bearer ${this.authStore.state.token}`
+                    }
+                });
+
+                this.toast.success('갤러리가 삭제되었습니다.', '🗑️ 삭제 완료');
+                await this.loadPhotos();
+            } catch (error) {
+                console.error('갤러리 삭제 실패:', error);
+                if (error.response?.status === 401) {
+                    this.toast.urgent('로그인이 필요합니다.', '🔐 로그인 필요');
+                } else if (error.response?.status === 403) {
+                    this.toast.urgent('권한이 없습니다.', '⚠️ 권한 없음');
+                } else {
+                    this.toast.error('갤러리 삭제에 실패했습니다.', '❌ 삭제 실패');
+                }
+            }
+        },
         goBack() {
             this.$router.push('/community');
         },
@@ -747,6 +806,57 @@ export default {
     font-size: 0.9rem;
     line-height: 1.5;
     margin-bottom: 15px;
+}
+
+.description-text {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 1.5;
+    max-height: 3em;
+}
+
+.admin-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid #f0f0f0;
+}
+
+.admin-actions button {
+    flex: 1;
+    padding: 8px 12px;
+    border: none;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.edit-btn {
+    background: #2c5aa0;
+    color: white;
+}
+
+.edit-btn:hover {
+    background: #1e3d6f;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(44, 90, 160, 0.3);
+}
+
+.delete-btn {
+    background: #dc3545;
+    color: white;
+}
+
+.delete-btn:hover {
+    background: #c82333;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(220, 53, 69, 0.3);
 }
 
 .photo-meta {

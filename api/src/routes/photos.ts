@@ -199,30 +199,59 @@ router.post('/', uploadLimiter, authenticateToken, requireAdmin, upload.array('p
   }
 });
 
-// 사진 수정 (관리자만)
-router.put('/:id', authenticateToken, requireAdmin, (req: AuthenticatedRequest, res) => {
+// 갤러리 수정 (관리자만) - 갤러리 정보 수정 및 사진 추가
+router.put('/:id', authenticateToken, requireAdmin, upload.array('photos', 20), (req: AuthenticatedRequest, res) => {
   try {
-    const photoId = parseInt(req.params.id);
+    const galleryId = parseInt(req.params.id);
     const { title, description, category_id } = req.body;
-    
+
     if (!title || !category_id) {
       return res.status(400).json({ error: 'Title and category are required' });
     }
-    
+
+    // 갤러리 정보 수정
     const result = db.prepare(`
-      UPDATE photos 
+      UPDATE photo_galleries
       SET title = ?, description = ?, category_id = ?, updated_at = CURRENT_TIMESTAMP
       WHERE id = ?
-    `).run(title, description || '', category_id, photoId);
-    
+    `).run(title, description || '', category_id, galleryId);
+
     if (result.changes === 0) {
-      return res.status(404).json({ error: 'Photo not found' });
+      return res.status(404).json({ error: 'Gallery not found' });
     }
-    
-    res.json({ message: 'Photo updated successfully' });
+
+    // 새 사진 추가 (있는 경우)
+    const files = req.files as Express.Multer.File[];
+    if (files && files.length > 0) {
+      // 기존 사진 개수 확인
+      const existingPhotos = db.prepare('SELECT COUNT(*) as count FROM photos WHERE gallery_id = ?').get(galleryId) as { count: number };
+
+      if (existingPhotos.count + files.length > 20) {
+        return res.status(400).json({ error: 'Cannot exceed 20 photos per gallery' });
+      }
+
+      const photoStmt = db.prepare(`
+        INSERT INTO photos (gallery_id, filename, original_name, file_path, file_size, display_order)
+        VALUES (?, ?, ?, ?, ?, ?)
+      `);
+
+      files.forEach((file, index) => {
+        const displayOrder = existingPhotos.count + index + 1;
+        photoStmt.run(
+          galleryId,
+          file.filename,
+          file.originalname,
+          file.path,
+          file.size,
+          displayOrder
+        );
+      });
+    }
+
+    res.json({ message: 'Gallery updated successfully' });
   } catch (error) {
-    console.error('Failed to update photo:', error);
-    res.status(500).json({ error: 'Failed to update photo' });
+    console.error('Failed to update gallery:', error);
+    res.status(500).json({ error: 'Failed to update gallery' });
   }
 });
 
