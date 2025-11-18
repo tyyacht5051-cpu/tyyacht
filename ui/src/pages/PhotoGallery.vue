@@ -24,8 +24,8 @@
 
                 <div class="gallery-categories">
                     <div class="category-tabs">
-                        <button 
-                            v-for="category in categories" 
+                        <button
+                            v-for="category in categories"
                             :key="category.id"
                             :class="['tab-button', { active: activeCategory === category.id }]"
                             @click="setActiveCategory(category.id)"
@@ -35,13 +35,57 @@
                     </div>
                 </div>
 
-                <div class="photo-grid">
+                <!-- 2단 레이아웃: 왼쪽 뷰어 + 오른쪽 갤러리 -->
+                <div class="gallery-layout">
+                    <!-- 왼쪽: 이미지 뷰어 -->
+                    <div class="viewer-card">
+                        <div v-if="selectedGallery && selectedGallery.photos && selectedGallery.photos.length > 0" class="viewer-content">
+                            <div class="viewer-image-container">
+                                <button v-if="selectedGallery.photos.length > 1" class="viewer-btn prev-btn" @click="prevImage" :disabled="currentImageIndex === 0">‹</button>
+                                <img :src="`${API_BASE_URL}${selectedGallery.photos[currentImageIndex].url}`" :alt="selectedGallery.title" class="viewer-image" />
+                                <button v-if="selectedGallery.photos.length > 1" class="viewer-btn next-btn" @click="nextImage" :disabled="currentImageIndex === selectedGallery.photos.length - 1">›</button>
+                                <div v-if="selectedGallery.photos.length > 1" class="viewer-counter">
+                                    {{ currentImageIndex + 1 }} / {{ selectedGallery.photos.length }}
+                                </div>
+                            </div>
+                            <div class="viewer-info">
+                                <h3>{{ selectedGallery.title }}</h3>
+                                <div class="viewer-meta">
+                                    <span class="viewer-date">📅 {{ selectedGallery.date }}</span>
+                                    <span class="viewer-category">{{ getCategoryName(selectedGallery.categoryId) }}</span>
+                                    <span class="viewer-count">{{ selectedGallery.photos.length }}장</span>
+                                </div>
+                                <p v-if="selectedGallery.description" class="viewer-description">{{ selectedGallery.description }}</p>
+                            </div>
+                            <!-- 썸네일 -->
+                            <div v-if="selectedGallery.photos.length > 1" class="viewer-thumbnails">
+                                <div
+                                    v-for="(photo, index) in selectedGallery.photos"
+                                    :key="photo.id"
+                                    :class="['viewer-thumbnail', { active: index === currentImageIndex }]"
+                                    @click="setCurrentImage(index)"
+                                >
+                                    <img :src="`${API_BASE_URL}${photo.url}`" :alt="`이미지 ${index + 1}`" />
+                                    <div class="thumbnail-num">{{ index + 1 }}</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div v-else class="viewer-placeholder">
+                            <div class="placeholder-icon">📷</div>
+                            <h3>사진을 선택하세요</h3>
+                            <p>오른쪽 갤러리에서 사진을 클릭하면 여기에 크게 표시됩니다</p>
+                        </div>
+                    </div>
+
+                    <!-- 오른쪽: 갤러리 목록 -->
+                    <div class="gallery-list-card">
+                        <div class="photo-grid">
                     <div
                         v-for="gallery in filteredPhotos"
                         :key="gallery.id"
                         class="photo-card"
                     >
-                        <div class="photo-container" @click="openModal(gallery)">
+                        <div class="photo-container" @click="selectGallery(gallery)">
                             <img v-if="gallery.url" :src="`${API_BASE_URL}${gallery.url}`" :alt="gallery.title" class="photo-image" />
                             <div v-else class="photo-placeholder">
                                 <div class="placeholder-icon">📷</div>
@@ -52,7 +96,7 @@
                             </div>
                         </div>
                         <div class="photo-info">
-                            <div @click="openModal(gallery)" style="cursor: pointer;">
+                            <div @click="selectGallery(gallery)" style="cursor: pointer;">
                                 <h4>{{ gallery.title }}</h4>
                                 <p class="description-text">{{ truncateDescription(gallery.description) }}</p>
                                 <div class="photo-meta">
@@ -72,10 +116,13 @@
                     </div>
                 </div>
 
-                <div class="empty-state" v-if="filteredPhotos.length === 0">
-                    <div class="empty-icon">📸</div>
-                    <h3>아직 사진이 없습니다</h3>
-                    <p>관리자가 곧 멋진 사진들을 업로드할 예정입니다.</p>
+                        <div class="empty-state" v-if="filteredPhotos.length === 0">
+                            <div class="empty-icon">📸</div>
+                            <h3>아직 사진이 없습니다</h3>
+                            <p>관리자가 곧 멋진 사진들을 업로드할 예정입니다.</p>
+                        </div>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="admin-section" v-if="isAdmin">
@@ -184,47 +231,6 @@
             </button>
         </div>
 
-        <!-- 갤러리 모달 -->
-        <div v-if="showModal" class="modal-overlay" @click="closeModal">
-            <div class="modal-content" @click.stop>
-                <button class="modal-close" @click="closeModal">&times;</button>
-                <div class="modal-image-container">
-                    <div v-if="selectedGallery && selectedGallery.photos && selectedGallery.photos.length > 0" class="gallery-slider">
-                        <button v-if="selectedGallery.photos.length > 1" class="slider-btn prev-btn" @click="prevImage" :disabled="currentImageIndex === 0">‹</button>
-                        <img :src="`${API_BASE_URL}${selectedGallery.photos[currentImageIndex].url}`" :alt="selectedGallery.title" class="modal-image" />
-                        <button v-if="selectedGallery.photos.length > 1" class="slider-btn next-btn" @click="nextImage" :disabled="currentImageIndex === selectedGallery.photos.length - 1">›</button>
-                        <div v-if="selectedGallery.photos.length > 1" class="image-counter">
-                            {{ currentImageIndex + 1 }} / {{ selectedGallery.photos.length }}
-                        </div>
-                    </div>
-                    <div v-else class="no-images">
-                        <div class="no-images-icon">📷</div>
-                        <p>이 갤러리에는 이미지가 없습니다.</p>
-                    </div>
-                </div>
-                <div class="modal-info">
-                    <h3>{{ selectedGallery.title }}</h3>
-                    <p v-if="selectedGallery.description">{{ selectedGallery.description }}</p>
-                    <div class="modal-meta">
-                        <span class="modal-date">{{ selectedGallery.date }}</span>
-                        <span class="modal-category">{{ getCategoryName(selectedGallery.categoryId) }}</span>
-                        <span v-if="selectedGallery.photos" class="modal-count">{{ selectedGallery.photos.length }}장</span>
-                    </div>
-                </div>
-                <div v-if="selectedGallery && selectedGallery.photos && selectedGallery.photos.length > 1" class="modal-thumbnails">
-                    <div class="thumbnails-container">
-                        <div
-                            v-for="(photo, index) in selectedGallery.photos"
-                            :key="photo.id"
-                            :class="['thumbnail', { active: index === currentImageIndex }]"
-                            @click="setCurrentImage(index)"
-                        >
-                            <img :src="`${API_BASE_URL}${photo.url}`" :alt="`이미지 ${index + 1}`" />
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
     </div>
 </template>
 
@@ -263,8 +269,7 @@ export default {
             ],
             photos: [],
             selectedGallery: null,
-            currentImageIndex: 0,
-            showModal: false
+            currentImageIndex: 0
         };
     },
     computed: {
@@ -286,22 +291,23 @@ export default {
             const category = this.categories.find(c => c.id === categoryId);
             return category ? category.name : '';
         },
-        async openModal(gallery) {
+        async selectGallery(gallery) {
             try {
                 // 갤러리 상세 정보 (사진들 포함) 로드
                 const response = await axios.get(`${API_BASE_URL}/api/photos/${gallery.id}`);
                 this.selectedGallery = response.data;
                 this.currentImageIndex = 0;
-                this.showModal = true;
+                // 뷰어로 스크롤
+                this.$nextTick(() => {
+                    const viewer = document.querySelector('.viewer-card');
+                    if (viewer) {
+                        viewer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }
+                });
             } catch (error) {
                 console.error('Failed to load gallery details:', error);
                 this.toast.error('갤러리를 불러오는데 실패했습니다.', '❌ 로드 실패');
             }
-        },
-        closeModal() {
-            this.selectedGallery = null;
-            this.currentImageIndex = 0;
-            this.showModal = false;
         },
         prevImage() {
             if (this.currentImageIndex > 0) {
@@ -728,11 +734,234 @@ export default {
     border-color: #2c5aa0;
 }
 
+/* 2단 레이아웃 */
+.gallery-layout {
+    display: grid;
+    grid-template-columns: 1.5fr 1fr;
+    gap: 30px;
+    margin-bottom: 40px;
+}
+
+/* 왼쪽 뷰어 카드 */
+.viewer-card {
+    background: white;
+    border-radius: 15px;
+    border: 2px solid #f0f0f0;
+    overflow: hidden;
+    position: sticky;
+    top: 90px;
+    height: fit-content;
+    max-height: calc(100vh - 120px);
+    display: flex;
+    flex-direction: column;
+}
+
+.viewer-content {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.viewer-image-container {
+    position: relative;
+    background: #1a1a1a;
+    min-height: 500px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+.viewer-image {
+    max-width: 100%;
+    max-height: 600px;
+    width: auto;
+    height: auto;
+    object-fit: contain;
+    border-radius: 8px;
+}
+
+.viewer-btn {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background: rgba(255, 255, 255, 0.9);
+    color: #2c5aa0;
+    border: none;
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    font-size: 24px;
+    cursor: pointer;
+    z-index: 10;
+    transition: all 0.3s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.viewer-btn:hover:not(:disabled) {
+    background: #2c5aa0;
+    color: white;
+    transform: translateY(-50%) scale(1.1);
+}
+
+.viewer-btn:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+}
+
+.viewer-btn.prev-btn {
+    left: 15px;
+}
+
+.viewer-btn.next-btn {
+    right: 15px;
+}
+
+.viewer-counter {
+    position: absolute;
+    bottom: 15px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0, 0, 0, 0.7);
+    color: white;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+.viewer-info {
+    padding: 25px;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.viewer-info h3 {
+    color: #2c5aa0;
+    font-size: 1.5rem;
+    margin-bottom: 12px;
+}
+
+.viewer-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+.viewer-date {
+    color: #666;
+    font-size: 0.9rem;
+}
+
+.viewer-category {
+    background: #f0f0f0;
+    padding: 4px 12px;
+    border-radius: 12px;
+    color: #666;
+    font-size: 0.85rem;
+}
+
+.viewer-count {
+    background: #2c5aa0;
+    color: white;
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 0.85rem;
+}
+
+.viewer-description {
+    color: #666;
+    line-height: 1.8;
+    white-space: pre-wrap;
+}
+
+.viewer-thumbnails {
+    padding: 20px;
+    background: #f8f9fa;
+    display: flex;
+    gap: 10px;
+    overflow-x: auto;
+    flex-shrink: 0;
+}
+
+.viewer-thumbnail {
+    position: relative;
+    width: 100px;
+    height: 75px;
+    border-radius: 8px;
+    overflow: hidden;
+    cursor: pointer;
+    border: 3px solid transparent;
+    transition: all 0.3s;
+    flex-shrink: 0;
+}
+
+.viewer-thumbnail:hover {
+    border-color: #2c5aa0;
+    transform: scale(1.05);
+}
+
+.viewer-thumbnail.active {
+    border-color: #2c5aa0;
+    box-shadow: 0 0 15px rgba(44, 90, 160, 0.4);
+}
+
+.viewer-thumbnail img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.thumbnail-num {
+    position: absolute;
+    top: 4px;
+    left: 4px;
+    background: rgba(0, 0, 0, 0.7);
+    color: white;
+    padding: 2px 6px;
+    border-radius: 8px;
+    font-size: 0.7rem;
+    font-weight: 600;
+}
+
+.viewer-placeholder {
+    min-height: 600px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: #999;
+    padding: 40px;
+    text-align: center;
+}
+
+.viewer-placeholder .placeholder-icon {
+    font-size: 5rem;
+    margin-bottom: 20px;
+    opacity: 0.5;
+}
+
+.viewer-placeholder h3 {
+    color: #666;
+    margin-bottom: 10px;
+}
+
+.viewer-placeholder p {
+    color: #999;
+}
+
+/* 오른쪽 갤러리 리스트 카드 */
+.gallery-list-card {
+    display: flex;
+    flex-direction: column;
+}
+
 .photo-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-    gap: 25px;
-    margin-bottom: 40px;
+    grid-template-columns: 1fr;
+    gap: 20px;
 }
 
 .photo-card {
@@ -751,7 +980,7 @@ export default {
 }
 
 .photo-container {
-    height: 450px;
+    height: 200px;
     overflow: hidden;
     border-radius: 12px;
     position: relative;
@@ -1206,12 +1435,13 @@ export default {
     position: relative;
     background: white;
     border-radius: 15px;
-    width: 60vw;
+    width: 90vw;
+    max-width: 1600px;
     height: 95vh;
     overflow: hidden;
     box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
 }
 
 .modal-close {
@@ -1237,53 +1467,62 @@ export default {
     background: rgba(0, 0, 0, 0.7);
 }
 
-.modal-image-container {
+/* 왼쪽 이미지 뷰어 */
+.modal-image-section {
     flex: 1;
     display: flex;
-    align-items: flex-start;
+    align-items: center;
     justify-content: center;
-    min-height: 0;
-    padding: 10px;
-    background: #f8f9fa;
+    background: #1a1a1a;
     overflow: auto;
+    padding: 20px;
 }
 
 .modal-image {
-    max-width: none;
+    max-width: 100%;
+    max-height: 100%;
+    width: auto;
     height: auto;
+    object-fit: contain;
     border-radius: 8px;
     display: block;
 }
 
-.modal-info {
-    padding: 20px;
+/* 오른쪽 정보 섹션 */
+.modal-info-section {
+    width: 450px;
     flex-shrink: 0;
-    border-top: 1px solid #f0f0f0;
     background: white;
-    height: auto;
-    min-height: 120px;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+    border-left: 1px solid #e0e0e0;
+}
+
+.modal-info {
+    padding: 30px;
+    flex-shrink: 0;
 }
 
 .modal-info h3 {
     color: #2c5aa0;
-    margin-bottom: 10px;
-    font-size: 1.5rem;
-}
-
-.modal-info p {
-    color: #666;
-    line-height: 1.6;
     margin-bottom: 15px;
-    white-space: pre-wrap;
-    word-wrap: break-word;
+    font-size: 1.6rem;
+    line-height: 1.3;
 }
 
 .modal-meta {
     display: flex;
-    justify-content: space-between;
-    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 25px;
+    padding-bottom: 20px;
+    border-bottom: 2px solid #f0f0f0;
+}
+
+.modal-date {
+    color: #666;
     font-size: 0.9rem;
-    color: #999;
 }
 
 .modal-category {
@@ -1291,6 +1530,7 @@ export default {
     padding: 5px 12px;
     border-radius: 15px;
     color: #666;
+    font-size: 0.85rem;
 }
 
 .modal-count {
@@ -1298,7 +1538,31 @@ export default {
     color: white;
     padding: 5px 12px;
     border-radius: 15px;
-    font-size: 0.8rem;
+    font-size: 0.85rem;
+}
+
+.description-section {
+    margin-top: 10px;
+}
+
+.description-section h4 {
+    color: #333;
+    font-size: 1rem;
+    margin-bottom: 12px;
+    font-weight: 600;
+}
+
+.description-section p {
+    color: #666;
+    line-height: 1.8;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    font-size: 0.95rem;
+}
+
+.no-description {
+    color: #999;
+    font-style: italic;
 }
 
 /* 갤러리 카운트 배지 */
@@ -1375,45 +1639,62 @@ export default {
 
 /* 썸네일 스타일 */
 .modal-thumbnails {
-    flex-shrink: 0;
-    padding: 20px;
-    border-top: 1px solid #f0f0f0;
-    background: white;
-    max-height: 120px;
-    overflow-y: auto;
+    padding: 20px 30px 30px;
+    border-top: 2px solid #f0f0f0;
+    background: #f8f9fa;
+}
+
+.modal-thumbnails h4 {
+    color: #333;
+    font-size: 1rem;
+    margin-bottom: 15px;
+    font-weight: 600;
 }
 
 .thumbnails-container {
-    display: flex;
-    gap: 10px;
-    justify-content: center;
-    flex-wrap: wrap;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
 }
 
 .thumbnail {
-    width: 80px;
-    height: 60px;
+    position: relative;
+    width: 100%;
+    aspect-ratio: 4/3;
     border-radius: 8px;
     overflow: hidden;
     cursor: pointer;
-    border: 2px solid transparent;
+    border: 3px solid transparent;
     transition: all 0.3s;
 }
 
 .thumbnail:hover {
     border-color: #2c5aa0;
     transform: scale(1.05);
+    box-shadow: 0 4px 12px rgba(44, 90, 160, 0.2);
 }
 
 .thumbnail.active {
     border-color: #2c5aa0;
-    box-shadow: 0 0 10px rgba(44, 90, 160, 0.3);
+    box-shadow: 0 0 15px rgba(44, 90, 160, 0.4);
 }
 
 .thumbnail img {
     width: 100%;
     height: 100%;
     object-fit: cover;
+}
+
+.thumbnail-number {
+    position: absolute;
+    top: 5px;
+    left: 5px;
+    background: rgba(0, 0, 0, 0.7);
+    color: white;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-size: 0.75rem;
+    font-weight: 600;
 }
 
 /* 이미지 없음 상태 */
@@ -1442,13 +1723,30 @@ export default {
         gap: 15px;
     }
 
-    .photo-grid {
+    .gallery-layout {
         grid-template-columns: 1fr;
         gap: 20px;
     }
 
+    .viewer-card {
+        position: static;
+        max-height: none;
+    }
+
+    .viewer-image-container {
+        min-height: 300px;
+    }
+
+    .viewer-image {
+        max-height: 400px;
+    }
+
+    .photo-grid {
+        grid-template-columns: 1fr;
+    }
+
     .photo-container {
-        height: 380px;
+        height: 250px;
     }
 
     .admin-buttons {
@@ -1457,25 +1755,6 @@ export default {
 
     .form-actions {
         flex-direction: column;
-    }
-
-    .modal-content {
-        width: 80vw;
-        height: 98vh;
-    }
-
-    .modal-image-container {
-        padding: 5px;
-        overflow: auto;
-    }
-
-    .modal-info {
-        padding: 15px;
-        min-height: 100px;
-    }
-
-    .modal-info h3 {
-        font-size: 1.3rem;
     }
 }
 </style>
