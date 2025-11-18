@@ -158,7 +158,13 @@ router.get('/:id', (req, res) => {
       url: `/api/uploads/notices/${image.filename}`
     }));
 
-    res.json({ ...notice, images, files: imagesWithUrls });
+    // 첨부 파일 경로를 웹에서 접근 가능한 URL로 변환
+    const filesWithUrls = files.map((file: any) => ({
+      ...file,
+      file_path: `/api/uploads/notices/${file.filename}`
+    }));
+
+    res.json({ ...notice, images: imagesWithUrls, files: filesWithUrls });
   } catch (error) {
     console.error('Failed to fetch notice:', error);
     res.status(500).json({ error: 'Failed to fetch notice' });
