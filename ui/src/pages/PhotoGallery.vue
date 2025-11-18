@@ -1240,18 +1240,19 @@ export default {
 .modal-image-container {
     flex: 1;
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     justify-content: center;
     min-height: 0;
     padding: 10px;
     background: #f8f9fa;
+    overflow: auto;
 }
 
 .modal-image {
-    width: 100%;
-    height: 100%;
-    object-fit: contain;
+    max-width: none;
+    height: auto;
     border-radius: 8px;
+    display: block;
 }
 
 .modal-info {
@@ -1317,10 +1318,8 @@ export default {
 /* 갤러리 슬라이더 스타일 */
 .gallery-slider {
     position: relative;
-    width: 100%;
-    height: 100%;
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     justify-content: center;
 }
 
@@ -1467,6 +1466,7 @@ export default {
 
     .modal-image-container {
         padding: 5px;
+        overflow: auto;
     }
 
     .modal-info {
