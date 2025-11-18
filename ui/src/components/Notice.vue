@@ -21,10 +21,11 @@
         공지사항이 없습니다.
       </div>
       <div v-else>
-        <div 
-          v-for="notice in displayNotices" 
+        <div
+          v-for="notice in displayNotices"
           :key="notice.id"
           class="notice-item"
+          :class="{ 'important-row': notice.important }"
           @click="$emit('notice-click', notice)"
         >
           <div class="notice-category">
@@ -33,7 +34,7 @@
             </span>
           </div>
           <div class="notice-content">
-            <h4 class="notice-title">{{ notice.title }}</h4>
+            <h4 class="notice-title" :class="{ 'important-title': notice.important }">{{ notice.title }}</h4>
             <p class="notice-date">{{ formatDate(notice.date) }}</p>
           </div>
           <div class="notice-arrow">
@@ -79,7 +80,13 @@ export default {
     },
     displayNotices() {
       return this.filteredNotices
-        .sort((a, b) => new Date(b.date) - new Date(a.date))
+        .sort((a, b) => {
+          // 중요 공지사항 우선 정렬
+          if (a.important && !b.important) return -1;
+          if (!a.important && b.important) return 1;
+          // 같은 중요도면 날짜로 정렬
+          return new Date(b.date) - new Date(a.date);
+        })
         .slice(0, this.maxDisplay)
     },
     hasNewNotices() {
@@ -214,6 +221,17 @@ export default {
   border-color: #2c5aa0;
 }
 
+.notice-item.important-row {
+  background: linear-gradient(to right, #fff9e6, #ffffff);
+  border-left: 4px solid #ffc107;
+  font-weight: 500;
+}
+
+.notice-item.important-row:hover {
+  background: linear-gradient(to right, #fff3cd, #f8f9fa);
+  box-shadow: 0 4px 12px rgba(255, 193, 7, 0.2);
+}
+
 .notice-category {
   margin-right: 15px;
 }
@@ -268,6 +286,11 @@ export default {
   color: #333;
   margin-bottom: 5px;
   line-height: 1.4;
+}
+
+.notice-title.important-title {
+  color: #d97706;
+  font-weight: 600;
 }
 
 .notice-date {
