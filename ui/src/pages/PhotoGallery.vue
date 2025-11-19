@@ -76,7 +76,7 @@
                 </div>
 
                 <!-- 페이지네이션 -->
-                <div class="pagination" v-if="totalPages > 1">
+                <div class="pagination" v-if="!selectedGallery && totalPages > 1">
                     <button class="pagination-btn" @click="prevPage" :disabled="currentPage === 1">
                         ‹ 이전
                     </button>
