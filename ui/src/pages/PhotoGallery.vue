@@ -471,14 +471,23 @@ export default {
             const i = Math.floor(Math.log(bytes) / Math.log(k));
             return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
         },
-        updateCategoryCounts() {
-            this.categories.forEach(category => {
-                if (category.id === 'all') {
-                    category.count = this.photos.length;
-                } else {
-                    category.count = this.photos.filter(photo => photo.categoryId === category.id).length;
-                }
-            });
+        async loadAllCategoryCounts() {
+            // 카테고리별 전체 게시물 수를 한 번만 로드 (고정값)
+            try {
+                const response = await axios.get(`${API_BASE_URL}/api/photos`, { params: { limit: 1000 } });
+                const allPhotos = response.data || [];
+
+                this.categories.forEach(category => {
+                    if (category.id === 'all') {
+                        category.count = allPhotos.length;
+                    } else {
+                        category.count = allPhotos.filter(photo => photo.category_id === category.id).length;
+                    }
+                });
+            } catch (error) {
+                console.error('Failed to load category counts:', error);
+                // 에러 시 기본값 유지
+            }
         },
         managePhotos() {
             // 사진 관리 페이지로 이동
@@ -565,13 +574,11 @@ export default {
 
                 // 전체 아이템 수 계산을 위해 카테고리별로 전체 수를 가져옴
                 await this.loadTotalCount();
-                this.updateCategoryCounts();
             } catch (error) {
                 console.error('Failed to load photos:', error);
                 // 일단 API 연결 실패 시에도 페이지가 로드되도록 함
                 this.photos = [];
                 this.totalItems = 0;
-                this.updateCategoryCounts();
                 // Toast 에러는 API 서버가 꺼져있을 때 너무 방해가 될 수 있으므로 콘솔로만
                 console.warn('API server may not be running. Photos will be empty.');
             }
@@ -680,6 +687,7 @@ export default {
     },
     mounted() {
         this.selectedGallery = null;  // 항상 목록 뷰로 시작
+        this.loadAllCategoryCounts();  // 카테고리별 게시물 수 로드 (한 번만)
         this.loadPhotos();
     }
 };
