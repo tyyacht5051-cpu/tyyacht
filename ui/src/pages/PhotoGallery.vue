@@ -1922,14 +1922,25 @@ export default {
     }
 
     .gallery-info-card {
-        order: 2;
+        order: 1;
         max-height: none;
+        margin-bottom: 20px;
     }
 
     .viewer-card {
-        order: 1;
+        order: 2;
         position: static;
         max-height: none;
+    }
+
+    .info-content {
+        max-height: none;
+        overflow-y: visible;
+    }
+
+    .back-to-grid-btn {
+        font-size: 0.9rem;
+        padding: 8px 12px;
     }
 
     .viewer-image-container {

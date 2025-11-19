@@ -100,12 +100,44 @@ export default {
       authStore
     }
   },
+  watch: {
+    // 라우트 변경 시 모바일 메뉴 닫기
+    '$route'() {
+      this.closeMenu()
+    }
+  },
+  mounted() {
+    // 외부 클릭 감지 이벤트 리스너 추가
+    document.addEventListener('click', this.handleClickOutside)
+  },
+  beforeUnmount() {
+    // 컴포넌트 제거 시 이벤트 리스너 정리
+    document.removeEventListener('click', this.handleClickOutside)
+  },
   methods: {
     goHome() {
       this.$router.push('/')
     },
     toggleMenu() {
       this.isMenuOpen = !this.isMenuOpen
+    },
+    closeMenu() {
+      this.isMenuOpen = false
+      this.isDropdownOpen = false
+      this.isCommunityDropdownOpen = false
+      this.isNoticeDropdownOpen = false
+    },
+    handleClickOutside(event) {
+      // 모바일 메뉴가 열려있을 때만 동작
+      if (!this.isMenuOpen) return
+
+      // 네비게이션 영역 전체를 참조
+      const navbar = this.$el
+
+      // 클릭한 요소가 네비게이션 외부인지 확인
+      if (navbar && !navbar.contains(event.target)) {
+        this.closeMenu()
+      }
     },
     showDropdown() {
       this.isDropdownOpen = true
