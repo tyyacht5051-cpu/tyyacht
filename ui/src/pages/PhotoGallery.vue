@@ -106,7 +106,7 @@
                         <div class="info-content">
                             <!-- 대표 이미지 (작게) -->
                             <div class="info-image-preview">
-                                <img v-if="selectedGallery.photos && selectedGallery.photos.length > 0"
+                                <img v-if="selectedGallery && selectedGallery.photos && selectedGallery.photos.length > 0"
                                      :src="`${API_BASE_URL}${selectedGallery.photos[currentImageIndex].url}`"
                                      :alt="selectedGallery.title"
                                      class="preview-image" />
@@ -118,7 +118,7 @@
                                 <div class="info-meta">
                                     <span class="info-date">📅 {{ selectedGallery.date }}</span>
                                     <span class="info-category">{{ getCategoryName(selectedGallery.categoryId) }}</span>
-                                    <span v-if="selectedGallery.photos" class="info-count">{{ selectedGallery.photos.length }}장</span>
+                                    <span v-if="selectedGallery && selectedGallery.photos" class="info-count">{{ selectedGallery.photos.length }}장</span>
                                 </div>
                                 <div class="info-description">
                                     <h4>상세 설명</h4>
@@ -128,7 +128,7 @@
                             </div>
 
                             <!-- 이미지 썸네일 리스트 -->
-                            <div v-if="selectedGallery.photos && selectedGallery.photos.length > 0" class="info-thumbnails">
+                            <div v-if="selectedGallery && selectedGallery.photos && selectedGallery.photos.length > 0" class="info-thumbnails">
                                 <h4>이미지 목록 ({{ selectedGallery.photos.length }}장)</h4>
                                 <div class="thumbnails-grid">
                                     <div
@@ -148,19 +148,19 @@
                     <!-- 오른쪽: 이미지 뷰어 -->
                     <div class="viewer-card">
                         <div class="viewer-image-container">
-                            <button v-if="selectedGallery.photos && selectedGallery.photos.length > 1"
+                            <button v-if="selectedGallery && selectedGallery.photos && selectedGallery.photos.length > 1"
                                     class="viewer-btn prev-btn"
                                     @click="prevImage"
                                     :disabled="currentImageIndex === 0">‹</button>
-                            <img v-if="selectedGallery.photos && selectedGallery.photos.length > 0"
+                            <img v-if="selectedGallery && selectedGallery.photos && selectedGallery.photos.length > 0"
                                  :src="`${API_BASE_URL}${selectedGallery.photos[currentImageIndex].url}`"
                                  :alt="selectedGallery.title"
                                  class="viewer-image" />
-                            <button v-if="selectedGallery.photos && selectedGallery.photos.length > 1"
+                            <button v-if="selectedGallery && selectedGallery.photos && selectedGallery.photos.length > 1"
                                     class="viewer-btn next-btn"
                                     @click="nextImage"
                                     :disabled="currentImageIndex === selectedGallery.photos.length - 1">›</button>
-                            <div v-if="selectedGallery.photos && selectedGallery.photos.length > 1" class="viewer-counter">
+                            <div v-if="selectedGallery && selectedGallery.photos && selectedGallery.photos.length > 1" class="viewer-counter">
                                 {{ currentImageIndex + 1 }} / {{ selectedGallery.photos.length }}
                             </div>
                         </div>
