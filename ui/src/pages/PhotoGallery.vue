@@ -335,6 +335,7 @@ export default {
         setActiveCategory(categoryId) {
             this.activeCategory = categoryId;
             this.currentPage = 1;
+            this.selectedGallery = null;  // 목록으로 돌아가기
             this.loadPhotos();
         },
         goToPage(page) {
@@ -360,16 +361,10 @@ export default {
         },
         async selectGallery(gallery) {
             try {
-                console.log('Selecting gallery:', gallery.id);
                 // 갤러리 상세 정보 (사진들 포함) 로드
                 const response = await axios.get(`${API_BASE_URL}/api/photos/${gallery.id}`);
-                console.log('Gallery details response:', response.data);
-                console.log('Has photos?', response.data.photos);
-                console.log('Photos length:', response.data.photos ? response.data.photos.length : 0);
                 this.selectedGallery = response.data;
                 this.currentImageIndex = 0;
-                console.log('selectedGallery set:', this.selectedGallery);
-                console.log('Is selectedGallery truthy?', !!this.selectedGallery);
             } catch (error) {
                 console.error('Failed to load gallery details:', error);
                 this.toast.error('갤러리를 불러오는데 실패했습니다.', '❌ 로드 실패');
@@ -555,9 +550,7 @@ export default {
                     params.category = this.activeCategory;
                 }
 
-                console.log('Loading photos with params:', params);
                 const response = await axios.get(`${API_BASE_URL}/api/photos`, { params });
-                console.log('Photos response:', response.data);
 
                 // API 데이터를 프론트엔드 형식으로 변환
                 this.photos = (response.data || []).map(gallery => ({
@@ -573,7 +566,6 @@ export default {
                 // 전체 아이템 수 계산을 위해 카테고리별로 전체 수를 가져옴
                 await this.loadTotalCount();
                 this.updateCategoryCounts();
-                console.log('Photos loaded:', this.photos.length);
             } catch (error) {
                 console.error('Failed to load photos:', error);
                 // 일단 API 연결 실패 시에도 페이지가 로드되도록 함
@@ -678,7 +670,16 @@ export default {
         }
     },
 
+    watch: {
+        '$route'() {
+            // 포토갤러리 페이지로 이동 시 항상 목록으로 리셋
+            if (this.$route.path === '/community/photo-gallery') {
+                this.selectedGallery = null;
+            }
+        }
+    },
     mounted() {
+        this.selectedGallery = null;  // 항상 목록 뷰로 시작
         this.loadPhotos();
     }
 };
