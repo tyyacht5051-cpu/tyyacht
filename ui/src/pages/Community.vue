@@ -27,7 +27,6 @@
                             <h3>{{ section.title }}</h3>
                             <p>{{ section.description }}</p>
                             <div class="section-info">
-                                <span class="access-type" :class="section.accessClass">{{ section.access }}</span>
                                 <span class="post-count">{{ section.count }}개 게시물</span>
                             </div>
                         </div>
@@ -284,7 +283,7 @@ export default {
 
 .section-info {
     display: flex;
-    justify-content: space-between;
+    justify-content: center;
     align-items: center;
     padding-top: 15px;
     border-top: 1px solid #f0f0f0;

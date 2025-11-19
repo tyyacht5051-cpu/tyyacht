@@ -14,11 +14,7 @@
                 <div class="gallery-header">
                     <div class="header-info">
                         <h2>사진 갤러리</h2>
-                        <p>관리자 전용 공간입니다. 다양한 교육 활동과 체험 현장의 모습을 담았습니다.</p>
-                    </div>
-                    <div class="admin-notice">
-                        <div class="notice-icon">🔒</div>
-                        <span>관리자 전용</span>
+                        <p>다양한 교육 활동과 체험 현장의 모습을 담았습니다.</p>
                     </div>
                 </div>
 
