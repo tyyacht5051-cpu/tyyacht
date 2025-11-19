@@ -113,12 +113,12 @@
                             </div>
 
                             <!-- 상세 정보 -->
-                            <div class="info-details">
+                            <div v-if="selectedGallery" class="info-details">
                                 <h3>{{ selectedGallery.title }}</h3>
                                 <div class="info-meta">
                                     <span class="info-date">📅 {{ selectedGallery.date }}</span>
                                     <span class="info-category">{{ getCategoryName(selectedGallery.categoryId) }}</span>
-                                    <span v-if="selectedGallery && selectedGallery.photos" class="info-count">{{ selectedGallery.photos.length }}장</span>
+                                    <span v-if="selectedGallery.photos" class="info-count">{{ selectedGallery.photos.length }}장</span>
                                 </div>
                                 <div class="info-description">
                                     <h4>상세 설명</h4>
