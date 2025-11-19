@@ -360,10 +360,13 @@ export default {
         },
         async selectGallery(gallery) {
             try {
+                console.log('Selecting gallery:', gallery.id);
                 // 갤러리 상세 정보 (사진들 포함) 로드
                 const response = await axios.get(`${API_BASE_URL}/api/photos/${gallery.id}`);
+                console.log('Gallery details response:', response.data);
                 this.selectedGallery = response.data;
                 this.currentImageIndex = 0;
+                console.log('selectedGallery set:', this.selectedGallery);
             } catch (error) {
                 console.error('Failed to load gallery details:', error);
                 this.toast.error('갤러리를 불러오는데 실패했습니다.', '❌ 로드 실패');
