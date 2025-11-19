@@ -75,6 +75,26 @@
                     </div>
                 </div>
 
+                <!-- 페이지네이션 -->
+                <div class="pagination" v-if="totalPages > 1">
+                    <button class="pagination-btn" @click="prevPage" :disabled="currentPage === 1">
+                        ‹ 이전
+                    </button>
+                    <div class="pagination-pages">
+                        <button
+                            v-for="page in totalPages"
+                            :key="page"
+                            :class="['pagination-page', { active: page === currentPage }]"
+                            @click="goToPage(page)"
+                        >
+                            {{ page }}
+                        </button>
+                    </div>
+                    <button class="pagination-btn" @click="nextPage" :disabled="currentPage === totalPages">
+                        다음 ›
+                    </button>
+                </div>
+
                 <!-- 클릭 후: 2단 레이아웃 (왼쪽: 갤러리 정보 + 오른쪽: 이미지 뷰어) -->
                 <div v-else class="gallery-layout">
                     <!-- 왼쪽: 갤러리 정보 (이미지, 내용, 썸네일) -->
@@ -291,7 +311,10 @@ export default {
             ],
             photos: [],
             selectedGallery: null,
-            currentImageIndex: 0
+            currentImageIndex: 0,
+            currentPage: 1,
+            itemsPerPage: 9,
+            totalItems: 0
         };
     },
     computed: {
@@ -303,11 +326,33 @@ export default {
         },
         isAdmin() {
             return this.authStore.state.isAuthenticated && this.authStore.isAdmin();
+        },
+        totalPages() {
+            return Math.ceil(this.totalItems / this.itemsPerPage);
         }
     },
     methods: {
         setActiveCategory(categoryId) {
             this.activeCategory = categoryId;
+            this.currentPage = 1;
+            this.loadPhotos();
+        },
+        goToPage(page) {
+            if (page >= 1 && page <= this.totalPages) {
+                this.currentPage = page;
+                this.loadPhotos();
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+        },
+        nextPage() {
+            if (this.currentPage < this.totalPages) {
+                this.goToPage(this.currentPage + 1);
+            }
+        },
+        prevPage() {
+            if (this.currentPage > 1) {
+                this.goToPage(this.currentPage - 1);
+            }
         },
         getCategoryName(categoryId) {
             const category = this.categories.find(c => c.id === categoryId);
@@ -494,8 +539,18 @@ export default {
 
         async loadPhotos() {
             try {
-                console.log('Loading photos from:', `${API_BASE_URL}/api/photos`);
-                const response = await axios.get(`${API_BASE_URL}/api/photos`);
+                const offset = (this.currentPage - 1) * this.itemsPerPage;
+                const params = {
+                    limit: this.itemsPerPage,
+                    offset: offset
+                };
+
+                if (this.activeCategory !== 'all') {
+                    params.category = this.activeCategory;
+                }
+
+                console.log('Loading photos with params:', params);
+                const response = await axios.get(`${API_BASE_URL}/api/photos`, { params });
                 console.log('Photos response:', response.data);
 
                 // API 데이터를 프론트엔드 형식으로 변환
@@ -508,15 +563,35 @@ export default {
                     url: gallery.url,
                     photo_count: gallery.photo_count || 0
                 }));
+
+                // 전체 아이템 수 계산을 위해 카테고리별로 전체 수를 가져옴
+                await this.loadTotalCount();
                 this.updateCategoryCounts();
                 console.log('Photos loaded:', this.photos.length);
             } catch (error) {
                 console.error('Failed to load photos:', error);
                 // 일단 API 연결 실패 시에도 페이지가 로드되도록 함
                 this.photos = [];
+                this.totalItems = 0;
                 this.updateCategoryCounts();
                 // Toast 에러는 API 서버가 꺼져있을 때 너무 방해가 될 수 있으므로 콘솔로만
                 console.warn('API server may not be running. Photos will be empty.');
+            }
+        },
+        async loadTotalCount() {
+            try {
+                const params = {};
+                if (this.activeCategory !== 'all') {
+                    params.category = this.activeCategory;
+                }
+                // 전체 개수를 얻기 위해 limit을 크게 설정하고 길이를 확인
+                const response = await axios.get(`${API_BASE_URL}/api/photos`, {
+                    params: { ...params, limit: 1000 }
+                });
+                this.totalItems = response.data?.length || 0;
+            } catch (error) {
+                console.error('Failed to load total count:', error);
+                this.totalItems = 0;
             }
         },
 
@@ -1176,6 +1251,66 @@ export default {
     color: #666;
 }
 
+/* 페이지네이션 */
+.pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    margin: 40px 0;
+}
+
+.pagination-btn {
+    padding: 10px 20px;
+    background: white;
+    border: 2px solid #f0f0f0;
+    color: #2c5aa0;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: all 0.3s;
+}
+
+.pagination-btn:hover:not(:disabled) {
+    background: #2c5aa0;
+    color: white;
+    border-color: #2c5aa0;
+}
+
+.pagination-btn:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+}
+
+.pagination-pages {
+    display: flex;
+    gap: 5px;
+}
+
+.pagination-page {
+    min-width: 40px;
+    height: 40px;
+    padding: 8px;
+    background: white;
+    border: 2px solid #f0f0f0;
+    color: #666;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: all 0.3s;
+}
+
+.pagination-page:hover {
+    border-color: #2c5aa0;
+    color: #2c5aa0;
+}
+
+.pagination-page.active {
+    background: #2c5aa0;
+    color: white;
+    border-color: #2c5aa0;
+}
+
 .admin-section {
     background: #f8f9fa;
     padding: 30px;
@@ -1824,6 +1959,22 @@ export default {
 
     .form-actions {
         flex-direction: column;
+    }
+
+    .pagination {
+        flex-direction: column;
+        gap: 15px;
+    }
+
+    .pagination-pages {
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+
+    .pagination-page {
+        min-width: 35px;
+        height: 35px;
+        font-size: 0.9rem;
     }
 }
 </style>
