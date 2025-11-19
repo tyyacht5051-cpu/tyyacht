@@ -350,19 +350,22 @@ export default {
 @media (max-width: 768px) {
   .nav-menu {
     position: fixed;
-    left: -100%;
+    left: 0;
     top: 70px;
     flex-direction: column;
     background: white;
     width: 100%;
     text-align: center;
-    transition: 0.3s;
+    transition: transform 0.3s ease;
     box-shadow: 0 10px 27px rgba(0, 0, 0, 0.05);
     padding: 20px 0;
+    transform: translateY(-100vh);
+    max-height: calc(100vh - 70px);
+    overflow-y: auto;
   }
 
   .nav-menu.active {
-    left: 0;
+    transform: translateY(0);
   }
 
   .nav-item {

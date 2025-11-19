@@ -1916,44 +1916,93 @@ export default {
         gap: 15px;
     }
 
+    /* 모바일: 통합 레이아웃 */
     .gallery-layout {
-        grid-template-columns: 1fr;
-        gap: 20px;
+        display: flex;
+        flex-direction: column;
+        gap: 0;
     }
 
-    .gallery-info-card {
+    /* 뒤로가기 버튼 */
+    .info-header {
         order: 1;
-        max-height: none;
-        margin-bottom: 20px;
+        padding: 15px;
+        background: white;
+        border-bottom: 1px solid #f0f0f0;
     }
 
+    /* 큰 이미지 뷰어 */
     .viewer-card {
         order: 2;
         position: static;
         max-height: none;
+        border-radius: 0;
+        background: #000;
+    }
+
+    .viewer-image-container {
+        min-height: 300px;
+        padding: 15px;
+    }
+
+    .viewer-image {
+        max-height: 350px;
+    }
+
+    /* 정보 카드 내용 */
+    .gallery-info-card {
+        order: 3;
+        max-height: none;
+        background: white;
+        border-radius: 0;
+        box-shadow: none;
+    }
+
+    /* 썸네일을 이미지 바로 아래로 */
+    .info-thumbnails {
+        order: 1;
+        padding: 15px;
+        background: white;
+        border-bottom: 1px solid #f0f0f0;
+    }
+
+    .info-thumbnails h4 {
+        font-size: 0.9rem;
+        margin-bottom: 10px;
+    }
+
+    .thumbnails-grid {
+        grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
+        gap: 8px;
+    }
+
+    /* 상세 정보 */
+    .info-details {
+        order: 2;
+        padding: 20px 15px;
+    }
+
+    .info-details h3 {
+        font-size: 1.3rem;
+    }
+
+    /* 이미지 프리뷰 숨김 (모바일에서는 큰 뷰어만 사용) */
+    .info-image-preview {
+        display: none;
     }
 
     .info-content {
         max-height: none;
         overflow-y: visible;
+        display: flex;
+        flex-direction: column;
     }
 
     .back-to-grid-btn {
         font-size: 0.9rem;
-        padding: 8px 12px;
-    }
-
-    .viewer-image-container {
-        min-height: 400px;
-        padding: 20px;
-    }
-
-    .viewer-image {
-        max-height: 400px;
-    }
-
-    .thumbnails-grid {
-        grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
+        padding: 10px 15px;
+        width: 100%;
+        justify-content: flex-start;
     }
 
     .photo-grid {
