@@ -195,16 +195,21 @@ export default {
         },
         async loadData() {
             try {
-                // 공지사항 목록 로드 (모든 공지사항)
+                // 공지사항 목록 로드 (자유게시판 제외)
                 const noticesRes = await axios.get(`${API_BASE_URL}/api/notices`, {
                     params: { limit: 50 }
                 });
-                this.allNotices = noticesRes.data.map(notice => ({
-                    ...notice,
-                    category: this.getCategoryTitle(notice.category_id),
-                    categoryClass: notice.category_id,
-                    date: notice.created_at.split('T')[0]
-                }));
+                this.allNotices = noticesRes.data
+                    .filter(notice => {
+                        // 게시판 카테고리 제외 (공지사항 카테고리만 표시)
+                        return !['free_board', 'review_board', 'crew_recruitment'].includes(notice.category_id);
+                    })
+                    .map(notice => ({
+                        ...notice,
+                        category: this.getCategoryTitle(notice.category_id),
+                        categoryClass: notice.category_id,
+                        date: notice.created_at.split('T')[0]
+                    }));
 
                 // 카테고리별 통계 로드
                 const statsRes = await axios.get(`${API_BASE_URL}/api/notices/stats/categories`);
