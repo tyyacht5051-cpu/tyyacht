@@ -38,7 +38,7 @@ async function updateAdminCredentials() {
     // Admin 계정 업데이트
     const result = db.prepare(`
       UPDATE users
-      SET username = ?, password = ?, updated_at = CURRENT_TIMESTAMP
+      SET username = ?, password_hash = ?, updated_at = CURRENT_TIMESTAMP
       WHERE id = ?
     `).run(newUsername, hashedPassword, adminUser.id);
 
