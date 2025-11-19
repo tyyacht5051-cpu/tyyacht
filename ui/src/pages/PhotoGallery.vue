@@ -96,7 +96,7 @@
                 </div>
 
                 <!-- 클릭 후: 2단 레이아웃 (왼쪽: 갤러리 정보 + 오른쪽: 이미지 뷰어) -->
-                <div v-else class="gallery-layout">
+                <div v-if="selectedGallery" class="gallery-layout">
                     <!-- 왼쪽: 갤러리 정보 (이미지, 내용, 썸네일) -->
                     <div class="gallery-info-card">
                         <div class="info-header">
@@ -364,9 +364,12 @@ export default {
                 // 갤러리 상세 정보 (사진들 포함) 로드
                 const response = await axios.get(`${API_BASE_URL}/api/photos/${gallery.id}`);
                 console.log('Gallery details response:', response.data);
+                console.log('Has photos?', response.data.photos);
+                console.log('Photos length:', response.data.photos ? response.data.photos.length : 0);
                 this.selectedGallery = response.data;
                 this.currentImageIndex = 0;
                 console.log('selectedGallery set:', this.selectedGallery);
+                console.log('Is selectedGallery truthy?', !!this.selectedGallery);
             } catch (error) {
                 console.error('Failed to load gallery details:', error);
                 this.toast.error('갤러리를 불러오는데 실패했습니다.', '❌ 로드 실패');
