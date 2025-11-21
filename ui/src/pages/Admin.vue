@@ -1948,7 +1948,7 @@ export default {
 
     getExperienceTypeLabel(type) {
       const typeMap = {
-        'cruise': '크루즈요트',
+        'cruise': '크루저요트',
         'dinghy': '딩기요트',
         'paddleboard': '패들보드'
       };
@@ -2313,7 +2313,7 @@ export default {
     getCategoryLabel(category) {
       const categoryMap = {
         'exemption': '면제교육',
-        'cruise': '크루즈요트',
+        'cruise': '크루저요트',
         'dinghy': '딩기요트',
         'recruitment': '채용',
         'others': '기타'
@@ -2720,7 +2720,7 @@ export default {
         gallery: '갤러리',
         notice: '공지사항',
         exemption: '면제교육',
-        cruise: '크루즈요트',
+        cruise: '크루저요트',
         dinghy: '딩기요트'
       };
       return labels[category] || category;

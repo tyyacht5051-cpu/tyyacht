@@ -167,7 +167,7 @@
 
                     <div v-else-if="notice.title" class="notice-content">
                         <div class="notice-header">
-                            <div class="category-badge cruise">🚢 크루즈요트</div>
+                            <div class="category-badge cruise">🚢 크루저요트</div>
                             <h1 class="notice-title">{{ notice.title }}</h1>
                             <div class="notice-meta">
                                 <span class="author">작성자: {{ notice.author_name || '관리자' }}</span>

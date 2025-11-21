@@ -91,7 +91,7 @@ const noticeStore = reactive({
   getCategoryDisplayName(category) {
     const displayMap = {
       'exemption': '면제교육',
-      'cruise': '크루즈요트',
+      'cruise': '크루저요트',
       'dinghy': '딩기요트',
       'recruitment': '채용',
       'others': '기타'

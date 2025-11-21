@@ -268,8 +268,8 @@ const loadCruiseYachtImages = () => {
     const cruiseYachtPaths = [
         '/images/cruise1.JPG',
         '/images/cruise2.jpg',
-        '/images/cruise3.jpg',
-        '/images/cruise5.jpg',
+        '/images/cruise3.png',
+        '/images/cruise5.png',
         '/images/cruise6.JPG',
     ];
 

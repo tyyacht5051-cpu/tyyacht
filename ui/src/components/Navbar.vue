@@ -42,7 +42,7 @@
           <ul class="dropdown-menu" :class="{ active: isNoticeDropdownOpen }">
             <li><router-link to="/notice" class="dropdown-link">공지사항 홈</router-link></li>
             <li><router-link to="/notice/exemption" class="dropdown-link">면제교육</router-link></li>
-            <li><router-link to="/notice/cruise" class="dropdown-link">크루즈요트</router-link></li>
+            <li><router-link to="/notice/cruise" class="dropdown-link">크루저요트</router-link></li>
             <li><router-link to="/notice/dinghy" class="dropdown-link">딩기요트</router-link></li>
             <li><router-link to="/notice/recruitment" class="dropdown-link">채용</router-link></li>
             <li><router-link to="/notice/others" class="dropdown-link">기타</router-link></li>

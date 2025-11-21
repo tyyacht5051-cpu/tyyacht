@@ -476,7 +476,7 @@ export default {
                     email: '', // ExperienceApply 폼에는 이메일 필드가 없음 - 추가 필요
                     experience_date: this.form.preferredDate,
                     participants: parseInt(this.form.participants) || 1,
-                    experience_type: this.form.programType || '크루즈요트',
+                    experience_type: this.form.programType || '크루저요트',
                     // 대표자 정보 포함
                     representative: {
                         name: this.form.name,
