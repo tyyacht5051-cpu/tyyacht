@@ -1,5 +1,5 @@
 <template>
-  <div v-if="currentPopup" class="popup-overlay" @click="handleOverlayClick">
+  <div v-if="currentPopup" class="popup-overlay">
     <div class="popup-modal" @click.stop>
       <!-- 닫기 버튼 -->
       <button class="close-btn" @click="closePopup" title="닫기">×</button>
@@ -136,11 +136,6 @@ export default {
       this.$emit('close');
     },
 
-    handleOverlayClick() {
-      // 오버레이 클릭 시 닫기 (선택사항)
-      this.closePopup();
-    },
-
     handleEscapeKey(e) {
       if (e.key === 'Escape') {
         this.closePopup();
@@ -244,47 +239,54 @@ export default {
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.7);
+  background: transparent;
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 10000;
   padding: 20px;
+  pointer-events: none;
 }
 
 .popup-modal {
   background: white;
-  border-radius: 12px;
-  max-width: 600px;
+  border-radius: 8px;
+  max-width: 500px;
   width: 100%;
-  max-height: 90vh;
+  max-height: 80vh;
   overflow: hidden;
   position: relative;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
   display: flex;
   flex-direction: column;
+  border: 1px solid #e0e0e0;
+  pointer-events: auto;
 }
 
 .close-btn {
   position: absolute;
-  top: 15px;
-  right: 15px;
-  background: rgba(0, 0, 0, 0.5);
-  color: white;
-  border: none;
-  width: 35px;
-  height: 35px;
-  border-radius: 50%;
-  font-size: 24px;
+  top: 10px;
+  right: 10px;
+  background: white;
+  color: #666;
+  border: 1px solid #ddd;
+  width: 30px;
+  height: 30px;
+  border-radius: 4px;
+  font-size: 20px;
   line-height: 1;
   cursor: pointer;
   z-index: 10;
-  transition: all 0.3s;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .close-btn:hover {
-  background: rgba(0, 0, 0, 0.8);
-  transform: rotate(90deg);
+  background: #f5f5f5;
+  color: #333;
+  border-color: #999;
 }
 
 .popup-content {
@@ -306,58 +308,60 @@ export default {
 .popup-image {
   width: 100%;
   overflow: hidden;
-  background: #f5f5f5;
+  background: #fff;
 }
 
 .popup-image img {
   width: 100%;
   height: auto;
   display: block;
-  transition: transform 0.3s;
 }
 
 .popup-text {
-  padding: 30px;
+  padding: 25px;
 }
 
 .popup-title {
-  font-size: 24px;
-  font-weight: bold;
-  color: #2c5aa0;
-  margin: 0 0 15px 0;
+  font-size: 20px;
+  font-weight: 600;
+  color: #333;
+  margin: 0 0 12px 0;
+  line-height: 1.4;
 }
 
 .popup-description {
-  font-size: 16px;
+  font-size: 14px;
   line-height: 1.6;
-  color: #555;
+  color: #666;
   white-space: pre-wrap;
   margin: 0;
 }
 
 .popup-footer {
   border-top: 1px solid #e0e0e0;
-  padding: 20px;
+  padding: 15px 20px;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 15px;
   flex-wrap: wrap;
-  background: #f9f9f9;
+  background: #fafafa;
 }
 
 .dont-show-today {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   cursor: pointer;
-  font-size: 14px;
+  font-size: 13px;
   color: #666;
   user-select: none;
 }
 
 .dont-show-today input[type="checkbox"] {
   cursor: pointer;
+  width: 16px;
+  height: 16px;
 }
 
 .popup-navigation {
@@ -367,52 +371,56 @@ export default {
 }
 
 .popup-counter {
-  font-size: 14px;
+  font-size: 13px;
   color: #666;
-  font-weight: 500;
+  font-weight: 400;
 }
 
 .nav-btn {
-  background: #2c5aa0;
-  color: white;
-  border: none;
-  padding: 6px 12px;
-  border-radius: 5px;
+  background: #f5f5f5;
+  color: #333;
+  border: 1px solid #ddd;
+  padding: 5px 10px;
+  border-radius: 4px;
   cursor: pointer;
-  font-size: 13px;
-  transition: all 0.3s;
+  font-size: 12px;
+  transition: all 0.2s;
 }
 
 .nav-btn:hover:not(:disabled) {
-  background: #1e3d6f;
+  background: #e8e8e8;
+  border-color: #999;
 }
 
 .nav-btn:disabled {
-  background: #ccc;
+  background: #f9f9f9;
+  color: #ccc;
   cursor: not-allowed;
+  border-color: #e0e0e0;
 }
 
 .close-btn-bottom {
-  background: #6c757d;
-  color: white;
-  border: none;
-  padding: 10px 20px;
-  border-radius: 5px;
+  background: #fff;
+  color: #333;
+  border: 1px solid #ddd;
+  padding: 8px 16px;
+  border-radius: 4px;
   cursor: pointer;
-  font-size: 14px;
-  font-weight: 500;
-  transition: all 0.3s;
+  font-size: 13px;
+  font-weight: 400;
+  transition: all 0.2s;
 }
 
 .close-btn-bottom:hover {
-  background: #5a6268;
+  background: #f5f5f5;
+  border-color: #999;
 }
 
 /* 모바일 반응형 */
 @media (max-width: 768px) {
   .popup-modal {
-    max-width: 95%;
-    max-height: 95vh;
+    max-width: 90%;
+    max-height: 85vh;
   }
 
   .popup-text {
@@ -420,14 +428,15 @@ export default {
   }
 
   .popup-title {
-    font-size: 20px;
+    font-size: 18px;
   }
 
   .popup-description {
-    font-size: 14px;
+    font-size: 13px;
   }
 
   .popup-footer {
+    padding: 12px 15px;
     flex-direction: column;
     align-items: stretch;
     gap: 10px;
@@ -435,6 +444,7 @@ export default {
 
   .dont-show-today {
     order: 1;
+    font-size: 12px;
   }
 
   .popup-navigation {
