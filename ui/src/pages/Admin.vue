@@ -30,6 +30,9 @@
         <button @click="activeTab = 'excel'" :class="{ active: activeTab === 'excel' }">
           엑셀 관리
         </button>
+        <button @click="activeTab = 'popups'" :class="{ active: activeTab === 'popups' }">
+          팝업 관리
+        </button>
         <button v-if="isSuperAdmin" @click="activeTab = 'settings'" :class="{ active: activeTab === 'settings' }">
           설정
         </button>
@@ -801,6 +804,196 @@
       />
     </div>
 
+    <!-- 팝업 관리 탭 -->
+    <div v-if="activeTab === 'popups'" class="admin-content">
+      <div class="content-header">
+        <h2>팝업 관리</h2>
+        <div class="header-actions">
+          <button @click="showPopupForm = true; editingPopup = null; resetPopupForm()" class="create-btn">
+            + 새 팝업 생성
+          </button>
+          <button @click="loadPopups" class="refresh-btn">새로고침</button>
+        </div>
+      </div>
+
+      <!-- 팝업 생성/수정 폼 -->
+      <div v-if="showPopupForm" class="popup-form-modal">
+        <div class="popup-form-content">
+          <div class="form-header">
+            <h3>{{ editingPopup ? '팝업 수정' : '새 팝업 생성' }}</h3>
+            <button @click="showPopupForm = false" class="close-btn">×</button>
+          </div>
+
+          <form @submit.prevent="savePopup" class="popup-form">
+            <div class="form-group">
+              <label>제목 *</label>
+              <input
+                v-model="popupForm.title"
+                type="text"
+                placeholder="팝업 제목을 입력하세요"
+                required
+              />
+            </div>
+
+            <div class="form-group">
+              <label>내용</label>
+              <textarea
+                v-model="popupForm.content"
+                placeholder="팝업 내용을 입력하세요"
+                rows="4"
+              ></textarea>
+            </div>
+
+            <div class="form-group">
+              <label>이미지</label>
+              <input
+                type="file"
+                @change="handlePopupImageChange"
+                accept="image/jpeg,image/jpg,image/png,image/gif"
+              />
+              <small>최대 5MB, jpeg/jpg/png/gif 형식</small>
+
+              <!-- 현재 이미지 미리보기 -->
+              <div v-if="popupForm.image_url && !popupForm.newImage" class="image-preview">
+                <img :src="getImageUrl(popupForm.image_url)" alt="Current image" />
+                <button type="button" @click="removePopupImage" class="remove-image-btn">
+                  이미지 제거
+                </button>
+              </div>
+
+              <!-- 새 이미지 미리보기 -->
+              <div v-if="popupForm.newImage" class="image-preview">
+                <img :src="popupForm.newImagePreview" alt="New image" />
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label>링크 URL</label>
+              <input
+                v-model="popupForm.link_url"
+                type="url"
+                placeholder="https://example.com"
+              />
+              <small>팝업 클릭 시 이동할 URL (선택사항)</small>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label>시작일</label>
+                <input
+                  v-model="popupForm.start_date"
+                  type="datetime-local"
+                />
+              </div>
+
+              <div class="form-group">
+                <label>종료일</label>
+                <input
+                  v-model="popupForm.end_date"
+                  type="datetime-local"
+                />
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label>표시 순서</label>
+                <input
+                  v-model.number="popupForm.display_order"
+                  type="number"
+                  min="0"
+                  placeholder="0"
+                />
+                <small>숫자가 작을수록 먼저 표시됩니다</small>
+              </div>
+
+              <div class="form-group">
+                <label class="checkbox-label">
+                  <input
+                    v-model="popupForm.is_active"
+                    type="checkbox"
+                  />
+                  <span>활성화</span>
+                </label>
+              </div>
+            </div>
+
+            <div class="form-actions">
+              <button type="submit" class="save-btn">
+                {{ editingPopup ? '수정' : '생성' }}
+              </button>
+              <button type="button" @click="showPopupForm = false" class="cancel-btn">
+                취소
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- 팝업 목록 -->
+      <div class="popups-table">
+        <table>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>제목</th>
+              <th>이미지</th>
+              <th>링크</th>
+              <th>상태</th>
+              <th>순서</th>
+              <th>시작일</th>
+              <th>종료일</th>
+              <th>생성일</th>
+              <th>관리</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-if="popups.length === 0">
+              <td colspan="10" class="no-data">등록된 팝업이 없습니다</td>
+            </tr>
+            <tr v-for="popup in popups" :key="popup.id">
+              <td>{{ popup.id }}</td>
+              <td>{{ popup.title }}</td>
+              <td>
+                <div v-if="popup.image_url" class="thumbnail">
+                  <img :src="getImageUrl(popup.image_url)" :alt="popup.title" />
+                </div>
+                <span v-else>-</span>
+              </td>
+              <td>
+                <a v-if="popup.link_url" :href="popup.link_url" target="_blank" class="link-preview">
+                  {{ popup.link_url.substring(0, 30) }}...
+                </a>
+                <span v-else>-</span>
+              </td>
+              <td>
+                <button
+                  @click="togglePopupStatus(popup)"
+                  :class="['status-badge', popup.is_active ? 'active' : 'inactive']"
+                >
+                  {{ popup.is_active ? '활성' : '비활성' }}
+                </button>
+              </td>
+              <td>{{ popup.display_order }}</td>
+              <td>{{ popup.start_date ? formatDateTime(popup.start_date) : '-' }}</td>
+              <td>{{ popup.end_date ? formatDateTime(popup.end_date) : '-' }}</td>
+              <td>{{ formatDateTime(popup.created_at) }}</td>
+              <td>
+                <div class="action-buttons">
+                  <button @click="editPopup(popup)" class="edit-btn" title="수정">
+                    수정
+                  </button>
+                  <button @click="deletePopup(popup.id)" class="delete-btn" title="삭제">
+                    삭제
+                  </button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
     <!-- 설정 탭 -->
     <div v-if="activeTab === 'settings'" class="admin-content">
       <div class="content-header">
@@ -1209,6 +1402,23 @@ export default {
         board: '',
         startDate: '',
         endDate: ''
+      },
+      // 팝업 관리 관련 데이터
+      popups: [],
+      showPopupForm: false,
+      editingPopup: null,
+      popupForm: {
+        title: '',
+        content: '',
+        image_url: '',
+        link_url: '',
+        is_active: true,
+        display_order: 0,
+        start_date: '',
+        end_date: '',
+        newImage: null,
+        newImagePreview: '',
+        remove_image: false
       },
       // 설정 관련 데이터
       activeSettingsTab: 'general',
@@ -2897,6 +3107,220 @@ ${item.content ? `내용: ${item.content.substring(0, 100)}...` : ''}
         const errorMsg = error.response?.data?.error || `${typeLabel} 삭제에 실패했습니다.`;
         this.toast.error(errorMsg, '❌ 삭제 오류');
       }
+    },
+
+    // ==================== 팝업 관리 메서드 ====================
+
+    async loadPopups() {
+      try {
+        const response = await axios.get(`${API_BASE_URL}/api/popups/admin`, {
+          headers: {
+            Authorization: `Bearer ${this.authStore.state.token}`
+          }
+        });
+        this.popups = response.data || [];
+      } catch (error) {
+        console.error('팝업 목록 로드 실패:', error);
+        this.toast.error('팝업 목록을 불러오는데 실패했습니다.', '❌ 로드 오류');
+      }
+    },
+
+    resetPopupForm() {
+      this.popupForm = {
+        title: '',
+        content: '',
+        image_url: '',
+        link_url: '',
+        is_active: true,
+        display_order: 0,
+        start_date: '',
+        end_date: '',
+        newImage: null,
+        newImagePreview: '',
+        remove_image: false
+      };
+    },
+
+    handlePopupImageChange(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      // 파일 크기 체크 (5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        this.toast.error('이미지 파일은 5MB 이하만 업로드 가능합니다.', '❌ 파일 크기 초과');
+        event.target.value = '';
+        return;
+      }
+
+      // 파일 형식 체크
+      const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
+      if (!allowedTypes.includes(file.type)) {
+        this.toast.error('jpeg, jpg, png, gif 형식만 업로드 가능합니다.', '❌ 잘못된 형식');
+        event.target.value = '';
+        return;
+      }
+
+      this.popupForm.newImage = file;
+
+      // 이미지 미리보기 생성
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        this.popupForm.newImagePreview = e.target.result;
+      };
+      reader.readAsDataURL(file);
+    },
+
+    removePopupImage() {
+      this.popupForm.image_url = '';
+      this.popupForm.remove_image = true;
+    },
+
+    editPopup(popup) {
+      this.editingPopup = popup;
+      this.popupForm = {
+        title: popup.title,
+        content: popup.content || '',
+        image_url: popup.image_url || '',
+        link_url: popup.link_url || '',
+        is_active: Boolean(popup.is_active),
+        display_order: popup.display_order || 0,
+        start_date: popup.start_date ? this.formatDateTimeForInput(popup.start_date) : '',
+        end_date: popup.end_date ? this.formatDateTimeForInput(popup.end_date) : '',
+        newImage: null,
+        newImagePreview: '',
+        remove_image: false
+      };
+      this.showPopupForm = true;
+    },
+
+    async savePopup() {
+      try {
+        const formData = new FormData();
+        formData.append('title', this.popupForm.title);
+        formData.append('content', this.popupForm.content || '');
+        formData.append('link_url', this.popupForm.link_url || '');
+        formData.append('is_active', this.popupForm.is_active ? '1' : '0');
+        formData.append('display_order', this.popupForm.display_order.toString());
+        formData.append('start_date', this.popupForm.start_date || '');
+        formData.append('end_date', this.popupForm.end_date || '');
+
+        if (this.popupForm.newImage) {
+          formData.append('image', this.popupForm.newImage);
+        }
+
+        if (this.popupForm.remove_image) {
+          formData.append('remove_image', 'true');
+        }
+
+        let response;
+        if (this.editingPopup) {
+          // 수정
+          response = await axios.put(
+            `${API_BASE_URL}/api/popups/${this.editingPopup.id}`,
+            formData,
+            {
+              headers: {
+                Authorization: `Bearer ${this.authStore.state.token}`,
+                'Content-Type': 'multipart/form-data'
+              }
+            }
+          );
+          this.toast.success('팝업이 수정되었습니다.', '✅ 수정 완료');
+        } else {
+          // 생성
+          response = await axios.post(
+            `${API_BASE_URL}/api/popups`,
+            formData,
+            {
+              headers: {
+                Authorization: `Bearer ${this.authStore.state.token}`,
+                'Content-Type': 'multipart/form-data'
+              }
+            }
+          );
+          this.toast.success('팝업이 생성되었습니다.', '✅ 생성 완료');
+        }
+
+        this.showPopupForm = false;
+        this.resetPopupForm();
+        this.editingPopup = null;
+        await this.loadPopups();
+      } catch (error) {
+        console.error('팝업 저장 실패:', error);
+        const errorMsg = error.response?.data?.error || '팝업 저장에 실패했습니다.';
+        this.toast.error(errorMsg, '❌ 저장 오류');
+      }
+    },
+
+    async deletePopup(id) {
+      if (!confirm('정말로 이 팝업을 삭제하시겠습니까?')) {
+        return;
+      }
+
+      try {
+        await axios.delete(`${API_BASE_URL}/api/popups/${id}`, {
+          headers: {
+            Authorization: `Bearer ${this.authStore.state.token}`
+          }
+        });
+
+        this.toast.success('팝업이 삭제되었습니다.', '✅ 삭제 완료');
+        await this.loadPopups();
+      } catch (error) {
+        console.error('팝업 삭제 실패:', error);
+        const errorMsg = error.response?.data?.error || '팝업 삭제에 실패했습니다.';
+        this.toast.error(errorMsg, '❌ 삭제 오류');
+      }
+    },
+
+    async togglePopupStatus(popup) {
+      try {
+        await axios.patch(
+          `${API_BASE_URL}/api/popups/${popup.id}/toggle`,
+          {},
+          {
+            headers: {
+              Authorization: `Bearer ${this.authStore.state.token}`
+            }
+          }
+        );
+
+        const newStatus = popup.is_active ? '비활성화' : '활성화';
+        this.toast.success(`팝업이 ${newStatus}되었습니다.`, '✅ 상태 변경');
+        await this.loadPopups();
+      } catch (error) {
+        console.error('팝업 상태 변경 실패:', error);
+        this.toast.error('팝업 상태 변경에 실패했습니다.', '❌ 변경 오류');
+      }
+    },
+
+    getImageUrl(url) {
+      if (!url) return '';
+      if (url.startsWith('http')) return url;
+      return `${API_BASE_URL}${url}`;
+    },
+
+    formatDateTime(datetime) {
+      if (!datetime) return '-';
+      const date = new Date(datetime);
+      return date.toLocaleString('ko-KR', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    },
+
+    formatDateTimeForInput(datetime) {
+      if (!datetime) return '';
+      const date = new Date(datetime);
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      const hours = String(date.getHours()).padStart(2, '0');
+      const minutes = String(date.getMinutes()).padStart(2, '0');
+      return `${year}-${month}-${day}T${hours}:${minutes}`;
     }
   },
 
@@ -2918,6 +3342,9 @@ ${item.content ? `내용: ${item.content.substring(0, 100)}...` : ''}
       if (newTab === 'education' && this.educationApplications.length === 0) {
         this.loadEducationApplications();
         this.loadEducationStats();
+      }
+      if (newTab === 'popups' && this.popups.length === 0) {
+        this.loadPopups();
       }
     },
 
@@ -4588,5 +5015,381 @@ input:checked + .slider:before {
   color: #666;
   margin: 5px 0 0 0;
   line-height: 1.4;
+}
+
+/* ==================== 팝업 관리 스타일 ==================== */
+
+/* 팝업 폼 모달 */
+.popup-form-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  padding: 20px;
+}
+
+.popup-form-content {
+  background: white;
+  border-radius: 12px;
+  max-width: 800px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+}
+
+.popup-form-content .form-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 30px;
+  border-bottom: 1px solid #e0e0e0;
+  background: #f8f9fa;
+  border-radius: 12px 12px 0 0;
+}
+
+.popup-form-content .form-header h3 {
+  margin: 0;
+  color: #2c5aa0;
+  font-size: 1.5rem;
+}
+
+.popup-form-content .form-header .close-btn {
+  background: none;
+  border: none;
+  font-size: 2rem;
+  color: #666;
+  cursor: pointer;
+  padding: 0;
+  width: 35px;
+  height: 35px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: all 0.3s;
+}
+
+.popup-form-content .form-header .close-btn:hover {
+  background: rgba(0, 0, 0, 0.1);
+  color: #000;
+}
+
+.popup-form {
+  padding: 30px;
+}
+
+.popup-form .form-group {
+  margin-bottom: 20px;
+}
+
+.popup-form .form-group label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 500;
+  color: #333;
+}
+
+.popup-form .form-group input[type="text"],
+.popup-form .form-group input[type="url"],
+.popup-form .form-group input[type="number"],
+.popup-form .form-group input[type="datetime-local"],
+.popup-form .form-group textarea {
+  width: 100%;
+  padding: 10px 15px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  font-size: 14px;
+  transition: border-color 0.3s;
+}
+
+.popup-form .form-group input:focus,
+.popup-form .form-group textarea:focus {
+  outline: none;
+  border-color: #2c5aa0;
+}
+
+.popup-form .form-group textarea {
+  resize: vertical;
+  font-family: inherit;
+}
+
+.popup-form .form-group small {
+  display: block;
+  margin-top: 5px;
+  color: #666;
+  font-size: 0.85rem;
+}
+
+.popup-form .form-group input[type="file"] {
+  padding: 8px 0;
+}
+
+.popup-form .form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+.popup-form .checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  margin-top: 28px;
+}
+
+.popup-form .checkbox-label input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+}
+
+.popup-form .checkbox-label span {
+  font-size: 14px;
+  color: #333;
+}
+
+.popup-form .image-preview {
+  margin-top: 15px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  padding: 10px;
+  position: relative;
+}
+
+.popup-form .image-preview img {
+  width: 100%;
+  max-height: 300px;
+  object-fit: contain;
+  border-radius: 5px;
+}
+
+.popup-form .remove-image-btn {
+  margin-top: 10px;
+  padding: 6px 12px;
+  background: #dc3545;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 13px;
+  transition: background 0.3s;
+}
+
+.popup-form .remove-image-btn:hover {
+  background: #c82333;
+}
+
+.popup-form .form-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  margin-top: 30px;
+  padding-top: 20px;
+  border-top: 1px solid #e0e0e0;
+}
+
+.popup-form .save-btn {
+  padding: 10px 24px;
+  background: #2c5aa0;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: background 0.3s;
+}
+
+.popup-form .save-btn:hover {
+  background: #1e3d6f;
+}
+
+.popup-form .cancel-btn {
+  padding: 10px 24px;
+  background: #6c757d;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: background 0.3s;
+}
+
+.popup-form .cancel-btn:hover {
+  background: #5a6268;
+}
+
+/* 팝업 테이블 */
+.popups-table {
+  margin-top: 20px;
+  overflow-x: auto;
+}
+
+.popups-table table {
+  width: 100%;
+  border-collapse: collapse;
+  background: white;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.popups-table thead {
+  background: #f8f9fa;
+}
+
+.popups-table th {
+  padding: 15px 12px;
+  text-align: left;
+  font-weight: 600;
+  color: #333;
+  border-bottom: 2px solid #dee2e6;
+  white-space: nowrap;
+}
+
+.popups-table td {
+  padding: 12px;
+  border-bottom: 1px solid #e9ecef;
+  vertical-align: middle;
+}
+
+.popups-table tr:hover {
+  background: #f8f9fa;
+}
+
+.popups-table .no-data {
+  text-align: center;
+  padding: 40px;
+  color: #666;
+  font-size: 14px;
+}
+
+.popups-table .thumbnail {
+  width: 80px;
+  height: 60px;
+  overflow: hidden;
+  border-radius: 5px;
+  border: 1px solid #ddd;
+}
+
+.popups-table .thumbnail img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.popups-table .link-preview {
+  color: #2c5aa0;
+  text-decoration: none;
+  font-size: 13px;
+}
+
+.popups-table .link-preview:hover {
+  text-decoration: underline;
+}
+
+.popups-table .status-badge {
+  padding: 5px 12px;
+  border-radius: 15px;
+  font-size: 12px;
+  font-weight: 500;
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.popups-table .status-badge.active {
+  background: #28a745;
+  color: white;
+}
+
+.popups-table .status-badge.active:hover {
+  background: #218838;
+}
+
+.popups-table .status-badge.inactive {
+  background: #6c757d;
+  color: white;
+}
+
+.popups-table .status-badge.inactive:hover {
+  background: #5a6268;
+}
+
+.popups-table .action-buttons {
+  display: flex;
+  gap: 8px;
+}
+
+.popups-table .edit-btn,
+.popups-table .delete-btn {
+  padding: 6px 12px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 500;
+  transition: all 0.3s;
+}
+
+.popups-table .edit-btn {
+  background: #007bff;
+  color: white;
+}
+
+.popups-table .edit-btn:hover {
+  background: #0056b3;
+}
+
+.popups-table .delete-btn {
+  background: #dc3545;
+  color: white;
+}
+
+.popups-table .delete-btn:hover {
+  background: #c82333;
+}
+
+/* 반응형 */
+@media (max-width: 1200px) {
+  .popup-form .form-row {
+    grid-template-columns: 1fr;
+  }
+
+  .popup-form .checkbox-label {
+    margin-top: 0;
+  }
+}
+
+@media (max-width: 768px) {
+  .popup-form-content {
+    max-width: 95%;
+  }
+
+  .popup-form {
+    padding: 20px;
+  }
+
+  .popups-table {
+    font-size: 13px;
+  }
+
+  .popups-table th,
+  .popups-table td {
+    padding: 8px 6px;
+  }
+
+  .popups-table .action-buttons {
+    flex-direction: column;
+  }
 }
 </style>

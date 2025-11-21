@@ -1,5 +1,12 @@
 <template>
     <div class="home">
+        <!-- 팝업 모달 -->
+        <PopupModal
+            v-if="showPopup && visiblePopups.length > 0"
+            :popups="visiblePopups"
+            @close="closePopup"
+        />
+
         <!-- 메인 히어로 섹션 -->
         <section class="hero-section">
             <div class="hero-background">
@@ -98,6 +105,7 @@
 <script>
 import Calendar from '../components/Calendar.vue';
 import NoticeList from '../components/Notice.vue';
+import PopupModal from '../components/PopupModal.vue';
 import { API_BASE_URL } from '../config/env.js';
 import axios from 'axios';
 import { useToast } from '../components/Toast.vue';
@@ -111,6 +119,7 @@ export default {
     components: {
         Calendar,
         NoticeList,
+        PopupModal,
     },
     data() {
         return {
@@ -119,6 +128,9 @@ export default {
             reviews: [], // 초기에는 비어있다가 로드 후 채워짐
             sliderInterval: null,
             isSliderPaused: false,
+            // 팝업 관련
+            popups: [],
+            showPopup: false,
             relatedSites: [
                 {
                     name: '통영시청',
@@ -185,6 +197,11 @@ export default {
         duplicatedSites() {
             // 무한 슬라이더를 위해 사이트 목록을 3배로 복제 (더 부드러운 전환을 위해)
             return [...this.relatedSites, ...this.relatedSites, ...this.relatedSites];
+        },
+        visiblePopups() {
+            // "오늘 하루 보지 않기"로 설정된 팝업 제외
+            const closedPopups = this.getClosedPopupsFromCookie();
+            return this.popups.filter(popup => !closedPopups.includes(popup.id));
         }
     },
     created() {
@@ -194,6 +211,7 @@ export default {
     async mounted() {
         console.log('Home 컴포넌트 마운트됨');
         await this.loadData();
+        await this.loadPopups(); // 팝업 로드
 
         // DOM이 완전히 렌더링된 후 슬라이더 시작
         this.$nextTick(() => {
@@ -483,7 +501,48 @@ export default {
             return `${year}.${month}.${day}`;
         },
 
+        // 팝업 관련 메서드
+        async loadPopups() {
+            try {
+                const response = await axios.get(`${API_BASE_URL}/api/popups`);
+                this.popups = response.data || [];
 
+                // 팝업이 있고, 표시할 팝업이 있으면 팝업 표시
+                if (this.visiblePopups.length > 0) {
+                    this.showPopup = true;
+                }
+            } catch (error) {
+                console.error('팝업 로드 실패:', error);
+                // 팝업 로드 실패는 사용자에게 알리지 않음 (조용히 실패)
+            }
+        },
+
+        closePopup() {
+            this.showPopup = false;
+        },
+
+        getCookie(name) {
+            const nameEQ = name + "=";
+            const ca = document.cookie.split(';');
+            for (let i = 0; i < ca.length; i++) {
+                let c = ca[i];
+                while (c.charAt(0) === ' ') c = c.substring(1, c.length);
+                if (c.indexOf(nameEQ) === 0) return c.substring(nameEQ.length, c.length);
+            }
+            return null;
+        },
+
+        getClosedPopupsFromCookie() {
+            const cookie = this.getCookie('closedPopups');
+            if (cookie) {
+                try {
+                    return JSON.parse(cookie);
+                } catch (e) {
+                    return [];
+                }
+            }
+            return [];
+        },
 
     },
 };

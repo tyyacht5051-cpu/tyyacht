@@ -18,6 +18,7 @@ import schedulesRoutes from './src/routes/schedules';
 import reviewsRoutes from './src/routes/reviews';
 import crewsRoutes from './src/routes/crews';
 import excelRoutes from './src/routes/excel';
+import popupsRoutes from './src/routes/popups';
 
 const app = express();
 
@@ -56,6 +57,7 @@ app.use('/api/schedules', schedulesRoutes);
 app.use('/api/reviews', reviewsRoutes);
 app.use('/api/crews', crewsRoutes);
 app.use('/api/excel', excelRoutes);
+app.use('/api/popups', popupsRoutes);
 
 app.get('/', (_req: express.Request, res: express.Response) => {
     res.send('Yacht School API Running...');
