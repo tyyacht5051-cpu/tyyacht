@@ -1,6 +1,7 @@
 import express, { Request, Response } from 'express';
 import { db } from '../db/database';
 import { authenticateToken, requireAdmin } from '../middleware/auth';
+import { config } from '../config/env';
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
@@ -10,7 +11,7 @@ const router = express.Router();
 // 이미지 업로드 설정
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
-        const uploadDir = path.join(__dirname, '../../uploads/popups');
+        const uploadDir = path.join(config.UPLOAD_PATH, 'popups');
         if (!fs.existsSync(uploadDir)) {
             fs.mkdirSync(uploadDir, { recursive: true });
         }
@@ -151,7 +152,7 @@ router.put('/:id', authenticateToken, requireAdmin, upload.single('image'), asyn
 
         // 이미지 제거 요청
         if (remove_image === 'true' && existingPopup.image_url) {
-            const imagePath = path.join(__dirname, '../../', existingPopup.image_url.replace('/api/', ''));
+            const imagePath = path.join(process.cwd(), existingPopup.image_url.replace('/api/', ''));
             if (fs.existsSync(imagePath)) {
                 fs.unlinkSync(imagePath);
             }
@@ -162,7 +163,7 @@ router.put('/:id', authenticateToken, requireAdmin, upload.single('image'), asyn
         if (req.file) {
             // 기존 이미지 삭제
             if (existingPopup.image_url) {
-                const oldImagePath = path.join(__dirname, '../../', existingPopup.image_url.replace('/api/', ''));
+                const oldImagePath = path.join(process.cwd(), existingPopup.image_url.replace('/api/', ''));
                 if (fs.existsSync(oldImagePath)) {
                     fs.unlinkSync(oldImagePath);
                 }
@@ -209,7 +210,7 @@ router.delete('/:id', authenticateToken, requireAdmin, async (req: Request, res:
 
         // 이미지 파일 삭제
         if (popup.image_url) {
-            const imagePath = path.join(__dirname, '../../', popup.image_url.replace('/api/', ''));
+            const imagePath = path.join(process.cwd(), popup.image_url.replace('/api/', ''));
             if (fs.existsSync(imagePath)) {
                 fs.unlinkSync(imagePath);
             }
