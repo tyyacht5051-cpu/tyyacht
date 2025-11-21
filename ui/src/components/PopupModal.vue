@@ -18,10 +18,9 @@
             <img :src="getImageUrl(currentPopup.image_url)" :alt="currentPopup.title">
           </div>
 
-          <!-- 제목과 내용 -->
-          <div class="popup-text">
-            <h2 class="popup-title">{{ currentPopup.title }}</h2>
-            <p v-if="currentPopup.content" class="popup-description">{{ currentPopup.content }}</p>
+          <!-- 내용 -->
+          <div v-if="currentPopup.content" class="popup-text">
+            <p class="popup-description">{{ currentPopup.content }}</p>
           </div>
         </a>
 
@@ -32,10 +31,9 @@
             <img :src="getImageUrl(currentPopup.image_url)" :alt="currentPopup.title">
           </div>
 
-          <!-- 제목과 내용 -->
-          <div class="popup-text">
-            <h2 class="popup-title">{{ currentPopup.title }}</h2>
-            <p v-if="currentPopup.content" class="popup-description">{{ currentPopup.content }}</p>
+          <!-- 내용 -->
+          <div v-if="currentPopup.content" class="popup-text">
+            <p class="popup-description">{{ currentPopup.content }}</p>
           </div>
         </template>
       </div>
@@ -293,6 +291,13 @@ export default {
 .popup-content {
   flex: 1;
   overflow-y: auto;
+  /* 스크롤바 숨기기 */
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE, Edge */
+}
+
+.popup-content::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Opera */
 }
 
 .popup-link {
