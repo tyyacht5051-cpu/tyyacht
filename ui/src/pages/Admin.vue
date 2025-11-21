@@ -385,7 +385,7 @@
           <label>체험 유형:</label>
           <select v-model="boardingFilters.experienceType">
             <option value="">전체</option>
-            <option value="cruise">크루져요트</option>
+            <option value="cruise">크루저요트</option>
             <option value="dinghy">딩기요트</option>
             <option value="paddleboard">패들보드</option>
           </select>
@@ -493,7 +493,7 @@
           <label>교육과정:</label>
           <select v-model="educationFilters.courseType">
             <option value="">전체</option>
-            <option value="크루져">크루져 요트 교육</option>
+            <option value="크루저">크루저 요트 교육</option>
             <option value="딩기">딩기 요트 교육</option>
           </select>
         </div>
@@ -585,7 +585,7 @@
           <select v-model="noticeFilters.category">
             <option value="">전체</option>
             <option value="exemption">면제교육</option>
-            <option value="cruise">크루져요트</option>
+            <option value="cruise">크루저요트</option>
             <option value="dinghy">딩기요트</option>
             <option value="recruitment">채용</option>
             <option value="others">기타</option>
@@ -657,7 +657,7 @@
             <label>카테고리</label>
             <select v-model="editForm.category_id" required>
               <option value="exemption">면제교육</option>
-              <option value="cruise">크루져요트</option>
+              <option value="cruise">크루저요트</option>
               <option value="dinghy">딩기요트</option>
               <option value="recruitment">채용</option>
               <option value="others">기타</option>

@@ -114,7 +114,7 @@
                 required
             >
                 <option value="">선택하세요</option>
-                <option value="크루져요트교육">크루져 요트 교육</option>
+                <option value="크루저요트교육">크루저 요트 교육</option>
                 <option value="딩기요트교육">딩기 요트 교육</option>
             </select>
             <div v-if="errors.courseType" class="form-error">
@@ -208,10 +208,10 @@ const isSubmitting = ref(false);
 
 // 교육과정별 세부과정 정보
 const courseSubOptions = {
-    크루져요트교육: [
-        { value: '크루져-초급과정', label: '초급과정 (10만원)' },
-        { value: '크루져-중급과정', label: '중급과정 (20만원)' },
-        { value: '크루져-고급과정', label: '고급과정 (30만원)' },
+    크루저요트교육: [
+        { value: '크루저-초급과정', label: '초급과정 (10만원)' },
+        { value: '크루저-중급과정', label: '중급과정 (20만원)' },
+        { value: '크루저-고급과정', label: '고급과정 (30만원)' },
         { value: '섬간항해보육', label: '섬 간(코스탈 레이스) 항해교육 1박2일(30만원)' },
         { value: '섬간항해보육', label: '섬 간(코스탈 레이스) 항해교육 2박3일(45만원)' },
     ],

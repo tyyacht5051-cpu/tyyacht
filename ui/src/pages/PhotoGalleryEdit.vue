@@ -37,8 +37,8 @@
                             <label>카테고리 *</label>
                             <select v-model="gallery.category_id" required>
                                 <option value="">카테고리를 선택하세요</option>
-                                <option value="cruise-education">크루져 요트 교육</option>
-                                <option value="cruise-experience">크루져 요트 체험</option>
+                                <option value="cruise-education">크루저 요트 교육</option>
+                                <option value="cruise-experience">크루저 요트 체험</option>
                                 <option value="dinghy-education">딩기 요트 교육</option>
                                 <option value="dinghy-experience">딩기 요트 체험</option>
                                 <option value="exemption-education">면제교육</option>

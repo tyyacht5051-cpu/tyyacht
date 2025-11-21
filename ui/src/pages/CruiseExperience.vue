@@ -5,8 +5,8 @@
                 <div class="hero-overlay"></div>
             </div>
             <div class="hero-content">
-                <h1 class="hero-title">크루져 요트 체험</h1>
-                <p class="hero-subtitle">가족, 친구와 함께하는 즐거운 크루져 요트 체험</p>
+                <h1 class="hero-title">크루저 요트 체험</h1>
+                <p class="hero-subtitle">가족, 친구와 함께하는 즐거운 크루저 요트 체험</p>
             </div>
         </section>
 
@@ -102,7 +102,7 @@ export default {
         };
 
         const contactUs = () => {
-            toast.tip('전화: 055-641-5051~2\n운영시간: 09:00~18:00', '🚢 크루져 체험 문의');
+            toast.tip('전화: 055-641-5051~2\n운영시간: 09:00~18:00', '🚢 크루저 체험 문의');
         };
 
         return {

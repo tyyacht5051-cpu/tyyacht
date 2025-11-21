@@ -68,7 +68,7 @@ export default {
   data() {
     return {
       selectedCategory: '전체',
-      categories: ['전체', '면제교육', '크루져요트', '딩기요트', '채용', '기타']
+      categories: ['전체', '면제교육', '크루저요트', '딩기요트', '채용', '기타']
     }
   },
   computed: {
@@ -125,7 +125,7 @@ export default {
     getCategoryClass(category) {
       const categoryMap = {
         '면제교육': 'exemption',
-        '크루져요트': 'cruise',
+        '크루저요트': 'cruise',
         '딩기요트': 'dinghy',
         '채용': 'recruitment',
         '기타': 'others'

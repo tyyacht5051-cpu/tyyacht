@@ -102,7 +102,7 @@
 
                     <!-- 크루즈 요트 섹션 -->
                     <div class="yacht-subsection">
-                        <h2>크루져 요트</h2>
+                        <h2>크루저 요트</h2>
                         <div class="cruise-yacht-gallery">
                             <div
                                 class="cruise-yacht-row"

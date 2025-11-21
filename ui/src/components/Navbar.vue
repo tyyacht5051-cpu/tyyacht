@@ -16,8 +16,8 @@
           <span class="nav-link dropdown-toggle">교육/체험프로그램</span>
           <ul class="dropdown-menu" :class="{ active: isDropdownOpen }">
             <li><router-link to="/program-guide" class="dropdown-link">프로그램안내</router-link></li>
-            <li><router-link to="/cruise-education" class="dropdown-link">크루져 요트 교육</router-link></li>
-            <li><router-link to="/cruise-experience" class="dropdown-link">크루져 요트 체험</router-link></li>
+            <li><router-link to="/cruise-education" class="dropdown-link">크루저 요트 교육</router-link></li>
+            <li><router-link to="/cruise-experience" class="dropdown-link">크루저 요트 체험</router-link></li>
             <li><router-link to="/dinghy-education" class="dropdown-link">딩기 요트 교육</router-link></li>
             <li><router-link to="/dinghy-experience" class="dropdown-link">딩기 요트 체험</router-link></li>
             <li><router-link to="/paddleboard-experience" class="dropdown-link">패들보드 체험</router-link></li>

@@ -25,8 +25,8 @@
                     <h4>교육/체험 프로그램</h4>
                     <ul class="footer-links">
                         <li><router-link to="/program-guide">프로그램안내</router-link></li>
-                        <li><router-link to="/cruise-education">크루져 요트 교육</router-link></li>
-                        <li><router-link to="/cruise-experience">크루져 요트 체험</router-link></li>
+                        <li><router-link to="/cruise-education">크루저 요트 교육</router-link></li>
+                        <li><router-link to="/cruise-experience">크루저 요트 체험</router-link></li>
                         <li><router-link to="/dinghy-education">딩기 요트 교육</router-link></li>
                         <li><router-link to="/dinghy-experience">딩기 요트 체험</router-link></li>
                         <li>

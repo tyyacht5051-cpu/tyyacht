@@ -43,8 +43,8 @@ export default {
             programs: [
                 {
                     id: 1,
-                    name: '크루져 요트 교육',
-                    description: '전문 강사와 함께하는 체계적인 크루져 요트 교육 프로그램',
+                    name: '크루저 요트 교육',
+                    description: '전문 강사와 함께하는 체계적인 크루저 요트 교육 프로그램',
                     duration: '1일 ~ 5일',
                     price: '100,000원부터',
                     image: '/images/cruise-education.jpg',
@@ -52,8 +52,8 @@ export default {
                 },
                 {
                     id: 2,
-                    name: '크루져 요트 체험',
-                    description: '가족, 친구와 함께하는 모두가 즐거운 크루져 요트 체험',
+                    name: '크루저 요트 체험',
+                    description: '가족, 친구와 함께하는 모두가 즐거운 크루저 요트 체험',
                     duration: '1시간 ~ 8시간',
                     price: '25,000원부터',
                     image: '/images/cruise-experience.jpg',
