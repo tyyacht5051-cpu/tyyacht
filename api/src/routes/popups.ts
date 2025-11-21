@@ -1,5 +1,5 @@
 import express, { Request, Response } from 'express';
-import db from '../config/database';
+import { db } from '../db/database';
 import { authenticateToken, requireAdmin } from '../middleware/auth';
 import multer from 'multer';
 import path from 'path';
