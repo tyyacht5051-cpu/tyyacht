@@ -164,7 +164,7 @@ export default {
                 },
                 {
                     id: 'cruise',
-                    title: '크루즈요트',
+                    title: '크루져요트',
                 },
                 {
                     id: 'dinghy',
@@ -278,7 +278,7 @@ export default {
 
         getCourseLabel(category) {
             const courseMap = {
-                'cruise': '크루즈요트',
+                'cruise': '크루져요트',
                 'dinghy': '딩기요트',
                 'exemption': '면제교육',
                 'paddleboard': '패들보드',

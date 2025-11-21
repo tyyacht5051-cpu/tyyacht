@@ -4,8 +4,8 @@
             <div class="hero-background"></div>
             <div class="hero-overlay"></div>
             <div class="hero-content">
-                <h1 class="hero-title">{{ notice.title || '크루즈요트 공지사항' }}</h1>
-                <p class="hero-subtitle">크루즈요트 관련 중요 공지사항입니다</p>
+                <h1 class="hero-title">{{ notice.title || '크루져요트 공지사항' }}</h1>
+                <p class="hero-subtitle">크루져요트 관련 중요 공지사항입니다</p>
             </div>
         </section>
 
@@ -16,7 +16,7 @@
                     <span class="separator">></span>
                     <router-link to="/notice">공지사항</router-link>
                     <span class="separator">></span>
-                    <router-link to="/notice/cruise">크루즈요트</router-link>
+                    <router-link to="/notice/cruise">크루져요트</router-link>
                     <span class="separator">></span>
                     <span class="current">{{ notice.title || '공지사항' }}</span>
                 </div>
@@ -234,7 +234,7 @@
                         <div class="preview-body">
                             <div class="preview-notice">
                                 <div class="notice-header">
-                                    <div class="category-badge cruise">🚢 크루즈요트</div>
+                                    <div class="category-badge cruise">🚢 크루져요트</div>
                                     <h1>{{ notice.title || '제목을 입력하세요' }}</h1>
                                     <div class="notice-meta">
                                         <span>{{ new Date().toLocaleDateString('ko-KR') }}</span>

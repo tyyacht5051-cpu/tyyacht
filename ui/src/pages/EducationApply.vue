@@ -20,7 +20,7 @@
                                     <div class="qualification-icon">
                                         <i class="fas fa-ship"></i>
                                     </div>
-                                    <h4>크루즈 요트 교육</h4>
+                                    <h4>크루져 요트 교육</h4>
                                     <p>대형 요트 면허 취득을 위한 전문 교육</p>
                                 </div>
                                 <div class="qualification-item">

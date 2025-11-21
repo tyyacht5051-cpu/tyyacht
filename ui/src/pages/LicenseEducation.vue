@@ -159,7 +159,7 @@ export default {
             programs: [
                 {
                     id: 1,
-                    name: '면허 교육 과정',
+                    name: '무시험 면허 취득 과정',
                     price: '70만원',
                     duration: '5일간',
                     hours: '40시간 연수 (이론22, 실기18)',

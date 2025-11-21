@@ -13,7 +13,7 @@
                 </thead>
                 <tbody>
                     <tr>
-                        <td rowspan="3" class="program-type">크루즈 요트 교육/체험</td>
+                        <td rowspan="3" class="program-type">크루져 요트 교육/체험</td>
                         <td>바다의땅 3호(35인승)</td>
                         <td>
                             <button class="detail-btn" @click="goToDetail('cruise-education')">
@@ -95,7 +95,7 @@
                 </thead>
                 <tbody>
                     <tr>
-                        <td rowspan="9" class="program-type">크루즈 요트 교육/체험</td>
+                        <td rowspan="9" class="program-type">크루져 요트 교육/체험</td>
                         <td>한산대첩 승전항로 (1h)</td>
                         <td>1h</td>
                         <td>1인 25,000원</td>

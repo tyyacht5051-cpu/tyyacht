@@ -76,7 +76,7 @@
                         <select v-model="newReview.category_id" required>
                             <option value="">카테고리를 선택하세요</option>
                             <option value="exemption">면제교육</option>
-                            <option value="cruise">크루즈요트</option>
+                            <option value="cruise">크루져요트</option>
                             <option value="dinghy">딩기요트</option>
                         </select>
                     </div>
@@ -158,7 +158,7 @@ export default {
             categories: [
                 { id: 'all', name: '전체', icon: '📋', count: 0 },
                 { id: 'exemption', name: '면제교육', icon: '📚', count: 0 },
-                { id: 'cruise', name: '크루즈요트', icon: '🛥️', count: 0 },
+                { id: 'cruise', name: '크루져요트', icon: '🛥️', count: 0 },
                 { id: 'dinghy', name: '딩기요트', icon: '⛵', count: 0 }
             ],
             posts: [],

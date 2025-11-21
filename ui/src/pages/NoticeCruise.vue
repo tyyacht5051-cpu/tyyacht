@@ -4,8 +4,8 @@
             <div class="hero-background"></div>
             <div class="hero-overlay"></div>
             <div class="hero-content">
-                <h1 class="hero-title">크루즈요트 공지사항</h1>
-                <p class="hero-subtitle">크루즈요트 교육 및 체험 관련 공지사항을 확인하세요</p>
+                <h1 class="hero-title">크루져요트 공지사항</h1>
+                <p class="hero-subtitle">크루져요트 교육 및 체험 관련 공지사항을 확인하세요</p>
             </div>
         </section>
 
@@ -15,7 +15,7 @@
                     <div class="breadcrumb">
                         <router-link to="/notice">공지사항</router-link>
                         <span class="separator">></span>
-                        <span class="current">크루즈요트</span>
+                        <span class="current">크루져요트</span>
                     </div>
                     <div class="notice-info">
                         <span class="total-count">총 {{ filteredNotices.length }}개 게시물</span>
@@ -67,7 +67,7 @@
                 <!-- 관리자 작성 폼 -->
                 <div v-if="showWriteForm && isAdmin" class="write-form">
                     <div class="form-header">
-                        <h3>크루즈요트 공지사항 작성</h3>
+                        <h3>크루져요트 공지사항 작성</h3>
                         <button class="close-btn" @click="showWriteForm = false">✕</button>
                     </div>
                     <form @submit.prevent="submitNotice">
@@ -247,7 +247,7 @@ export default {
                     date: notice.created_at.split('T')[0]
                 }));
             } catch (error) {
-                console.error('크루즈요트 공지사항 로드 실패:', error);
+                console.error('크루져요트 공지사항 로드 실패:', error);
                 this.toast.error('공지사항을 불러오는데 실패했습니다.', '⚠️ 로드 오류');
             }
         },

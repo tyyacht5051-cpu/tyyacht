@@ -223,8 +223,8 @@ export default {
             thumbnailPreview: null,
             categories: [
                 { id: 'all', name: '전체', count: 0 },
-                { id: 'cruise-education', name: '크루즈 요트 교육', count: 0 },
-                { id: 'cruise-experience', name: '크루즈 요트 체험', count: 0 },
+                { id: 'cruise-education', name: '크루져 요트 교육', count: 0 },
+                { id: 'cruise-experience', name: '크루져 요트 체험', count: 0 },
                 { id: 'dinghy-education', name: '딩기 요트 교육', count: 0 },
                 { id: 'dinghy-experience', name: '딩기 요트 체험', count: 0 },
                 { id: 'paddleboard', name: '패들보드 체험', count: 0 }

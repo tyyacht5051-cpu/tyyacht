@@ -20,8 +20,8 @@
                                     <div class="qualification-icon">
                                         <i class="fas fa-ship"></i>
                                     </div>
-                                    <h4>크루즈 요트 체험</h4>
-                                    <p>대형 요트에서 편안한 크루즈 체험</p>
+                                    <h4>크루져 요트 체험</h4>
+                                    <p>대형 요트에서 편안한 크루져 체험</p>
                                 </div>
                                 <div class="qualification-item">
                                     <div class="qualification-icon">
@@ -148,7 +148,7 @@
                                         required
                                     >
                                         <option value="">선택하세요</option>
-                                        <option value="크루즈요트체험">크루즈 요트 체험</option>
+                                        <option value="크루져요트체험">크루져 요트 체험</option>
                                         <option value="딩기요트체험">딩기 요트 체험</option>
                                         <option value="패들보드체험">패들보드 체험</option>
                                     </select>
@@ -371,7 +371,7 @@ export default {
             errors: {},
             isSubmitting: false,
             subPrograms: {
-                '크루즈요트체험': [
+                '크루져요트체험': [
                     { value: '한산대첩승전항로1', label: '한산대첩 승전항로 (1시간) - 25,000원' },
                     { value: '한산대첩승전항로2', label: '한산대첩 승전항로 연장 (1시간 30분) - 30,000원' },
                     { value: '이순신역사탐방', label: '이순신 역사 탐방 (2시간) - 35,000원' },

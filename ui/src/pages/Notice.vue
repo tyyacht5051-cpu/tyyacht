@@ -115,8 +115,8 @@ export default {
                 },
                 {
                     id: 'cruise',
-                    title: '크루즈요트',
-                    description: '크루즈요트 교육 및 체험 관련 공지',
+                    title: '크루져요트',
+                    description: '크루져요트 교육 및 체험 관련 공지',
                     icon: '⛵',
                     count: 0,
                     latestDate: null,
