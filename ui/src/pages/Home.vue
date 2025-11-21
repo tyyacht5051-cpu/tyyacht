@@ -5,6 +5,7 @@
             v-if="showPopup && visiblePopups.length > 0"
             :popups="visiblePopups"
             @close="closePopup"
+            @close-all="closeAllPopups"
         />
 
         <!-- 메인 히어로 섹션 -->
@@ -517,7 +518,18 @@ export default {
             }
         },
 
-        closePopup() {
+        closePopup(popupId) {
+            // 개별 팝업 닫기 - 해당 팝업을 배열에서 제거
+            this.popups = this.popups.filter(popup => popup.id !== popupId);
+
+            // 모든 팝업이 닫히면 showPopup을 false로
+            if (this.visiblePopups.length === 0) {
+                this.showPopup = false;
+            }
+        },
+
+        closeAllPopups() {
+            // 모든 팝업 닫기 (ESC 키)
             this.showPopup = false;
         },
 

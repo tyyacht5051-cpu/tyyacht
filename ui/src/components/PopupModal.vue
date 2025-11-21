@@ -1,74 +1,63 @@
 <template>
-  <div v-if="currentPopup" class="popup-overlay">
-    <div class="popup-modal" @click.stop>
-      <!-- 닫기 버튼 -->
-      <button class="close-btn" @click="closePopup" title="닫기">×</button>
+  <div v-if="popups.length > 0" class="popup-overlay">
+    <div class="popup-container">
+      <!-- 각 팝업을 개별적으로 표시 -->
+      <div
+        v-for="popup in popups"
+        :key="popup.id"
+        class="popup-modal"
+        @click.stop
+      >
+        <!-- 닫기 버튼 -->
+        <button class="close-btn" @click="closePopup(popup.id)" title="닫기">×</button>
 
-      <!-- 팝업 내용 -->
-      <div class="popup-content">
-        <!-- 링크가 있으면 전체를 링크로 감싸기 -->
-        <a
-          v-if="currentPopup.link_url"
-          :href="currentPopup.link_url"
-          class="popup-link"
-          @click="handleLinkClick"
-        >
-          <!-- 이미지 -->
-          <div v-if="currentPopup.image_url" class="popup-image">
-            <img :src="getImageUrl(currentPopup.image_url)" :alt="currentPopup.title">
-          </div>
-
-          <!-- 내용 -->
-          <div v-if="currentPopup.content" class="popup-text">
-            <p class="popup-description">{{ currentPopup.content }}</p>
-          </div>
-        </a>
-
-        <!-- 링크가 없으면 일반 컨텐츠 -->
-        <template v-else>
-          <!-- 이미지 -->
-          <div v-if="currentPopup.image_url" class="popup-image">
-            <img :src="getImageUrl(currentPopup.image_url)" :alt="currentPopup.title">
-          </div>
-
-          <!-- 내용 -->
-          <div v-if="currentPopup.content" class="popup-text">
-            <p class="popup-description">{{ currentPopup.content }}</p>
-          </div>
-        </template>
-      </div>
-
-      <!-- 하단 버튼 -->
-      <div class="popup-footer">
-        <label class="dont-show-today">
-          <input
-            type="checkbox"
-            v-model="dontShowToday"
-            @change="handleDontShowTodayChange"
+        <!-- 팝업 내용 -->
+        <div class="popup-content">
+          <!-- 링크가 있으면 전체를 링크로 감싸기 -->
+          <a
+            v-if="popup.link_url"
+            :href="popup.link_url"
+            class="popup-link"
+            @click="handleLinkClick(popup.id)"
           >
-          <span>오늘 하루 보지 않기</span>
-        </label>
+            <!-- 이미지 -->
+            <div v-if="popup.image_url" class="popup-image">
+              <img :src="getImageUrl(popup.image_url)" :alt="popup.title">
+            </div>
 
-        <!-- 여러 팝업이 있을 때 네비게이션 -->
-        <div v-if="popups.length > 1" class="popup-navigation">
-          <button
-            @click="previousPopup"
-            :disabled="currentIndex === 0"
-            class="nav-btn prev-btn"
-          >
-            ◀ 이전
-          </button>
-          <span class="popup-counter">{{ currentIndex + 1 }} / {{ popups.length }}</span>
-          <button
-            @click="nextPopup"
-            :disabled="currentIndex === popups.length - 1"
-            class="nav-btn next-btn"
-          >
-            다음 ▶
-          </button>
+            <!-- 내용 -->
+            <div v-if="popup.content" class="popup-text">
+              <p class="popup-description">{{ popup.content }}</p>
+            </div>
+          </a>
+
+          <!-- 링크가 없으면 일반 컨텐츠 -->
+          <template v-else>
+            <!-- 이미지 -->
+            <div v-if="popup.image_url" class="popup-image">
+              <img :src="getImageUrl(popup.image_url)" :alt="popup.title">
+            </div>
+
+            <!-- 내용 -->
+            <div v-if="popup.content" class="popup-text">
+              <p class="popup-description">{{ popup.content }}</p>
+            </div>
+          </template>
         </div>
 
-        <button @click="closePopup" class="close-btn-bottom">닫기</button>
+        <!-- 하단 버튼 -->
+        <div class="popup-footer">
+          <label class="dont-show-today">
+            <input
+              type="checkbox"
+              :checked="dontShowToday[popup.id]"
+              @change="handleDontShowTodayChange(popup.id, $event)"
+            >
+            <span>오늘 하루 보지 않기</span>
+          </label>
+
+          <button @click="closePopup(popup.id)" class="close-btn-bottom">닫기</button>
+        </div>
       </div>
     </div>
   </div>
@@ -88,32 +77,20 @@ export default {
   },
   data() {
     return {
-      currentIndex: 0,
-      dontShowToday: false,
+      dontShowToday: {}, // 각 팝업별 "오늘 하루 보지 않기" 상태
       closedPopupIds: [] // 오늘 하루 보지 않기로 설정한 팝업 ID들
     };
-  },
-  computed: {
-    currentPopup() {
-      if (this.popups.length === 0 || this.currentIndex >= this.popups.length) {
-        return null;
-      }
-      return this.popups[this.currentIndex];
-    }
-  },
-  watch: {
-    currentPopup(newPopup) {
-      if (newPopup) {
-        // 현재 팝업이 "오늘 하루 보지 않기"로 설정되어 있는지 확인
-        this.dontShowToday = this.isDontShowToday(newPopup.id);
-      }
-    }
   },
   mounted() {
     // 쿠키에서 오늘 하루 보지 않기로 설정된 팝업 ID들 로드
     this.loadClosedPopups();
 
-    // ESC 키로 닫기
+    // 각 팝업의 초기 체크박스 상태 설정
+    this.popups.forEach(popup => {
+      this.$set(this.dontShowToday, popup.id, this.isDontShowToday(popup.id));
+    });
+
+    // ESC 키로 모든 팝업 닫기
     window.addEventListener('keydown', this.handleEscapeKey);
   },
   beforeUnmount() {
@@ -128,44 +105,36 @@ export default {
       return `${API_BASE_URL}${url}`;
     },
 
-    closePopup() {
-      if (this.dontShowToday && this.currentPopup) {
-        this.setDontShowToday(this.currentPopup.id);
+    closePopup(popupId) {
+      if (this.dontShowToday[popupId]) {
+        this.setDontShowToday(popupId);
       }
-      this.$emit('close');
+      this.$emit('close', popupId);
     },
 
     handleEscapeKey(e) {
       if (e.key === 'Escape') {
-        this.closePopup();
+        // 모든 팝업 닫기
+        this.$emit('close-all');
       }
     },
 
-    handleLinkClick() {
+    handleLinkClick(popupId) {
       // 링크 클릭 시에도 "오늘 하루 보지 않기" 저장
-      if (this.dontShowToday && this.currentPopup) {
-        this.setDontShowToday(this.currentPopup.id);
+      if (this.dontShowToday[popupId]) {
+        this.setDontShowToday(popupId);
       }
     },
 
-    handleDontShowTodayChange() {
+    handleDontShowTodayChange(popupId, event) {
       // 체크박스 상태 변경 시
-      if (this.dontShowToday && this.currentPopup) {
-        this.setDontShowToday(this.currentPopup.id);
-      } else if (this.currentPopup) {
-        this.removeDontShowToday(this.currentPopup.id);
-      }
-    },
+      const checked = event.target.checked;
+      this.$set(this.dontShowToday, popupId, checked);
 
-    nextPopup() {
-      if (this.currentIndex < this.popups.length - 1) {
-        this.currentIndex++;
-      }
-    },
-
-    previousPopup() {
-      if (this.currentIndex > 0) {
-        this.currentIndex--;
+      if (checked) {
+        this.setDontShowToday(popupId);
+      } else {
+        this.removeDontShowToday(popupId);
       }
     },
 
@@ -241,17 +210,28 @@ export default {
   background: transparent;
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
   z-index: 10000;
   padding: 20px;
+  pointer-events: none;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+.popup-container {
+  display: flex;
+  gap: 20px;
+  align-items: center;
+  padding: 0 20px;
   pointer-events: none;
 }
 
 .popup-modal {
   background: white;
   border-radius: 8px;
-  max-width: 500px;
-  width: 100%;
+  width: 400px;
+  max-width: 400px;
+  min-width: 400px;
   max-height: 80vh;
   overflow: hidden;
   position: relative;
@@ -260,6 +240,7 @@ export default {
   flex-direction: column;
   border: 1px solid #e0e0e0;
   pointer-events: auto;
+  flex-shrink: 0;
 }
 
 .close-btn {
@@ -370,41 +351,6 @@ export default {
   height: 16px;
 }
 
-.popup-navigation {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.popup-counter {
-  font-size: 13px;
-  color: #666;
-  font-weight: 400;
-}
-
-.nav-btn {
-  background: #f5f5f5;
-  color: #333;
-  border: 1px solid #ddd;
-  padding: 5px 10px;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 12px;
-  transition: all 0.2s;
-}
-
-.nav-btn:hover:not(:disabled) {
-  background: #e8e8e8;
-  border-color: #999;
-}
-
-.nav-btn:disabled {
-  background: #f9f9f9;
-  color: #ccc;
-  cursor: not-allowed;
-  border-color: #e0e0e0;
-}
-
 .close-btn-bottom {
   background: #fff;
   color: #333;
@@ -424,17 +370,23 @@ export default {
 
 /* 모바일 반응형 */
 @media (max-width: 768px) {
+  .popup-overlay {
+    padding: 10px;
+  }
+
+  .popup-container {
+    padding: 0 10px;
+  }
+
   .popup-modal {
-    max-width: 90%;
+    width: 320px;
+    max-width: 320px;
+    min-width: 320px;
     max-height: 85vh;
   }
 
   .popup-text {
     padding: 20px;
-  }
-
-  .popup-title {
-    font-size: 18px;
   }
 
   .popup-description {
@@ -453,13 +405,8 @@ export default {
     font-size: 12px;
   }
 
-  .popup-navigation {
-    order: 2;
-    justify-content: center;
-  }
-
   .close-btn-bottom {
-    order: 3;
+    order: 2;
     width: 100%;
   }
 }
