@@ -877,22 +877,14 @@
               <small>팝업 클릭 시 이동할 URL (선택사항)</small>
             </div>
 
-            <div class="form-row">
-              <div class="form-group">
-                <label>시작일</label>
-                <input
-                  v-model="popupForm.start_date"
-                  type="datetime-local"
-                />
-              </div>
-
-              <div class="form-group">
-                <label>종료일</label>
-                <input
-                  v-model="popupForm.end_date"
-                  type="datetime-local"
-                />
-              </div>
+            <div class="form-group">
+              <label>종료일 (선택한 날짜의 23:59:59까지 표시)</label>
+              <input
+                v-model="popupForm.end_date"
+                type="date"
+                placeholder="종료일을 선택하세요"
+              />
+              <small>종료일을 설정하지 않으면 계속 표시됩니다</small>
             </div>
 
             <div class="form-row">
@@ -941,7 +933,6 @@
               <th>링크</th>
               <th>상태</th>
               <th>순서</th>
-              <th>시작일</th>
               <th>종료일</th>
               <th>생성일</th>
               <th>관리</th>
@@ -949,7 +940,7 @@
           </thead>
           <tbody>
             <tr v-if="popups.length === 0">
-              <td colspan="10" class="no-data">등록된 팝업이 없습니다</td>
+              <td colspan="9" class="no-data">등록된 팝업이 없습니다</td>
             </tr>
             <tr v-for="popup in popups" :key="popup.id">
               <td>{{ popup.id }}</td>
@@ -975,8 +966,7 @@
                 </button>
               </td>
               <td>{{ popup.display_order }}</td>
-              <td>{{ popup.start_date ? formatDateTime(popup.start_date) : '-' }}</td>
-              <td>{{ popup.end_date ? formatDateTime(popup.end_date) : '-' }}</td>
+              <td>{{ popup.end_date ? formatDateTime(popup.end_date) : '무제한' }}</td>
               <td>{{ formatDateTime(popup.created_at) }}</td>
               <td>
                 <div class="action-buttons">
@@ -1414,7 +1404,6 @@ export default {
         link_url: '',
         is_active: true,
         display_order: 0,
-        start_date: '',
         end_date: '',
         newImage: null,
         newImagePreview: '',
@@ -3133,7 +3122,6 @@ ${item.content ? `내용: ${item.content.substring(0, 100)}...` : ''}
         link_url: '',
         is_active: true,
         display_order: 0,
-        start_date: '',
         end_date: '',
         newImage: null,
         newImagePreview: '',
@@ -3184,8 +3172,7 @@ ${item.content ? `내용: ${item.content.substring(0, 100)}...` : ''}
         link_url: popup.link_url || '',
         is_active: Boolean(popup.is_active),
         display_order: popup.display_order || 0,
-        start_date: popup.start_date ? this.formatDateTimeForInput(popup.start_date) : '',
-        end_date: popup.end_date ? this.formatDateTimeForInput(popup.end_date) : '',
+        end_date: popup.end_date ? this.formatDateForInput(popup.end_date) : '',
         newImage: null,
         newImagePreview: '',
         remove_image: false
@@ -3201,8 +3188,19 @@ ${item.content ? `내용: ${item.content.substring(0, 100)}...` : ''}
         formData.append('link_url', this.popupForm.link_url || '');
         formData.append('is_active', this.popupForm.is_active ? '1' : '0');
         formData.append('display_order', this.popupForm.display_order.toString());
-        formData.append('start_date', this.popupForm.start_date || '');
-        formData.append('end_date', this.popupForm.end_date || '');
+
+        // 시작일은 항상 현재 시간 (즉시)
+        const now = new Date();
+        formData.append('start_date', now.toISOString());
+
+        // 종료일: 선택한 날짜가 있으면 그 날짜의 23:59:59
+        if (this.popupForm.end_date) {
+          const endDate = new Date(this.popupForm.end_date);
+          endDate.setHours(23, 59, 59, 999);
+          formData.append('end_date', endDate.toISOString());
+        } else {
+          formData.append('end_date', '');
+        }
 
         if (this.popupForm.newImage) {
           formData.append('image', this.popupForm.newImage);
@@ -3321,6 +3319,15 @@ ${item.content ? `내용: ${item.content.substring(0, 100)}...` : ''}
       const hours = String(date.getHours()).padStart(2, '0');
       const minutes = String(date.getMinutes()).padStart(2, '0');
       return `${year}-${month}-${day}T${hours}:${minutes}`;
+    },
+
+    formatDateForInput(datetime) {
+      if (!datetime) return '';
+      const date = new Date(datetime);
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
     }
   },
 
