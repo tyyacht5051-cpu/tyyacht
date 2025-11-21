@@ -78,7 +78,7 @@
 
 <script>
 import axios from 'axios';
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+import { API_BASE_URL } from '../config/env.js';
 
 export default {
   name: 'PopupModal',
@@ -123,7 +123,8 @@ export default {
   },
   methods: {
     getImageUrl(url) {
-      if (url.startsWith('http')) {
+      if (!url) return '';
+      if (url.startsWith('http://') || url.startsWith('https://')) {
         return url;
       }
       return `${API_BASE_URL}${url}`;
