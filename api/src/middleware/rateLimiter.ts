@@ -3,7 +3,7 @@ import rateLimit from 'express-rate-limit';
 // 일반적인 API 요청에 대한 속도 제한
 export const generalLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15분
-  max: 100, // IP당 15분에 최대 100개 요청
+  max: 500, // IP당 15분에 최대 500개 요청 (페이지 로드 시 많은 API 호출 고려)
   message: {
     error: '너무 많은 요청이 발생했습니다. 15분 후에 다시 시도해주세요.',
     code: 'RATE_LIMIT_EXCEEDED'
