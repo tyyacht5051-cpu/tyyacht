@@ -1,7 +1,11 @@
 const Database = require('better-sqlite3');
 const path = require('path');
 
-const dbPath = path.join(__dirname, 'database.db');
+// 환경 변수나 명령줄 인자로 데이터베이스 경로 지정 가능
+// 예: DB_PATH=/var/lib/tyyacht/database.db node create-popups-table.js
+const dbPath = process.env.DB_PATH || path.join(__dirname, 'database.db');
+console.log('📁 데이터베이스 경로:', dbPath);
+
 const db = new Database(dbPath);
 
 try {
