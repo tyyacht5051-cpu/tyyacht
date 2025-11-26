@@ -272,7 +272,10 @@ export default {
     methods: {
         async loadPosts() {
             try {
-                const response = await axios.get(`${API_BASE_URL}/api/reviews`);
+                // limit을 크게 설정하여 모든 후기를 가져옴
+                const response = await axios.get(`${API_BASE_URL}/api/reviews`, {
+                    params: { limit: 1000 }
+                });
                 this.posts = response.data.map(post => ({
                     ...post,
                     preview: post.content.substring(0, 100) + (post.content.length > 100 ? '...' : '')
