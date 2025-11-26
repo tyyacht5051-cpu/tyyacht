@@ -55,7 +55,7 @@
                     <div class="contact-info">
                         <div class="contact-item">
                             <i class="fas fa-map-marker-alt"></i>
-                            <span>경남 통영시 도남로 260-28</span>
+                            <span>경남 통영시 도남로 269-28</span>
                         </div>
                         <div class="contact-item">
                             <i class="fas fa-phone"></i>
@@ -67,7 +67,7 @@
                         </div>
                         <div class="contact-item">
                             <i class="fas fa-clock"></i>
-                            <span>평일 09:00 - 18:00</span>
+                            <span>평일 09:00 - 18:00(월요일 휴무)</span>
                         </div>
                     </div>
                 </div>
