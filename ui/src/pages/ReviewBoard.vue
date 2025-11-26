@@ -35,28 +35,76 @@
                         <h3>아직 등록된 후기가 없습니다</h3>
                         <p>첫 번째 후기를 작성해보세요!</p>
                     </div>
-                    <div v-else class="posts-grid">
-                        <div
-                            v-for="post in filteredPosts"
-                            :key="post.id"
-                            class="post-card"
-                            @click="openPost(post)"
-                        >
-                            <div class="post-header">
-                                <span class="category-badge" :class="getCategoryClass(post.category_id)">
-                                    {{ getCategoryName(post.category_id) }}
-                                </span>
-                                <span class="post-date">{{ formatDate(post.created_at) }}</span>
-                            </div>
-                            <h3 class="post-title">{{ post.title }}</h3>
-                            <p class="post-preview">{{ post.preview }}</p>
-                            <div class="post-footer">
-                                <span class="author">👤 {{ post.author_name }}</span>
-                                <div class="post-stats">
-                                    <span class="views">👁️ {{ post.views }}</span>
-                                    <span class="rating">⭐ {{ post.rating }}/5</span>
+                    <div v-else>
+                        <div class="posts-grid">
+                            <div
+                                v-for="post in paginatedPosts"
+                                :key="post.id"
+                                class="post-card"
+                                @click="openPost(post)"
+                            >
+                                <div class="post-header">
+                                    <span class="category-badge" :class="getCategoryClass(post.category_id)">
+                                        {{ getCategoryName(post.category_id) }}
+                                    </span>
+                                    <span class="post-date">{{ formatDate(post.created_at) }}</span>
+                                </div>
+                                <h3 class="post-title">{{ post.title }}</h3>
+                                <p class="post-preview">{{ post.preview }}</p>
+                                <div class="post-footer">
+                                    <span class="author">👤 {{ post.author_name }}</span>
+                                    <div class="post-stats">
+                                        <span class="views">👁️ {{ post.views }}</span>
+                                        <span class="rating">⭐ {{ post.rating }}/5</span>
+                                    </div>
                                 </div>
                             </div>
+                        </div>
+
+                        <!-- 페이지네이션 -->
+                        <div v-if="totalPages > 1" class="pagination">
+                            <button
+                                class="page-btn"
+                                :disabled="currentPage === 1"
+                                @click="goToPrevPage"
+                            >
+                                ‹ 이전
+                            </button>
+
+                            <button
+                                v-if="pageNumbers[0] > 1"
+                                class="page-btn"
+                                @click="goToPage(1)"
+                            >
+                                1
+                            </button>
+                            <span v-if="pageNumbers[0] > 2" class="ellipsis">...</span>
+
+                            <button
+                                v-for="page in pageNumbers"
+                                :key="page"
+                                :class="['page-btn', { active: currentPage === page }]"
+                                @click="goToPage(page)"
+                            >
+                                {{ page }}
+                            </button>
+
+                            <span v-if="pageNumbers[pageNumbers.length - 1] < totalPages - 1" class="ellipsis">...</span>
+                            <button
+                                v-if="pageNumbers[pageNumbers.length - 1] < totalPages"
+                                class="page-btn"
+                                @click="goToPage(totalPages)"
+                            >
+                                {{ totalPages }}
+                            </button>
+
+                            <button
+                                class="page-btn"
+                                :disabled="currentPage === totalPages"
+                                @click="goToNextPage"
+                            >
+                                다음 ›
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -170,7 +218,9 @@ export default {
                 content: '',
                 category_id: '',
                 rating: 5
-            }
+            },
+            currentPage: 1,
+            itemsPerPage: 12
         };
     },
     computed: {
@@ -179,6 +229,41 @@ export default {
                 return this.posts;
             }
             return this.posts.filter(post => post.category_id === this.selectedCategory);
+        },
+        paginatedPosts() {
+            const start = (this.currentPage - 1) * this.itemsPerPage;
+            const end = start + this.itemsPerPage;
+            return this.filteredPosts.slice(start, end);
+        },
+        totalPages() {
+            return Math.ceil(this.filteredPosts.length / this.itemsPerPage);
+        },
+        pageNumbers() {
+            const pages = [];
+            const maxVisible = 5; // 최대 표시할 페이지 번호 개수
+
+            if (this.totalPages <= maxVisible) {
+                // 전체 페이지가 5개 이하면 모두 표시
+                for (let i = 1; i <= this.totalPages; i++) {
+                    pages.push(i);
+                }
+            } else {
+                // 현재 페이지를 중심으로 표시
+                let start = Math.max(1, this.currentPage - 2);
+                let end = Math.min(this.totalPages, this.currentPage + 2);
+
+                if (this.currentPage <= 3) {
+                    end = maxVisible;
+                } else if (this.currentPage >= this.totalPages - 2) {
+                    start = this.totalPages - maxVisible + 1;
+                }
+
+                for (let i = start; i <= end; i++) {
+                    pages.push(i);
+                }
+            }
+
+            return pages;
         }
     },
     async mounted() {
@@ -206,6 +291,29 @@ export default {
         },
         selectCategory(categoryId) {
             this.selectedCategory = categoryId;
+            this.currentPage = 1; // 카테고리 변경 시 첫 페이지로
+        },
+        goToPage(page) {
+            if (page >= 1 && page <= this.totalPages) {
+                this.currentPage = page;
+                // 페이지 변경 시 스크롤을 게시글 목록 상단으로
+                this.$nextTick(() => {
+                    const postsSection = document.querySelector('.posts-list');
+                    if (postsSection) {
+                        postsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }
+                });
+            }
+        },
+        goToPrevPage() {
+            if (this.currentPage > 1) {
+                this.goToPage(this.currentPage - 1);
+            }
+        },
+        goToNextPage() {
+            if (this.currentPage < this.totalPages) {
+                this.goToPage(this.currentPage + 1);
+            }
         },
         getCategoryName(categoryId) {
             const category = this.categories.find(c => c.id === categoryId);
@@ -614,6 +722,53 @@ export default {
     word-wrap: break-word;
 }
 
+/* 페이지네이션 스타일 */
+.pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    margin-top: 40px;
+    padding: 20px 0;
+}
+
+.page-btn {
+    min-width: 40px;
+    height: 40px;
+    padding: 0 12px;
+    border: 1px solid #e0e0e0;
+    background: white;
+    color: #333;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.95rem;
+    transition: all 0.2s;
+}
+
+.page-btn:hover:not(:disabled) {
+    border-color: #2c5aa0;
+    color: #2c5aa0;
+    background: #f0f7ff;
+}
+
+.page-btn.active {
+    background: #2c5aa0;
+    color: white;
+    border-color: #2c5aa0;
+    font-weight: 600;
+}
+
+.page-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.ellipsis {
+    padding: 0 8px;
+    color: #999;
+    user-select: none;
+}
+
 @media (max-width: 768px) {
     .board-header {
         flex-direction: column;
@@ -636,6 +791,24 @@ export default {
 
     .post-stats {
         gap: 10px;
+    }
+
+    /* 모바일 페이지네이션 */
+    .pagination {
+        gap: 4px;
+        padding: 15px 0;
+    }
+
+    .page-btn {
+        min-width: 36px;
+        height: 36px;
+        padding: 0 8px;
+        font-size: 0.85rem;
+    }
+
+    .ellipsis {
+        padding: 0 4px;
+        font-size: 0.85rem;
     }
 }
 </style>
