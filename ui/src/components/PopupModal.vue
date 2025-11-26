@@ -138,63 +138,57 @@ export default {
       }
     },
 
-    // 쿠키 관련 메서드
-    setCookie(name, value, hours) {
-      const date = new Date();
-      date.setTime(date.getTime() + (hours * 60 * 60 * 1000));
-      const expires = "expires=" + date.toUTCString();
-      document.cookie = name + "=" + value + ";" + expires + ";path=/";
-    },
-
-    getCookie(name) {
-      const nameEQ = name + "=";
-      const ca = document.cookie.split(';');
-      for (let i = 0; i < ca.length; i++) {
-        let c = ca[i];
-        while (c.charAt(0) === ' ') c = c.substring(1, c.length);
-        if (c.indexOf(nameEQ) === 0) return c.substring(nameEQ.length, c.length);
-      }
-      return null;
-    },
-
-    deleteCookie(name) {
-      document.cookie = name + "=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
-    },
-
+    // localStorage 관련 메서드
     setDontShowToday(popupId) {
-      const closedPopups = this.getClosedPopupsFromCookie();
-      if (!closedPopups.includes(popupId)) {
-        closedPopups.push(popupId);
-        this.setCookie('closedPopups', JSON.stringify(closedPopups), 24);
-        this.closedPopupIds = closedPopups;
+      const closedPopups = this.getClosedPopupsFromStorage();
+      if (!closedPopups.some(item => item.id === popupId)) {
+        const now = new Date().getTime();
+        const expiryTime = now + (24 * 60 * 60 * 1000); // 24시간 후
+        closedPopups.push({ id: popupId, expiry: expiryTime });
+        localStorage.setItem('closedPopups', JSON.stringify(closedPopups));
+        this.closedPopupIds = closedPopups.map(item => item.id);
       }
     },
 
     removeDontShowToday(popupId) {
-      const closedPopups = this.getClosedPopupsFromCookie();
-      const filtered = closedPopups.filter(id => id !== popupId);
-      this.setCookie('closedPopups', JSON.stringify(filtered), 24);
-      this.closedPopupIds = filtered;
+      const closedPopups = this.getClosedPopupsFromStorage();
+      const filtered = closedPopups.filter(item => item.id !== popupId);
+      localStorage.setItem('closedPopups', JSON.stringify(filtered));
+      this.closedPopupIds = filtered.map(item => item.id);
     },
 
     isDontShowToday(popupId) {
       return this.closedPopupIds.includes(popupId);
     },
 
-    getClosedPopupsFromCookie() {
-      const cookie = this.getCookie('closedPopups');
-      if (cookie) {
-        try {
-          return JSON.parse(cookie);
-        } catch (e) {
-          return [];
+    getClosedPopupsFromStorage() {
+      try {
+        const stored = localStorage.getItem('closedPopups');
+        if (stored) {
+          const closedPopups = JSON.parse(stored);
+          const now = new Date().getTime();
+
+          // 만료된 항목 제거
+          const validPopups = closedPopups.filter(item => {
+            return item.expiry && item.expiry > now;
+          });
+
+          // 만료된 항목이 있으면 localStorage 업데이트
+          if (validPopups.length !== closedPopups.length) {
+            localStorage.setItem('closedPopups', JSON.stringify(validPopups));
+          }
+
+          return validPopups;
         }
+      } catch (e) {
+        console.error('localStorage 읽기 실패:', e);
       }
       return [];
     },
 
     loadClosedPopups() {
-      this.closedPopupIds = this.getClosedPopupsFromCookie();
+      const closedPopups = this.getClosedPopupsFromStorage();
+      this.closedPopupIds = closedPopups.map(item => item.id);
     }
   }
 };

@@ -201,7 +201,7 @@ export default {
         },
         visiblePopups() {
             // "오늘 하루 보지 않기"로 설정된 팝업 제외
-            const closedPopups = this.getClosedPopupsFromCookie();
+            const closedPopups = this.getClosedPopupsFromStorage();
             return this.popups.filter(popup => !closedPopups.includes(popup.id));
         }
     },
@@ -533,25 +533,27 @@ export default {
             this.showPopup = false;
         },
 
-        getCookie(name) {
-            const nameEQ = name + "=";
-            const ca = document.cookie.split(';');
-            for (let i = 0; i < ca.length; i++) {
-                let c = ca[i];
-                while (c.charAt(0) === ' ') c = c.substring(1, c.length);
-                if (c.indexOf(nameEQ) === 0) return c.substring(nameEQ.length, c.length);
-            }
-            return null;
-        },
+        getClosedPopupsFromStorage() {
+            try {
+                const stored = localStorage.getItem('closedPopups');
+                if (stored) {
+                    const closedPopups = JSON.parse(stored);
+                    const now = new Date().getTime();
 
-        getClosedPopupsFromCookie() {
-            const cookie = this.getCookie('closedPopups');
-            if (cookie) {
-                try {
-                    return JSON.parse(cookie);
-                } catch (e) {
-                    return [];
+                    // 만료된 항목 제거
+                    const validPopups = closedPopups.filter(item => {
+                        return item.expiry && item.expiry > now;
+                    });
+
+                    // 만료된 항목이 있으면 localStorage 업데이트
+                    if (validPopups.length !== closedPopups.length) {
+                        localStorage.setItem('closedPopups', JSON.stringify(validPopups));
+                    }
+
+                    return validPopups.map(item => item.id);
                 }
+            } catch (e) {
+                console.error('localStorage 읽기 실패:', e);
             }
             return [];
         },
