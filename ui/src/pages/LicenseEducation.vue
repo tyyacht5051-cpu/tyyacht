@@ -25,7 +25,7 @@
                 <div class="education-programs">
                     <h2>교육 프로그램</h2>
                     <div class="programs-grid">
-                        <div class="program-card" v-for="program in programs" :key="program.id">
+                        <div class="program-card" v-for="program in programs" :key="program.id" @click="handleProgramClick(program)">
                             <div class="program-header">
                                 <div class="program-price">{{ program.price }}</div>
                                 <h3>{{ program.name }}</h3>
@@ -149,9 +149,17 @@ export default {
             toast.tip('전화: 055-641-5051~2\n운영시간: 09:00~18:00', '🎓 면허 교육 문의');
         };
 
+        const handleProgramClick = (program) => {
+            // 무시험 면허 취득 과정(id: 1)을 클릭하면 면제교육신청 페이지로 이동
+            if (program.id === 1) {
+                router.push('/exemption-apply');
+            }
+        };
+
         return {
             goToApplication,
             contactUs,
+            handleProgramClick,
         };
     },
     data() {
@@ -313,6 +321,7 @@ export default {
     border-radius: 20px;
     overflow: hidden;
     transition: all 0.3s;
+    cursor: pointer;
 }
 
 .program-card:hover {
