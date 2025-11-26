@@ -82,12 +82,12 @@ export default {
     };
   },
   mounted() {
-    // 쿠키에서 오늘 하루 보지 않기로 설정된 팝업 ID들 로드
+    // localStorage에서 오늘 하루 보지 않기로 설정된 팝업 ID들 로드
     this.loadClosedPopups();
 
     // 각 팝업의 초기 체크박스 상태 설정
     this.popups.forEach(popup => {
-      this.$set(this.dontShowToday, popup.id, this.isDontShowToday(popup.id));
+      this.dontShowToday[popup.id] = this.isDontShowToday(popup.id);
     });
 
     // ESC 키로 모든 팝업 닫기
@@ -129,7 +129,7 @@ export default {
     handleDontShowTodayChange(popupId, event) {
       // 체크박스 상태 변경 시
       const checked = event.target.checked;
-      this.$set(this.dontShowToday, popupId, checked);
+      this.dontShowToday[popupId] = checked;
 
       if (checked) {
         this.setDontShowToday(popupId);
