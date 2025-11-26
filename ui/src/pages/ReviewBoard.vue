@@ -447,6 +447,8 @@ export default {
     color: #666;
     line-height: 1.6;
     margin-bottom: 15px;
+    white-space: pre-wrap;
+    word-wrap: break-word;
 }
 
 .post-footer {
@@ -605,6 +607,11 @@ export default {
 .detail-content {
     line-height: 1.8;
     color: #444;
+}
+
+.detail-content p {
+    white-space: pre-wrap;
+    word-wrap: break-word;
 }
 
 @media (max-width: 768px) {

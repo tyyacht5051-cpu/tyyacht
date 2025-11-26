@@ -815,6 +815,8 @@ export default {
     line-height: 1.5;
     margin-bottom: 15px;
     font-size: 0.95rem;
+    white-space: pre-wrap;
+    word-wrap: break-word;
 }
 
 .review-meta {
