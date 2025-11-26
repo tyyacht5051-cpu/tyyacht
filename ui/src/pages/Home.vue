@@ -49,7 +49,7 @@
                 <div class="reviews-section">
                     <div class="section-header">
                         <h2 class="section-title">후기게시판</h2>
-                        <router-link to="/community/reviews" class="more-link">
+                        <router-link to="/community/review-board" class="more-link">
                             <span>더보기</span>
                             <i class="fas fa-chevron-right"></i>
                         </router-link>
@@ -59,7 +59,7 @@
                             v-for="review in reviews"
                             :key="review.id"
                             class="review-card"
-                            @click="$router.push(`/community/reviews/${review.id}`)"
+                            @click="$router.push('/community/review-board')"
                         >
                             <div class="review-header">
                                 <div class="review-rating">
