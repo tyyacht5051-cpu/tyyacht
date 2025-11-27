@@ -98,7 +98,7 @@ export default {
         const router = useRouter();
 
         const goToApplication = () => {
-            router.push('/experience-apply');
+            router.push({ path: '/experience-apply', query: { type: '크루저요트체험' } });
         };
 
         const contactUs = () => {

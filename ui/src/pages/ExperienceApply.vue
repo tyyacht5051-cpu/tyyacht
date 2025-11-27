@@ -603,6 +603,13 @@ export default {
             }
         }
     },
+    mounted() {
+        // 쿼리 파라미터에서 타입 읽어 자동 선택
+        const queryType = this.$route.query.type;
+        if (queryType) {
+            this.form.programType = queryType;
+        }
+    },
 };
 </script>
 

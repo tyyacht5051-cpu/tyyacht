@@ -168,7 +168,7 @@ export default {
         const router = useRouter();
 
         const goToApplication = () => {
-            router.push('/experience-apply');
+            router.push({ path: '/experience-apply', query: { type: '패들보드체험' } });
         };
 
         const contactUs = () => {

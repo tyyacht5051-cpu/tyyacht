@@ -123,7 +123,7 @@ export default {
         const router = useRouter()
         
         const goToApplication = () => {
-            router.push('/education-apply')
+            router.push({ path: '/education-apply', query: { type: '딩기요트교육' } })
         }
         
         const contactUs = () => {

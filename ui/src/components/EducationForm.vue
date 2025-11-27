@@ -182,12 +182,14 @@
 </template>
 
 <script setup lang="ts">
-import { reactive, ref } from 'vue';
+import { reactive, ref, onMounted } from 'vue';
 import { useToast } from './Toast.vue';
 import { API_BASE_URL } from '../config/env.js';
+import { useRoute } from 'vue-router';
 import axios from 'axios';
 
 const toast = useToast();
+const route = useRoute();
 
 // 폼 데이터
 const form = reactive({
@@ -200,6 +202,14 @@ const form = reactive({
     courseType: '',
     subCourse: '',
     privacyAgreed: false,
+});
+
+// 컴포넌트 마운트 시 쿼리 파라미터에서 타입 읽기
+onMounted(() => {
+    const queryType = route.query.type as string;
+    if (queryType) {
+        form.courseType = queryType;
+    }
 });
 
 // 에러 상태

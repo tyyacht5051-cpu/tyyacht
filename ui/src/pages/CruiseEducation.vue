@@ -171,7 +171,7 @@ export default {
         const router = useRouter();
 
         const goToApplication = () => {
-            router.push('/education-apply');
+            router.push({ path: '/education-apply', query: { type: '크루저요트교육' } });
         };
 
         const contactUs = () => {
