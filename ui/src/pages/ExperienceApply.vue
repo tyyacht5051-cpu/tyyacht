@@ -123,9 +123,11 @@
                                     <input
                                         type="tel"
                                         v-model="form.phone"
+                                        @input="handlePhoneInput"
                                         class="form-control"
                                         :class="{ error: errors.phone }"
-                                        placeholder="010-0000-0000"
+                                        placeholder="010-1234-5678"
+                                        maxlength="13"
                                         required
                                     />
                                     <div v-if="errors.phone" class="form-error">
@@ -391,6 +393,23 @@ export default {
         };
     },
     methods: {
+        formatPhoneNumber(value) {
+            const numbers = value.replace(/[^\d]/g, '');
+
+            if (numbers.length <= 3) {
+                return numbers;
+            } else if (numbers.length <= 7) {
+                return `${numbers.slice(0, 3)}-${numbers.slice(3)}`;
+            } else if (numbers.length <= 11) {
+                return `${numbers.slice(0, 3)}-${numbers.slice(3, 7)}-${numbers.slice(7, 11)}`;
+            } else {
+                return `${numbers.slice(0, 3)}-${numbers.slice(3, 7)}-${numbers.slice(7, 11)}`;
+            }
+        },
+        handlePhoneInput(event) {
+            const formatted = this.formatPhoneNumber(event.target.value);
+            this.form.phone = formatted;
+        },
         validateForm() {
             this.errors = {};
 

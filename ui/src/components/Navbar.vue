@@ -55,6 +55,9 @@
           <router-link to="/exemption-apply" class="nav-link apply-btn">면제교육 신청</router-link>
         </li>
         <li class="nav-item">
+          <router-link to="/practice-apply" class="nav-link apply-btn">실기연수 신청</router-link>
+        </li>
+        <li class="nav-item">
           <router-link to="/education-apply" class="nav-link apply-btn">요트교육 신청</router-link>
         </li>
         <!-- 로그인되지 않은 경우 -->

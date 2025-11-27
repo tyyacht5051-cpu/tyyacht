@@ -41,8 +41,10 @@
                             type="tel"
                             id="phone"
                             v-model="form.phone"
+                            @input="handlePhoneInput"
                             required
                             placeholder="010-1234-5678"
+                            maxlength="13"
                         />
                     </div>
                 </div>
@@ -78,38 +80,15 @@
                 </div>
             </div>
 
-            <!-- 교육과정 섹션 -->
+            <!-- 교육과정 섹션 - 면제교육 고정 -->
             <div class="form-section">
                 <h3>신청 교육과정</h3>
-                <div class="course-options">
-                    <label class="course-option">
-                        <input
-                            type="radio"
-                            name="course"
-                            value="general"
-                            v-model="form.courseType"
-                            required
-                        />
-                        <span class="course-info">
-                            <strong>면제교육</strong>
-                            <span class="course-price">70만원</span>
-                            <p>5일 과정 (이론 + 실기)</p>
-                        </span>
-                    </label>
-                    <label class="course-option">
-                        <input
-                            type="radio"
-                            name="course"
-                            value="practical"
-                            v-model="form.courseType"
-                            required
-                        />
-                        <span class="course-info">
-                            <strong>실기 연수</strong>
-                            <span class="course-price">50만원</span>
-                            <p>3일 과정 (실기 위주)</p>
-                        </span>
-                    </label>
+                <div class="course-fixed">
+                    <div class="course-info-fixed">
+                        <strong>면제교육</strong>
+                        <span class="course-price">70만원</span>
+                        <p>5일 과정 (이론22시간 + 실기18시간)</p>
+                    </div>
                 </div>
             </div>
 
@@ -233,7 +212,7 @@ const form = reactive({
     email: '',
     address: '',
     license: '',
-    courseType: '',
+    courseType: 'general',
     preferredDates: [] as string[],
     discountEligibility: '',
     experience: 'none',
@@ -370,11 +349,6 @@ const validateForm = (): boolean => {
         }
     }
 
-    if (!form.courseType) {
-        toast.error('교육과정을 선택해주세요.');
-        return false;
-    }
-
     if (selectedDates.value.length === 0) {
         toast.error('교육일정을 최소 1일 이상 선택해주세요.');
         return false;
@@ -400,7 +374,7 @@ const resetForm = () => {
         email: '',
         address: '',
         license: '',
-        courseType: '',
+        courseType: 'general',
         preferredDates: [],
         discountEligibility: '',
         experience: 'none',
@@ -490,6 +464,27 @@ const formatSelectedDate = (dateString: string): string => {
         day: 'numeric',
         weekday: 'short',
     });
+};
+
+// 전화번호 자동 하이픈 포맷팅
+const formatPhoneNumber = (value: string): string => {
+    const numbers = value.replace(/[^\d]/g, '');
+
+    if (numbers.length <= 3) {
+        return numbers;
+    } else if (numbers.length <= 7) {
+        return `${numbers.slice(0, 3)}-${numbers.slice(3)}`;
+    } else if (numbers.length <= 11) {
+        return `${numbers.slice(0, 3)}-${numbers.slice(3, 7)}-${numbers.slice(7, 11)}`;
+    } else {
+        return `${numbers.slice(0, 3)}-${numbers.slice(3, 7)}-${numbers.slice(7, 11)}`;
+    }
+};
+
+const handlePhoneInput = (event: Event) => {
+    const target = event.target as HTMLInputElement;
+    const formatted = formatPhoneNumber(target.value);
+    form.phone = formatted;
 };
 
 // 컴포넌트 마운트 시 가능한 날짜 로드
@@ -633,6 +628,43 @@ onMounted(() => {
     color: #666;
     margin: 0;
     font-size: 0.95rem;
+}
+
+/* 고정 교육과정 스타일 */
+.course-fixed {
+    padding: 20px;
+    border: 2px solid #2c5aa0;
+    border-radius: 12px;
+    background: rgba(44, 90, 160, 0.05);
+}
+
+.course-info-fixed {
+    text-align: center;
+}
+
+.course-info-fixed strong {
+    display: block;
+    font-size: 1.3rem;
+    color: #2c5aa0;
+    margin-bottom: 10px;
+    font-weight: 700;
+}
+
+.course-info-fixed .course-price {
+    display: inline-block;
+    background: #2c5aa0;
+    color: white;
+    padding: 6px 16px;
+    border-radius: 20px;
+    font-size: 1rem;
+    font-weight: 600;
+    margin-bottom: 10px;
+}
+
+.course-info-fixed p {
+    color: #666;
+    margin: 0;
+    font-size: 1rem;
 }
 
 .agreement-box {

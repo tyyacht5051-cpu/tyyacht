@@ -59,9 +59,11 @@
                 <input
                     type="tel"
                     v-model="form.phone"
+                    @input="handlePhoneInput"
                     class="form-control"
                     :class="{ error: errors.phone }"
-                    placeholder="010-0000-0000"
+                    placeholder="010-1234-5678"
+                    maxlength="13"
                     required
                 />
                 <div v-if="errors.phone" class="form-error">
@@ -350,6 +352,27 @@ const validateForm = (): boolean => {
     }
 
     return isValid;
+};
+
+// 전화번호 자동 하이픈 포맷팅
+const formatPhoneNumber = (value: string): string => {
+    const numbers = value.replace(/[^\d]/g, '');
+
+    if (numbers.length <= 3) {
+        return numbers;
+    } else if (numbers.length <= 7) {
+        return `${numbers.slice(0, 3)}-${numbers.slice(3)}`;
+    } else if (numbers.length <= 11) {
+        return `${numbers.slice(0, 3)}-${numbers.slice(3, 7)}-${numbers.slice(7, 11)}`;
+    } else {
+        return `${numbers.slice(0, 3)}-${numbers.slice(3, 7)}-${numbers.slice(7, 11)}`;
+    }
+};
+
+const handlePhoneInput = (event: Event) => {
+    const target = event.target as HTMLInputElement;
+    const formatted = formatPhoneNumber(target.value);
+    form.phone = formatted;
 };
 
 // 폼 초기화
