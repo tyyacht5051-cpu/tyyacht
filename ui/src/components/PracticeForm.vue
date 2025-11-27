@@ -69,15 +69,6 @@
                         placeholder="전체 주소를 입력해주세요"
                     />
                 </div>
-
-                <div class="form-group">
-                    <label for="license">자격증 보유 유무</label>
-                    <select id="license" v-model="form.license">
-                        <option value="">선택해주세요</option>
-                        <option value="general1">일반 조종 1급</option>
-                        <option value="general2">일반 조종 2급</option>
-                    </select>
-                </div>
             </div>
 
             <!-- 교육과정 섹션 - 실기연수 고정 -->
@@ -95,75 +86,11 @@
             <!-- 교육일정 섹션 -->
             <div class="form-section">
                 <h3>교육일정</h3>
-                <div class="form-group">
-                    <label>교육일정 * (최대 5일 선택 가능)</label>
-                    <div class="calendar-container">
-                        <div class="month-navigation">
-                            <button type="button" @click="previousMonth" class="nav-btn">
-                                &lt;
-                            </button>
-                            <h4>{{ currentMonthYear }}</h4>
-                            <button type="button" @click="nextMonth" class="nav-btn">&gt;</button>
-                        </div>
-
-                        <div class="calendar">
-                            <div class="calendar-header">
-                                <div class="day-header">일</div>
-                                <div class="day-header">월</div>
-                                <div class="day-header">화</div>
-                                <div class="day-header">수</div>
-                                <div class="day-header">목</div>
-                                <div class="day-header">금</div>
-                                <div class="day-header">토</div>
-                            </div>
-
-                            <div class="calendar-body">
-                                <div
-                                    v-for="day in calendarDays"
-                                    :key="day.date"
-                                    :class="[
-                                        'calendar-day',
-                                        {
-                                            'other-month': !day.isCurrentMonth,
-                                            selected: day.isSelected,
-                                            available: day.isAvailable,
-                                            disabled:
-                                                !day.isAvailable ||
-                                                !day.isCurrentMonth ||
-                                                day.isPast,
-                                        },
-                                    ]"
-                                    @click="toggleDateSelection(day)"
-                                >
-                                    {{ day.day }}
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="selected-dates" v-if="selectedDates.length > 0">
-                            <h5>선택된 날짜 ({{ selectedDates.length }}/5)</h5>
-                            <div class="date-tags">
-                                <span
-                                    v-for="date in selectedDates"
-                                    :key="date"
-                                    class="date-tag"
-                                    @click="removeSelectedDate(date)"
-                                >
-                                    {{ formatSelectedDate(date) }}
-                                    <span class="remove-btn">×</span>
-                                </span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label for="discountEligibility">할인 혜택 가능여부</label>
-                    <select id="discountEligibility" v-model="form.discountEligibility">
-                        <option value="">해당사항 없음</option>
-                        <option value="tongyeong">통영시민할인 20%</option>
-                        <option value="partner">협력단체 20%</option>
-                        <option value="disabled">장애인할인 50%</option>
-                    </select>
+                <div class="contact-info-box">
+                    <p class="contact-message">
+                        <i class="fas fa-phone"></i>
+                        교육일정은 <strong>055-641-5051~2</strong>로 문의바랍니다.
+                    </p>
                 </div>
             </div>
 
@@ -195,7 +122,7 @@
 </template>
 
 <script setup lang="ts">
-import { reactive, ref, onMounted, computed } from 'vue';
+import { reactive, ref } from 'vue';
 import { useToast } from './Toast.vue';
 import { API_BASE_URL } from '../config/env.js';
 import axios from 'axios';
@@ -211,75 +138,15 @@ const form = reactive({
     phone: '',
     email: '',
     address: '',
-    license: '',
     courseType: 'practical',
-    preferredDates: [] as string[],
-    discountEligibility: '',
-    experience: 'none',
-    motivation: '',
     privacyAgreed: false,
 });
-
-const availableDates = ref<string[]>([]);
-const selectedDates = ref<string[]>([]);
-const currentDate = ref(new Date());
 
 // 제출 상태
 const isSubmitting = ref(false);
 
-// 계산된 속성들
-const currentMonthYear = computed(() => {
-    return currentDate.value.toLocaleDateString('ko-KR', { year: 'numeric', month: 'long' });
-});
-
-interface CalendarDay {
-    date: string;
-    day: number;
-    isCurrentMonth: boolean;
-    isPast: boolean;
-    isAvailable: boolean;
-    isSelected: boolean;
-}
-
-const calendarDays = computed((): CalendarDay[] => {
-    const year = currentDate.value.getFullYear();
-    const month = currentDate.value.getMonth();
-    const firstDay = new Date(year, month, 1);
-    const startDate = new Date(firstDay);
-    startDate.setDate(startDate.getDate() - firstDay.getDay());
-
-    const days: CalendarDay[] = [];
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-
-    for (let i = 0; i < 42; i++) {
-        const date = new Date(startDate);
-        date.setDate(startDate.getDate() + i);
-
-        const dateString = date.toISOString().split('T')[0];
-        const isCurrentMonth = date.getMonth() === month;
-        const isPast = date < today;
-        const isAvailable = availableDates.value.includes(dateString);
-        const isSelected = selectedDates.value.includes(dateString);
-
-        days.push({
-            date: dateString,
-            day: date.getDate(),
-            isCurrentMonth,
-            isPast,
-            isAvailable,
-            isSelected,
-        });
-    }
-
-    return days;
-});
-
 // 폼 제출
 const submitForm = async () => {
-    // 선택된 날짜를 폼에 반영
-    form.preferredDates = selectedDates.value;
-
     if (!validateForm()) {
         return;
     }
@@ -295,10 +162,7 @@ const submitForm = async () => {
             birthDate: form.birthDate,
             gender: form.gender,
             address: form.address,
-            license: form.license,
             courseType: form.courseType,
-            preferredDates: form.preferredDates,
-            discountEligibility: form.discountEligibility,
         };
 
         const response = await axios.post(`${API_BASE_URL}/api/applications/exemption`, submitData);
@@ -349,13 +213,6 @@ const validateForm = (): boolean => {
         }
     }
 
-    if (selectedDates.value.length === 0) {
-        toast.error('교육일정을 최소 1일 이상 선택해주세요.');
-        return false;
-    }
-
-    // 할인 혜택은 선택사항이므로 검증하지 않음
-
     if (!form.privacyAgreed) {
         toast.error('개인정보 처리 동의가 필요합니다.');
         return false;
@@ -373,97 +230,10 @@ const resetForm = () => {
         phone: '',
         email: '',
         address: '',
-        license: '',
         courseType: 'practical',
-        preferredDates: [],
-        discountEligibility: '',
-        experience: 'none',
-        motivation: '',
         privacyAgreed: false,
     });
-    selectedDates.value = [];
     toast.info('폼이 초기화되었습니다.');
-};
-
-// 가능한 날짜 로드
-const loadAvailableDates = async () => {
-    try {
-        const dates: string[] = [];
-        const today = new Date();
-
-        for (let i = 0; i < 6; i++) {
-            // 현재월부터 6개월간
-            const targetMonth = new Date(today.getFullYear(), today.getMonth() + i, 1);
-            const monthKey = `${targetMonth.getFullYear()}-${String(targetMonth.getMonth() + 1).padStart(2, '0')}`;
-
-            try {
-                const response = await axios.get(
-                    `${API_BASE_URL}/api/schedules/available/${monthKey}`
-                );
-                const availableMonthDates: string[] = response.data.dates || [];
-                dates.push(...availableMonthDates);
-            } catch (error) {
-                console.error(`Failed to load dates for ${monthKey}:`, error);
-            }
-        }
-
-        availableDates.value = dates.sort();
-    } catch (error) {
-        console.error('Failed to load available dates:', error);
-        toast.error('교육 가능 날짜를 불러오는데 실패했습니다.');
-    }
-};
-
-// 달력 네비게이션
-const previousMonth = () => {
-    currentDate.value = new Date(
-        currentDate.value.getFullYear(),
-        currentDate.value.getMonth() - 1,
-        1
-    );
-};
-
-const nextMonth = () => {
-    currentDate.value = new Date(
-        currentDate.value.getFullYear(),
-        currentDate.value.getMonth() + 1,
-        1
-    );
-};
-
-// 날짜 선택 토글
-const toggleDateSelection = (day: CalendarDay) => {
-    if (!day.isAvailable || !day.isCurrentMonth || day.isPast) return;
-
-    const dateIndex = selectedDates.value.indexOf(day.date);
-
-    if (dateIndex > -1) {
-        selectedDates.value.splice(dateIndex, 1);
-    } else if (selectedDates.value.length < 5) {
-        selectedDates.value.push(day.date);
-        selectedDates.value.sort();
-    } else {
-        toast.error('최대 5일까지만 선택할 수 있습니다.');
-    }
-};
-
-// 선택된 날짜 제거
-const removeSelectedDate = (date: string) => {
-    const index = selectedDates.value.indexOf(date);
-    if (index > -1) {
-        selectedDates.value.splice(index, 1);
-    }
-};
-
-// 선택된 날짜 포맷팅
-const formatSelectedDate = (dateString: string): string => {
-    if (!dateString) return '';
-    const date = new Date(dateString);
-    return date.toLocaleDateString('ko-KR', {
-        month: 'short',
-        day: 'numeric',
-        weekday: 'short',
-    });
 };
 
 // 전화번호 자동 하이픈 포맷팅
@@ -486,11 +256,6 @@ const handlePhoneInput = (event: Event) => {
     const formatted = formatPhoneNumber(target.value);
     form.phone = formatted;
 };
-
-// 컴포넌트 마운트 시 가능한 날짜 로드
-onMounted(() => {
-    loadAvailableDates();
-});
 </script>
 
 <style scoped>
@@ -665,6 +430,35 @@ onMounted(() => {
     color: #666;
     margin: 0;
     font-size: 1rem;
+}
+
+/* 연락처 안내 박스 */
+.contact-info-box {
+    padding: 25px;
+    background: #f8f9fa;
+    border: 2px solid #2c5aa0;
+    border-radius: 12px;
+    text-align: center;
+}
+
+.contact-message {
+    margin: 0;
+    font-size: 1.1rem;
+    color: #333;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+}
+
+.contact-message i {
+    color: #2c5aa0;
+    font-size: 1.3rem;
+}
+
+.contact-message strong {
+    color: #2c5aa0;
+    font-size: 1.2rem;
 }
 
 .agreement-box {
