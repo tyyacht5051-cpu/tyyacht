@@ -612,9 +612,11 @@ export default {
             this.form.programType = queryType;
         }
 
-        // 세부 프로그램도 자동 선택
+        // 세부 프로그램도 자동 선택 (DOM 업데이트 후)
         if (querySubType) {
-            this.form.subProgram = querySubType;
+            this.$nextTick(() => {
+                this.form.subProgram = querySubType;
+            });
         }
     },
 };
