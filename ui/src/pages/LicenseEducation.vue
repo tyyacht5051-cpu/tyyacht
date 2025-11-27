@@ -154,6 +154,10 @@ export default {
             if (program.id === 1) {
                 router.push('/exemption-apply');
             }
+            // 실기 연수 과정(id: 2)을 클릭하면 실기연수신청 페이지로 이동
+            else if (program.id === 2) {
+                router.push('/practice-apply');
+            }
         };
 
         return {
