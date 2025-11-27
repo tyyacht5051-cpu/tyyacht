@@ -24,7 +24,7 @@
                 <div class="experience-programs">
                     <h2>체험 프로그램</h2>
                     <div class="programs-container">
-                        <div class="program-card" v-for="program in programs" :key="program.id">
+                        <div class="program-card" v-for="program in programs" :key="program.id" @click="applyProgram(program)" style="cursor: pointer;">
                             <div class="program-image">
                                 <img :src="program.image" :alt="program.name" />
                             </div>
@@ -162,17 +162,35 @@ export default {
         const goToApplication = () => {
             router.push({ path: '/experience-apply', query: { type: '딩기요트체험' } })
         }
-        
+
+        const applyProgram = (program) => {
+            // 프로그램 ID에 따라 value 매핑
+            const programValueMap = {
+                1: '호비겟어웨이체험',
+                2: '토파즈오메가체험'
+            };
+
+            const subType = programValueMap[program.id];
+            router.push({
+                path: '/experience-apply',
+                query: {
+                    type: '딩기요트체험',
+                    subType: subType
+                }
+            });
+        }
+
         const contactUs = () => {
             toast.tip('전화: 055-641-5051~2\n운영시간: 09:00~18:00', '⛵ 딩기 체험 문의')
         }
-        
+
         const showLocation = () => {
             toast.info('경상남도 통영시 산양읍 통영요트학교', '📍 위치 정보')
         }
-        
+
         return {
             goToApplication,
+            applyProgram,
             contactUs,
             showLocation
         }

@@ -15,7 +15,7 @@
                 <div class="experience-programs">
                     <h2>체험 프로그램</h2>
                     <div class="programs-grid">
-                        <div class="program-card" v-for="program in programs" :key="program.id">
+                        <div class="program-card" v-for="program in programs" :key="program.id" @click="applyProgram(program)" style="cursor: pointer;">
                             <div class="program-header">
                                 <h3>{{ program.name }}</h3>
                                 <span class="duration">{{ program.duration }}</span>
@@ -101,12 +101,34 @@ export default {
             router.push({ path: '/experience-apply', query: { type: '크루저요트체험' } });
         };
 
+        const applyProgram = (program) => {
+            // 프로그램 ID에 따라 value 매핑
+            const programValueMap = {
+                1: '한산대첩승전항로1',
+                1.5: '한산대첩승전항로2',
+                2: '이순신역사탐방',
+                3: '힐링섬탐방1',
+                3.5: '힐링섬탐방2',
+                4: '선셈체험'
+            };
+
+            const subType = programValueMap[program.id];
+            router.push({
+                path: '/experience-apply',
+                query: {
+                    type: '크루저요트체험',
+                    subType: subType
+                }
+            });
+        };
+
         const contactUs = () => {
             toast.tip('전화: 055-641-5051~2\n운영시간: 09:00~18:00', '🚢 크루저 체험 문의');
         };
 
         return {
             goToApplication,
+            applyProgram,
             contactUs,
         };
     },

@@ -54,43 +54,43 @@
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <tr>
+                                    <tr @click="applyProgram('exemption')" style="cursor: pointer;">
                                         <td>요트 자격증 면제 교육</td>
                                         <td>5일(40시간)</td>
                                         <td>요트면허취득과정 참고</td>
                                         <td>자격증 취득 가능</td>
                                     </tr>
-                                    <tr>
+                                    <tr @click="applyProgram('practice')" style="cursor: pointer;">
                                         <td>실기 시험 연수 과정</td>
                                         <td>2일(12시간)</td>
                                         <td>요트면허취득과정 참고</td>
                                         <td>실무 중심 교육</td>
                                     </tr>
-                                    <tr>
+                                    <tr @click="applyProgram('크루저-초급과정')" style="cursor: pointer;">
                                         <td>크루저 초급과정</td>
                                         <td>1일(7시간)</td>
                                         <td>1인 100,000원</td>
                                         <td>기초 과정</td>
                                     </tr>
-                                    <tr>
+                                    <tr @click="applyProgram('크루저-중급과정')" style="cursor: pointer;">
                                         <td>크루저 중급과정</td>
                                         <td>2일(14시간)</td>
                                         <td>1인 200,000원</td>
                                         <td>중급자 대상</td>
                                     </tr>
-                                    <tr>
+                                    <tr @click="applyProgram('크루저-고급과정')" style="cursor: pointer;">
                                         <td>크루저 고급과정</td>
                                         <td>2일(14시간)</td>
                                         <td>1인 300,000원</td>
                                         <td>고급자 대상</td>
                                     </tr>
-                                    <tr>
+                                    <tr @click="applyProgram('섬간항해교육1')" style="cursor: pointer;">
                                         <td rowspan="2">섬 간(코스탈 레이스)항해 교육</td>
                                         <td>1박 2일</td>
                                         <td>300,000원부터</td>
                                         <td>사량도/매물도 코스</td>
                                     </tr>
-                                    <tr>
+                                    <tr @click="applyProgram('섬간항해교육2')" style="cursor: pointer;">
                                         <td>2박 3일</td>
                                         <td>450,000원부터</td>
                                         <td>사량도/매물도 코스</td>
@@ -174,12 +174,39 @@ export default {
             router.push({ path: '/education-apply', query: { type: '크루저요트교육' } });
         };
 
+        const applyProgram = (programType) => {
+            // 특수 케이스: 면제교육과 실기연수는 다른 페이지로 이동
+            if (programType === 'exemption') {
+                router.push('/exemption-apply');
+                return;
+            }
+            if (programType === 'practice') {
+                router.push('/practice-apply');
+                return;
+            }
+
+            // 섬간항해교육 value 매핑
+            let subType = programType;
+            if (programType === '섬간항해교육1' || programType === '섬간항해교육2') {
+                subType = '섬간항해보육'; // EducationForm의 value와 동일하게
+            }
+
+            router.push({
+                path: '/education-apply',
+                query: {
+                    type: '크루저요트교육',
+                    subType: subType
+                }
+            });
+        };
+
         const contactUs = () => {
             toast.tip('전화: 055-641-5051~2\n운영시간: 09:00~18:00', '🚢 크루저 교육 문의');
         };
 
         return {
             goToApplication,
+            applyProgram,
             contactUs,
         };
     },

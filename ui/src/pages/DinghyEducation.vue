@@ -24,7 +24,7 @@
                 <div class="education-levels">
                     <h2>교육 단계</h2>
                     <div class="levels-grid">
-                        <div class="level-card" v-for="level in educationLevels" :key="level.id">
+                        <div class="level-card" v-for="level in educationLevels" :key="level.id" @click="applyLevel(level)" style="cursor: pointer;">
                             <div class="level-header">
                                 <div class="level-number">{{ level.level }}</div>
                                 <h3>{{ level.name }}</h3>
@@ -125,13 +125,32 @@ export default {
         const goToApplication = () => {
             router.push({ path: '/education-apply', query: { type: '딩기요트교육' } })
         }
-        
+
+        const applyLevel = (level) => {
+            // 레벨 ID에 따라 value 매핑
+            const levelValueMap = {
+                1: '딩기요트-토파즈 우노 기초',
+                2: '딩기요트-토파즈 우노 중급',
+                3: '딩기요트-토파즈 우노 고급'
+            };
+
+            const subType = levelValueMap[level.id];
+            router.push({
+                path: '/education-apply',
+                query: {
+                    type: '딩기요트교육',
+                    subType: subType
+                }
+            });
+        }
+
         const contactUs = () => {
             toast.tip('전화: 055-641-5051~2\n운영시간: 09:00~18:00', '⛵ 딩기 교육 문의')
         }
-        
+
         return {
             goToApplication,
+            applyLevel,
             contactUs
         }
     },

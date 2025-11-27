@@ -606,8 +606,15 @@ export default {
     mounted() {
         // 쿼리 파라미터에서 타입 읽어 자동 선택
         const queryType = this.$route.query.type;
+        const querySubType = this.$route.query.subType;
+
         if (queryType) {
             this.form.programType = queryType;
+        }
+
+        // 세부 프로그램도 자동 선택
+        if (querySubType) {
+            this.form.subProgram = querySubType;
         }
     },
 };

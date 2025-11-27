@@ -42,7 +42,7 @@
                 <div class="programs-section">
                     <h2>체험 프로그램</h2>
                     <div class="programs-grid">
-                        <div class="program-card" v-for="program in programs" :key="program.id">
+                        <div class="program-card" v-for="program in programs" :key="program.id" @click="applyProgram(program)" style="cursor: pointer;">
                             <div class="program-header">
                                 <h3>{{ program.name }}</h3>
                                 <div class="program-type">{{ program.type }}</div>
@@ -171,12 +171,30 @@ export default {
             router.push({ path: '/experience-apply', query: { type: '패들보드체험' } });
         };
 
+        const applyProgram = (program) => {
+            // 프로그램 ID에 따라 value 매핑
+            const programValueMap = {
+                1: '6인용패들보드체험',
+                2: '1-2인용패들보드체험'
+            };
+
+            const subType = programValueMap[program.id];
+            router.push({
+                path: '/experience-apply',
+                query: {
+                    type: '패들보드체험',
+                    subType: subType
+                }
+            });
+        };
+
         const contactUs = () => {
             toast.tip('전화: 055-641-5051~2\n운영시간: 09:00~18:00', '🏄‍♂️ 패들보드 체험 문의');
         };
 
         return {
             goToApplication,
+            applyProgram,
             contactUs,
         };
     },

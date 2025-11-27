@@ -207,8 +207,15 @@ const form = reactive({
 // 컴포넌트 마운트 시 쿼리 파라미터에서 타입 읽기
 onMounted(() => {
     const queryType = route.query.type as string;
+    const querySubType = route.query.subType as string;
+
     if (queryType) {
         form.courseType = queryType;
+    }
+
+    // 세부 과정도 자동 선택
+    if (querySubType) {
+        form.subCourse = querySubType;
     }
 });
 
