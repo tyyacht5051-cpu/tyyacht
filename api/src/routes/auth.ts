@@ -87,14 +87,7 @@ router.post('/login', loginLimiter, async (req, res) => {
       return res.status(401).json({ error: '사용자를 찾을 수 없습니다.' });
     }
 
-    console.log('Login attempt - Username:', username);
-    console.log('Login attempt - Password received:', password);
-    console.log('Login attempt - Hash from DB:', user.password_hash);
-    console.log('Login attempt - Hash length:', user.password_hash?.length);
-
     const isValidPassword = await bcrypt.compare(password, user.password_hash);
-
-    console.log('Login attempt - Password valid:', isValidPassword);
 
     if (!isValidPassword) {
       logLoginActivity(user.username, user.email, 'FAILED', req.ip);
