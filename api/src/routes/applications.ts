@@ -451,12 +451,22 @@ router.post('/exemption', authenticateToken, (req: AuthenticatedRequest, res) =>
       return res.status(400).json({ error: 'Required fields are missing' });
     }
     
-    if (!['general', 'practical'].includes(courseType)) {
+    if (!['general', 'practical', 'exemption'].includes(courseType)) {
       return res.status(400).json({ error: 'Invalid course type' });
     }
     
     const user_id = req.user ? req.user.id : null;
-    
+
+    // 중복 제출 방지: 같은 이름+전화번호로 60초 이내 신청 차단
+    const recent = db.prepare(`
+      SELECT id FROM exemption_applications
+      WHERE name = ? AND phone = ? AND created_at > datetime('now', '-60 seconds')
+    `).get(name, phone) as any;
+
+    if (recent) {
+      return res.status(409).json({ error: '이미 신청이 접수되었습니다. 잠시 후 다시 시도해주세요.' });
+    }
+
     const result = db.prepare(`
       INSERT INTO exemption_applications (
         user_id, name, phone, email, birth_date, gender, address,

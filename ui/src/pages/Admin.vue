@@ -311,7 +311,7 @@
               <td>{{ formatLicense(app.boat_license_number) }}</td>
               <td class="course-cell">
                 <span :class="['course-badge', app.education_type]">
-                  {{ app.education_type === 'general' ? '면제교육' : '실기연수' }}
+                  {{ app.education_type === 'exemption' ? '면제교육' : app.education_type === 'general' ? '면제교육' : '실기연수' }}
                 </span>
               </td>
               <td class="dates-cell">
@@ -336,7 +336,7 @@
                     <option value="approved">승인</option>
                     <option value="rejected">거부</option>
                   </select>
-                  <button @click="downloadExemptionDocument(app)" class="doc-download-btn" title="신청서 다운로드">
+                  <button v-if="app.status === 'approved'" @click="downloadExemptionDocument(app)" class="doc-download-btn" title="신청서 다운로드">
                     신청서
                   </button>
                 </div>
@@ -2329,7 +2329,7 @@ export default {
         await axios.patch(`${API_BASE_URL}/api/applications/exemption/${app.id}/status`, {
           status: newStatus
         });
-        
+
         app.status = newStatus;
         this.toast.success(`신청 상태가 ${this.getStatusLabel(newStatus)}로 변경되었습니다.`, '📋 상태 변경');
         await this.loadApplicationStats();
