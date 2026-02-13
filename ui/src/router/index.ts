@@ -316,7 +316,7 @@ function checkAuthStatus(): { isAuthenticated: boolean; isAdmin: boolean; user: 
 
     const result = {
       isAuthenticated: true,
-      isAdmin: user?.role === 'admin',
+      isAdmin: user?.role === 'admin' || user?.role === 'super_admin',
       user
     }
     

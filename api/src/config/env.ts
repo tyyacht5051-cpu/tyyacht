@@ -77,9 +77,15 @@ function validateConfig(): Config {
   }
 
   // ALLOWED_ORIGINS 파싱
-  const allowedOrigins = process.env.ALLOWED_ORIGINS
+  let allowedOrigins = process.env.ALLOWED_ORIGINS
     ? process.env.ALLOWED_ORIGINS.split(',').map(origin => origin.trim())
     : defaultValues.ALLOWED_ORIGINS;
+
+  // 개발 환경에서 localhost 자동 추가
+  if ((process.env.NODE_ENV || defaultValues.NODE_ENV) !== 'production') {
+    const localOrigins = ['http://localhost:3001', 'http://localhost:3002', 'http://localhost:4000'];
+    allowedOrigins = [...new Set([...allowedOrigins, ...localOrigins])];
+  }
 
   return {
     NODE_ENV: process.env.NODE_ENV || defaultValues.NODE_ENV,

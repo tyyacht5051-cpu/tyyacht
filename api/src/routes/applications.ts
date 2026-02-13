@@ -1,6 +1,7 @@
 import express from 'express';
 import { db } from '../db/database';
 import { authenticateToken, requireAdmin, AuthenticatedRequest } from '../middleware/auth';
+import { generateExemptionDocument } from '../utils/exemption-document';
 
 const router = express.Router();
 
@@ -642,21 +643,42 @@ router.get('/exemption/counts/:month', (req: any, res) => {
   }
 });
 
-// 면제교육 신청 엑셀 다운로드 (관리자만)
-router.get('/exemption/export', authenticateToken, requireAdmin, (req: AuthenticatedRequest, res) => {
+// 면제교육 신청서 개별 문서 다운로드 (관리자만)
+router.get('/exemption/:id/document', authenticateToken, requireAdmin, (req: AuthenticatedRequest, res) => {
   try {
-    const applications = db.prepare(`
-      SELECT ea.*, u.username as user_username 
-      FROM exemption_applications ea 
-      LEFT JOIN users u ON ea.user_id = u.id 
-      ORDER BY ea.created_at DESC
-    `).all() as ExemptionApplication[];
-    
-    // 실제로는 엑셀 라이브러리를 사용해야 하지만, 일단 JSON으로 반환
-    res.json(applications);
+    const applicationId = parseInt(req.params.id);
+    if (isNaN(applicationId)) {
+      return res.status(400).json({ error: 'Invalid application ID' });
+    }
+
+    const application = db.prepare(`
+      SELECT * FROM exemption_applications WHERE id = ?
+    `).get(applicationId) as any;
+
+    if (!application) {
+      return res.status(404).json({ error: 'Application not found' });
+    }
+
+    const docBuffer = generateExemptionDocument({
+      name: application.name,
+      gender: application.gender || '',
+      birth_date: application.birth_date || '',
+      address: application.address || '',
+      preferred_date: application.preferred_date,
+      email: application.email || '',
+      phone: application.phone || '',
+      license: application.license,
+      course_type: application.course_type || '',
+      created_at: application.created_at || '',
+    });
+
+    const fileName = encodeURIComponent(`면제교육신청서_${application.name}.docx`);
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
+    res.setHeader('Content-Disposition', `attachment; filename*=UTF-8''${fileName}`);
+    res.send(docBuffer);
   } catch (error) {
-    console.error('Failed to export exemption applications:', error);
-    res.status(500).json({ error: 'Failed to export applications' });
+    console.error('Failed to generate exemption document:', error);
+    res.status(500).json({ error: 'Failed to generate document' });
   }
 });
 

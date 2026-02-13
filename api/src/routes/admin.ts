@@ -36,7 +36,7 @@ router.get('/verify-admin', authenticateToken, requireAdmin, (req: Authenticated
     // 데이터베이스에서 실시간 관리자 상태 재확인
     const user = db.prepare('SELECT id, username, role, is_active FROM users WHERE id = ?').get(req.user?.id) as Pick<User, 'id' | 'username' | 'role' | 'is_active'> | undefined;
 
-    if (!user || user.role !== 'admin' || user.is_active !== 1) {
+    if (!user || (user.role !== 'admin' && user.role !== 'super_admin') || user.is_active !== 1) {
       console.warn(`⚠️ 비활성화된 관리자 계정 접근 시도: ${req.user?.username} (${req.ip})`);
       return res.status(403).json({
         error: '관리자 권한이 없거나 비활성화된 계정입니다.',

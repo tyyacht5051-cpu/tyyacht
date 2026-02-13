@@ -229,7 +229,6 @@
       <div class="content-header">
         <h2>면제교육 신청자 관리</h2>
         <div class="header-actions">
-          <button @click="exportApplications" class="export-btn">엑셀 다운로드</button>
           <button @click="refreshApplications" class="refresh-btn">새로고침</button>
         </div>
       </div>
@@ -327,15 +326,20 @@
                 </span>
               </td>
               <td class="actions-cell">
-                <select 
-                  @change="updateApplicationStatus(app, $event.target.value)" 
-                  :value="app.status"
-                  class="status-select"
-                >
-                  <option value="pending">대기중</option>
-                  <option value="approved">승인</option>
-                  <option value="rejected">거부</option>
-                </select>
+                <div class="actions-group">
+                  <select
+                    @change="updateApplicationStatus(app, $event.target.value)"
+                    :value="app.status"
+                    class="status-select"
+                  >
+                    <option value="pending">대기중</option>
+                    <option value="approved">승인</option>
+                    <option value="rejected">거부</option>
+                  </select>
+                  <button @click="downloadExemptionDocument(app)" class="doc-download-btn" title="신청서 다운로드">
+                    신청서
+                  </button>
+                </div>
               </td>
             </tr>
           </tbody>
@@ -2335,23 +2339,25 @@ export default {
       }
     },
 
-    async exportApplications() {
+    async downloadExemptionDocument(app) {
       try {
-        const response = await axios.get(`${API_BASE_URL}/api/applications/exemption/export`, {
-          params: this.applicationFilters,
+        const response = await axios.get(`${API_BASE_URL}/api/applications/exemption/${app.id}/document`, {
           responseType: 'blob'
         });
-        
-        const blob = new Blob([response.data], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+
+        const blob = new Blob([response.data], {
+          type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+        });
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `면제교육신청자_${new Date().toISOString().split('T')[0]}.xlsx`;
+        a.download = `면제교육신청서_${app.name}.docx`;
         a.click();
         window.URL.revokeObjectURL(url);
+        this.toast.success(`${app.name}님의 신청서가 다운로드되었습니다.`);
       } catch (error) {
-        console.error('Failed to export applications:', error);
-        this.toast.error('엑셀 다운로드에 실패했습니다.', '📄 다운로드 실패');
+        console.error('Failed to download exemption document:', error);
+        this.toast.error('신청서 다운로드에 실패했습니다.');
       }
     },
 
@@ -4240,6 +4246,27 @@ ${item.content ? `내용: ${item.content.substring(0, 100)}...` : ''}
   border-radius: 4px;
   font-size: 0.8rem;
   cursor: pointer;
+}
+
+.actions-group {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+}
+
+.doc-download-btn {
+  padding: 4px 8px;
+  background: #17a2b8;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.doc-download-btn:hover {
+  background: #138496;
 }
 
 .no-applications {

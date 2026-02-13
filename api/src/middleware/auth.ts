@@ -30,7 +30,7 @@ export const authenticateToken = (req: AuthenticatedRequest, res: Response, next
     req.user = {
       id: decoded.userId || decoded.id,
       username: decoded.username,
-      isAdmin: decoded.role === 'admin'
+      isAdmin: decoded.role === 'admin' || decoded.role === 'super_admin'
     };
     next();
   } catch (error) {
@@ -98,7 +98,7 @@ export const optionalAuth = (req: AuthenticatedRequest, res: Response, next: Nex
     req.user = {
       id: decoded.userId || decoded.id,
       username: decoded.username,
-      isAdmin: decoded.role === 'admin'
+      isAdmin: decoded.role === 'admin' || decoded.role === 'super_admin'
     };
   } catch (error) {
     console.error('선택적 JWT 토큰 검증 실패:', error);
