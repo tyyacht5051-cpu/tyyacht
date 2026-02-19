@@ -2927,7 +2927,10 @@ export default {
         notice: '공지사항',
         exemption: '면제교육',
         cruise: '크루저요트',
-        dinghy: '딩기요트'
+        dinghy: '딩기요트',
+        'related-events': '관련행사',
+        'external-activities': '대외활동',
+        'exemption-education': '면제교육'
       };
       return labels[category] || category;
     },
