@@ -1575,7 +1575,7 @@ export default {
         const date = new Date(startDate);
         date.setDate(startDate.getDate() + i);
         
-        const dateString = date.toISOString().split('T')[0];
+        const dateString = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
         const isCurrentMonth = date.getMonth() === month;
         const isPast = date < today;
         
@@ -2280,7 +2280,8 @@ export default {
     },
 
     formatSelectedDate(dateString) {
-      const date = new Date(dateString);
+      const [y, m, d] = dateString.split('-').map(Number);
+      const date = new Date(y, m - 1, d);
       return date.toLocaleDateString('ko-KR', { month: 'short', day: 'numeric' });
     },
 
