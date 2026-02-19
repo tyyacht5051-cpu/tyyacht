@@ -140,8 +140,8 @@ function formatLicense(license: string | null): string {
     return '일반조종 1급 □  2급 □  해당사항 없음 ☑';
   }
   const l = license;
-  const has1 = l.includes('1급');
-  const has2 = l.includes('2급');
+  const has1 = l.includes('1급') || l === 'general1';
+  const has2 = l.includes('2급') || l === 'general2';
 
   if (has1 && has2) {
     return '일반조종 1급 ☑  2급 ☑  해당사항 없음 □';
