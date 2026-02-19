@@ -79,6 +79,19 @@ function modifyCellContent(cellXml: string, newText: string): string {
 }
 
 /**
+ * Format birth date to YYMMDD: "1993-10-22" → "931022"
+ */
+function formatBirthDate6(dateStr: string): string {
+  if (!dateStr) return '';
+  const d = new Date(dateStr);
+  if (isNaN(d.getTime())) return dateStr;
+  const yy = String(d.getFullYear()).slice(2);
+  const mm = String(d.getMonth() + 1).padStart(2, '0');
+  const dd = String(d.getDate()).padStart(2, '0');
+  return `${yy}${mm}${dd}`;
+}
+
+/**
  * Format date string to Korean format: "2026년  2월  12일"
  */
 function formatDateKorean(dateStr: string): string {
@@ -287,7 +300,7 @@ export function generateExemptionDocument(data: ExemptionData): Buffer {
   const cellMods: Array<{ table: number; row: number; col: number; text: string }> = [
     { table: 0, row: 2, col: 2, text: data.name },                              // 성명
     { table: 0, row: 2, col: 4, text: formatGender(data.gender) },               // 성별 ☑남 □여
-    // Row 3 (주민등록번호) - 공란 유지, 기입하지 않음
+    { table: 0, row: 3, col: 2, text: formatBirthDate6(data.birth_date) },       // 생년월일 (YYMMDD)
     { table: 0, row: 4, col: 2, text: data.address },                            // 주소
     { table: 0, row: 5, col: 2, text: '☑ 요 트' },                              // 유형 - 요트 항상 체크
     { table: 0, row: 5, col: 4, text: formatPreferredDates(data.preferred_date) }, // 교육일시 (월만)

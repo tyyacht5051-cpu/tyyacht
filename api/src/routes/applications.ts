@@ -1,6 +1,6 @@
 import express from 'express';
 import { db } from '../db/database';
-import { authenticateToken, requireAdmin, AuthenticatedRequest } from '../middleware/auth';
+import { authenticateToken, requireAdmin, optionalAuth, AuthenticatedRequest } from '../middleware/auth';
 import { generateExemptionDocument } from '../utils/exemption-document';
 
 const router = express.Router();
@@ -431,8 +431,8 @@ router.get('/cruise/export', authenticateToken, requireAdmin, (req: Authenticate
 
 // ============= 면제교육 신청 API =============
 
-// 면제교육 신청 제출
-router.post('/exemption', authenticateToken, (req: AuthenticatedRequest, res) => {
+// 면제교육 신청 제출 (비로그인도 가능)
+router.post('/exemption', optionalAuth, (req: AuthenticatedRequest, res) => {
   try {
     const {
       name,

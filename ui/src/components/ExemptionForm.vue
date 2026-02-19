@@ -256,7 +256,7 @@ const calendarDays = computed((): CalendarDay[] => {
         const date = new Date(startDate);
         date.setDate(startDate.getDate() + i);
 
-        const dateString = date.toISOString().split('T')[0];
+        const dateString = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
         const isCurrentMonth = date.getMonth() === month;
         const isPast = date < today;
         const isAvailable = availableDates.value.includes(dateString);
@@ -458,7 +458,8 @@ const removeSelectedDate = (date: string) => {
 // 선택된 날짜 포맷팅
 const formatSelectedDate = (dateString: string): string => {
     if (!dateString) return '';
-    const date = new Date(dateString);
+    const [y, m, d] = dateString.split('-').map(Number);
+    const date = new Date(y, m - 1, d);
     return date.toLocaleDateString('ko-KR', {
         month: 'short',
         day: 'numeric',
