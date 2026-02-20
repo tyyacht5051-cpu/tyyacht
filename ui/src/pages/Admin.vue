@@ -335,6 +335,7 @@
                     <button v-if="app.status === 'approved' && app.course_type !== 'practical'" @click="downloadExemptionDocument(app)" class="doc-download-btn" title="면제교육 신청서 다운로드">
                       신청서
                     </button>
+                    <button v-if="app.status === 'rejected'" @click="deleteExemptionApplication(app.id)" class="delete-btn">삭제</button>
                   </div>
                 </td>
               </tr>
@@ -2801,19 +2802,40 @@ export default {
 
     async deleteEducationApplication(appId) {
       if (!confirm('정말로 이 신청서를 삭제하시겠습니까?')) return;
-      
+
       try {
         await axios.delete(`${API_BASE_URL}/api/applications/education/${appId}`);
-        
+
         // 임시로 배열에서 제거
         this.educationApplications = this.educationApplications.filter(app => app.id !== appId);
         await this.loadEducationStats();
-        
+
         if (this.toast) {
           this.toast.success('요트교육 신청서가 삭제되었습니다.', '🗑️ 삭제 완료');
         }
       } catch (error) {
         console.error('Failed to delete education application:', error);
+        if (this.toast) {
+          this.toast.error('신청서 삭제에 실패했습니다.');
+        }
+      }
+    },
+
+    async deleteExemptionApplication(appId) {
+      if (!confirm('정말로 이 신청서를 삭제하시겠습니까?')) return;
+
+      try {
+        await axios.delete(`${API_BASE_URL}/api/applications/exemption/${appId}`, {
+          headers: { Authorization: `Bearer ${this.token}` }
+        });
+
+        this.applications = this.applications.filter(app => app.id !== appId);
+
+        if (this.toast) {
+          this.toast.success('신청서가 삭제되었습니다.', '🗑️ 삭제 완료');
+        }
+      } catch (error) {
+        console.error('Failed to delete exemption application:', error);
         if (this.toast) {
           this.toast.error('신청서 삭제에 실패했습니다.');
         }

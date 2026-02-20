@@ -577,6 +577,26 @@ router.patch('/exemption/:id/status', authenticateToken, requireAdmin, (req: Aut
   }
 });
 
+// 면제교육/실기연수 신청 삭제 (관리자만)
+router.delete('/exemption/:id', authenticateToken, requireAdmin, (req: AuthenticatedRequest, res) => {
+  try {
+    const applicationId = parseInt(req.params.id);
+
+    const result = db.prepare(`
+      DELETE FROM exemption_applications WHERE id = ?
+    `).run(applicationId);
+
+    if (result.changes === 0) {
+      return res.status(404).json({ error: 'Application not found' });
+    }
+
+    res.json({ message: 'Application deleted successfully' });
+  } catch (error) {
+    console.error('Failed to delete exemption application:', error);
+    res.status(500).json({ error: 'Failed to delete application' });
+  }
+});
+
 // 면제교육 신청 통계 (관리자만)
 router.get('/exemption/stats', authenticateToken, requireAdmin, (req: AuthenticatedRequest, res) => {
   try {
