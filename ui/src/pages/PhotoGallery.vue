@@ -302,15 +302,16 @@ export default {
             selectedFiles: [],
             draggedIndex: null,
             categories: [
-                { id: 'all', name: '전체', count: 24 },
-                { id: 'cruise-education', name: '크루저 요트 교육', count: 8 },
-                { id: 'cruise-experience', name: '크루저 요트 체험', count: 6 },
-                { id: 'dinghy-education', name: '딩기 요트 교육', count: 5 },
-                { id: 'dinghy-experience', name: '딩기 요트 체험', count: 3 },
-                { id: 'paddleboard', name: '패들보드 체험', count: 2 },
+                { id: 'all', name: '전체', count: 0 },
+                { id: 'exemption-education', name: '면제교육', count: 0 },
+                { id: 'cruise-education', name: '크루저 요트 교육', count: 0 },
+                { id: 'cruise-experience', name: '크루저 요트 체험', count: 0 },
+                { id: 'dinghy-education', name: '딩기 요트 교육', count: 0 },
+                { id: 'dinghy-experience', name: '딩기 요트 체험', count: 0 },
+                { id: 'paddleboard', name: '패들보드 체험', count: 0 },
                 { id: 'related-events', name: '관련행사', count: 0 },
                 { id: 'external-activities', name: '대외활동', count: 0 },
-                { id: 'exemption-education', name: '면제교육', count: 0 }
+                { id: 'field-work', name: '현장작업', count: 0 }
             ],
             photos: [],
             selectedGallery: null,

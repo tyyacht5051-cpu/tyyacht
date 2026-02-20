@@ -12,14 +12,8 @@
         <button @click="activeTab = 'schedules'" :class="{ active: activeTab === 'schedules' }">
           면제교육 일정
         </button>
-        <button @click="activeTab = 'applications'" :class="{ active: activeTab === 'applications' }">
-          면제교육 신청자
-        </button>
-        <button @click="activeTab = 'boarding'" :class="{ active: activeTab === 'boarding' }">
-          승선 체험 신청서
-        </button>
-        <button @click="activeTab = 'education'" :class="{ active: activeTab === 'education' }">
-          요트교육 신청자
+        <button @click="activeTab = 'allApplications'" :class="{ active: activeTab === 'allApplications' }">
+          신청서 관리
         </button>
         <button @click="activeTab = 'notices'" :class="{ active: activeTab === 'notices' }">
           공지사항 관리
@@ -27,10 +21,7 @@
         <button @click="activeTab = 'community'" :class="{ active: activeTab === 'community' }">
           커뮤니티 관리
         </button>
-        <button @click="activeTab = 'excel'" :class="{ active: activeTab === 'excel' }">
-          엑셀 관리
-        </button>
-        <button @click="activeTab = 'popups'" :class="{ active: activeTab === 'popups' }">
+<button @click="activeTab = 'popups'" :class="{ active: activeTab === 'popups' }">
           팝업 관리
         </button>
         <button v-if="isSuperAdmin" @click="activeTab = 'settings'" :class="{ active: activeTab === 'settings' }">
@@ -224,111 +215,344 @@
       </div>
     </div>
 
-    <!-- 면제교육 신청자 탭 -->
-    <div v-if="activeTab === 'applications'" class="admin-content">
+    <!-- 신청서 관리 통합 탭 -->
+    <div v-if="activeTab === 'allApplications'" class="admin-content">
       <div class="content-header">
-        <h2>면제교육 신청자 관리</h2>
-        <div class="header-actions">
-          <button @click="refreshApplications" class="refresh-btn">새로고침</button>
-        </div>
-      </div>
-      
-      <div class="applications-filters">
-        <div class="filter-group">
-          <label>신청일자:</label>
-          <input type="date" v-model="applicationFilters.startDate">
-          <span>~</span>
-          <input type="date" v-model="applicationFilters.endDate">
-        </div>
-        <div class="filter-group">
-          <label>교육과정:</label>
-          <select v-model="applicationFilters.courseType">
-            <option value="">전체</option>
-            <option value="general">면제교육</option>
-            <option value="practical">실기 연수</option>
-          </select>
-        </div>
-        <div class="filter-group">
-          <label>상태:</label>
-          <select v-model="applicationFilters.status">
-            <option value="">전체</option>
-            <option value="pending">대기중</option>
-            <option value="approved">승인</option>
-            <option value="rejected">거부</option>
-          </select>
-        </div>
-        <button @click="applyFilters" class="filter-btn">필터 적용</button>
+        <h2>신청서 관리</h2>
       </div>
 
-      <div class="applications-stats">
-        <div class="stat-card">
-          <div class="stat-number">{{ applicationStats.total || 0 }}</div>
-          <div class="stat-label">총 신청자</div>
+      <!-- 서브탭 -->
+      <div class="sub-tabs">
+        <button @click="appSubTab = 'exemption'" :class="{ active: appSubTab === 'exemption' }">면제교육</button>
+        <button @click="appSubTab = 'practical'" :class="{ active: appSubTab === 'practical' }">실기연수</button>
+        <button @click="appSubTab = 'boarding'" :class="{ active: appSubTab === 'boarding' }">승선체험</button>
+        <button @click="appSubTab = 'education'" :class="{ active: appSubTab === 'education' }">요트교육</button>
+      </div>
+
+      <!-- 면제교육 서브탭 -->
+      <div v-if="appSubTab === 'exemption' || appSubTab === 'practical'" class="sub-tab-content">
+        <div class="header-actions" style="margin-bottom: 10px;">
+          <button @click="refreshApplications" class="refresh-btn">새로고침</button>
         </div>
-        <div class="stat-card">
-          <div class="stat-number">{{ applicationStats.pending || 0 }}</div>
-          <div class="stat-label">승인 대기</div>
+
+        <div class="applications-filters">
+          <div class="filter-group">
+            <label>신청일자:</label>
+            <input type="date" v-model="applicationFilters.startDate">
+            <span>~</span>
+            <input type="date" v-model="applicationFilters.endDate">
+          </div>
+          <div class="filter-group">
+            <label>상태:</label>
+            <select v-model="applicationFilters.status">
+              <option value="">전체</option>
+              <option value="pending">대기중</option>
+              <option value="approved">승인</option>
+              <option value="rejected">거부</option>
+            </select>
+          </div>
+          <button @click="applyFilters" class="filter-btn">필터 적용</button>
         </div>
-        <div class="stat-card">
-          <div class="stat-number">{{ applicationStats.approved || 0 }}</div>
-          <div class="stat-label">승인 완료</div>
+
+        <div class="applications-stats">
+          <div class="stat-card">
+            <div class="stat-number">{{ applicationStats.total || 0 }}</div>
+            <div class="stat-label">총 신청자</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-number">{{ applicationStats.pending || 0 }}</div>
+            <div class="stat-label">승인 대기</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-number">{{ applicationStats.approved || 0 }}</div>
+            <div class="stat-label">승인 완료</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-number">{{ applicationStats.thisMonth || 0 }}</div>
+            <div class="stat-label">이번달 신청</div>
+          </div>
         </div>
-        <div class="stat-card">
-          <div class="stat-number">{{ applicationStats.thisMonth || 0 }}</div>
-          <div class="stat-label">이번달 신청</div>
+
+        <div class="applications-table">
+          <table>
+            <thead>
+              <tr>
+                <th>신청일</th>
+                <th>이름</th>
+                <th>연락처</th>
+                <th>이메일</th>
+                <th>생년월일</th>
+                <th>주소</th>
+                <th>자격증</th>
+                <th>교육과정</th>
+                <th>희망일자</th>
+                <th>할인혜택</th>
+                <th>상태</th>
+                <th>관리</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="app in filteredApplicationsBySubTab" :key="app.id" :class="['app-row', app.status]">
+                <td>{{ formatDate(app.created_at) }}</td>
+                <td class="name-cell">
+                  <strong>{{ app.name }}</strong>
+                  <span v-if="!app.user_id" class="guest-badge">비회원</span>
+                </td>
+                <td>{{ app.phone }}</td>
+                <td>{{ app.email }}</td>
+                <td>{{ formatDate(app.birth_date) }}</td>
+                <td class="address-cell">{{ app.address }}</td>
+                <td>{{ formatLicense(app.boat_license_number) }}</td>
+                <td class="course-cell">
+                  <span :class="['course-badge', app.education_type]">
+                    {{ app.education_type === 'exemption' ? '면제교육' : app.education_type === 'general' ? '면제교육' : '실기연수' }}
+                  </span>
+                </td>
+                <td class="dates-cell">
+                  <div v-for="date in parsePreferredDates(app.preferred_date)" :key="date" class="date-item">
+                    {{ formatShortDate(date) }}
+                  </div>
+                </td>
+                <td>{{ formatDiscount(app.special_requests) }}</td>
+                <td>
+                  <span :class="['status-badge', app.status]">
+                    {{ getStatusLabel(app.status) }}
+                  </span>
+                </td>
+                <td class="actions-cell">
+                  <div class="actions-group">
+                    <select
+                      @change="updateApplicationStatus(app, $event.target.value)"
+                      :value="app.status"
+                      class="status-select"
+                    >
+                      <option value="pending">대기중</option>
+                      <option value="approved">승인</option>
+                      <option value="rejected">거부</option>
+                    </select>
+                    <button v-if="app.status === 'approved' && app.course_type === 'practical'" @click="downloadPracticalDocument(app)" class="doc-download-btn" title="실기연수 신청서 다운로드">
+                      실기연수
+                    </button>
+                    <button v-if="app.status === 'approved' && app.course_type !== 'practical'" @click="downloadExemptionDocument(app)" class="doc-download-btn" title="면제교육 신청서 다운로드">
+                      면제교육
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div v-if="filteredApplicationsBySubTab.length === 0" class="no-applications">
+            신청자가 없습니다.
+          </div>
         </div>
       </div>
-      
-      <div class="applications-table">
-        <table>
-          <thead>
-            <tr>
-              <th>신청일</th>
-              <th>이름</th>
-              <th>연락처</th>
-              <th>이메일</th>
-              <th>생년월일</th>
-              <th>주소</th>
-              <th>자격증</th>
-              <th>교육과정</th>
-              <th>희망일자</th>
-              <th>할인혜택</th>
-              <th>상태</th>
-              <th>관리</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="app in applications" :key="app.id" :class="['app-row', app.status]">
-              <td>{{ formatDate(app.created_at) }}</td>
-              <td class="name-cell">
-                <strong>{{ app.name }}</strong>
-                <span v-if="!app.user_id" class="guest-badge">비회원</span>
-              </td>
-              <td>{{ app.phone }}</td>
-              <td>{{ app.email }}</td>
-              <td>{{ formatDate(app.birth_date) }}</td>
-              <td class="address-cell">{{ app.address }}</td>
-              <td>{{ formatLicense(app.boat_license_number) }}</td>
-              <td class="course-cell">
-                <span :class="['course-badge', app.education_type]">
-                  {{ app.education_type === 'exemption' ? '면제교육' : app.education_type === 'general' ? '면제교육' : '실기연수' }}
-                </span>
-              </td>
-              <td class="dates-cell">
-                <div v-for="date in parsePreferredDates(app.preferred_date)" :key="date" class="date-item">
-                  {{ formatShortDate(date) }}
-                </div>
-              </td>
-              <td>{{ formatDiscount(app.special_requests) }}</td>
-              <td>
-                <span :class="['status-badge', app.status]">
-                  {{ getStatusLabel(app.status) }}
-                </span>
-              </td>
-              <td class="actions-cell">
-                <div class="actions-group">
+
+      <!-- 승선체험 서브탭 -->
+      <div v-if="appSubTab === 'boarding'" class="sub-tab-content">
+        <div class="stats-cards">
+          <div class="stat-card">
+            <div class="stat-number">{{ boardingStats.total || 0 }}</div>
+            <div class="stat-label">총 신청</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-number">{{ boardingStats.pending || 0 }}</div>
+            <div class="stat-label">대기중</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-number">{{ boardingStats.confirmed || 0 }}</div>
+            <div class="stat-label">승인됨</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-number">{{ boardingStats.cancelled || 0 }}</div>
+            <div class="stat-label">취소됨</div>
+          </div>
+        </div>
+
+        <div class="content-header">
+          <h2>승선 체험 신청서 관리</h2>
+          <div class="header-actions">
+            <button @click="exportBoardingApplications" class="export-btn">엑셀 다운로드</button>
+            <button @click="refreshBoardingApplications" class="refresh-btn">새로고침</button>
+          </div>
+        </div>
+
+        <div class="applications-filters">
+          <div class="filter-group">
+            <label>신청일자:</label>
+            <input type="date" v-model="boardingFilters.startDate">
+            <span>~</span>
+            <input type="date" v-model="boardingFilters.endDate">
+          </div>
+          <div class="filter-group">
+            <label>체험 유형:</label>
+            <select v-model="boardingFilters.experienceType">
+              <option value="">전체</option>
+              <option value="cruise">크루저요트</option>
+              <option value="dinghy">딩기요트</option>
+              <option value="paddleboard">패들보드</option>
+            </select>
+          </div>
+          <div class="filter-group">
+            <label>상태:</label>
+            <select v-model="boardingFilters.status">
+              <option value="">전체</option>
+              <option value="pending">대기중</option>
+              <option value="confirmed">승인됨</option>
+              <option value="cancelled">취소됨</option>
+            </select>
+          </div>
+          <button @click="applyBoardingFilters" class="filter-btn">필터 적용</button>
+        </div>
+
+        <div class="applications-table-container">
+          <table class="applications-table">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>이름</th>
+                <th>연락처</th>
+                <th>이메일</th>
+                <th>체험 유형</th>
+                <th>시간</th>
+                <th>희망 날짜</th>
+                <th>인원</th>
+                <th>상태</th>
+                <th>신청일</th>
+                <th>액션</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="app in boardingApplications" :key="app.id">
+                <td>{{ app.id }}</td>
+                <td>{{ app.name }}</td>
+                <td>{{ app.phone }}</td>
+                <td>{{ app.email }}</td>
+                <td>
+                  <span class="program-badge" :class="app.experienceType">
+                    {{ getExperienceTypeLabel(app.experienceType) }}
+                  </span>
+                </td>
+                <td>{{ app.duration || '-' }}</td>
+                <td>{{ formatDate(app.desiredDate) }}</td>
+                <td>{{ app.participants }}명</td>
+                <td>
+                  <select v-model="app.status" @change="updateBoardingApplicationStatus(app, app.status)"
+                          class="status-select" :class="app.status">
+                    <option value="pending">대기중</option>
+                    <option value="confirmed">승인됨</option>
+                    <option value="cancelled">취소됨</option>
+                  </select>
+                </td>
+                <td>{{ formatDate(app.createdAt) }}</td>
+                <td class="actions">
+                  <button @click="viewBoardingApplication(app)" class="view-btn">상세보기</button>
+                  <button v-if="app.status === 'confirmed'" @click="downloadBoardingDocument(app)" class="doc-download-btn" title="승선체험 신청서 다운로드">신청서</button>
+                  <button @click="deleteBoardingApplication(app.id)" class="delete-btn">삭제</button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- 요트교육 서브탭 -->
+      <div v-if="appSubTab === 'education'" class="sub-tab-content">
+        <div class="stats-cards">
+          <div class="stat-card">
+            <div class="stat-number">{{ educationStats.total || 0 }}</div>
+            <div class="stat-label">총 신청</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-number">{{ educationStats.pending || 0 }}</div>
+            <div class="stat-label">대기중</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-number">{{ educationStats.confirmed || 0 }}</div>
+            <div class="stat-label">승인됨</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-number">{{ educationStats.thisMonth || 0 }}</div>
+            <div class="stat-label">이번달 신청</div>
+          </div>
+        </div>
+
+        <div class="content-header">
+          <h2>요트교육 신청자 관리</h2>
+          <div class="header-actions">
+            <button @click="exportEducationApplications" class="export-btn">엑셀 다운로드</button>
+            <button @click="refreshEducationApplications" class="refresh-btn">새로고침</button>
+          </div>
+        </div>
+
+        <div class="applications-filters">
+          <div class="filter-group">
+            <label>신청일자:</label>
+            <input type="date" v-model="educationFilters.startDate">
+            <span>~</span>
+            <input type="date" v-model="educationFilters.endDate">
+          </div>
+          <div class="filter-group">
+            <label>교육과정:</label>
+            <select v-model="educationFilters.courseType">
+              <option value="">전체</option>
+              <option value="크루저">크루저 요트 교육</option>
+              <option value="딩기">딩기 요트 교육</option>
+            </select>
+          </div>
+          <div class="filter-group">
+            <label>상태:</label>
+            <select v-model="educationFilters.status">
+              <option value="">전체</option>
+              <option value="pending">대기중</option>
+              <option value="approved">승인</option>
+              <option value="rejected">거부</option>
+            </select>
+          </div>
+          <button @click="applyEducationFilters" class="filter-btn">필터 적용</button>
+        </div>
+
+        <div class="applications-table-container">
+          <table class="applications-table">
+            <thead>
+              <tr>
+                <th>신청일</th>
+                <th>이름</th>
+                <th>연락처</th>
+                <th>이메일</th>
+                <th>생년월일</th>
+                <th>성별</th>
+                <th>소재지</th>
+                <th>교육과정</th>
+                <th>상태</th>
+                <th>관리</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="app in educationApplications" :key="app.id" :class="['app-row', app.status]">
+                <td>{{ formatDate(app.createdAt) }}</td>
+                <td class="name-cell">
+                  <strong>{{ app.name }}</strong>
+                  <span v-if="!app.user_id" class="guest-badge">비회원</span>
+                </td>
+                <td>{{ app.phone }}</td>
+                <td>{{ app.email }}</td>
+                <td>{{ formatDate(app.birthDate) }}</td>
+                <td>{{ formatGender(app.gender) }}</td>
+                <td class="address-cell">{{ app.address }}</td>
+                <td class="course-cell">
+                  <span :class="['course-badge', getCourseTypeClass(app.courseType)]">
+                    {{ app.courseType }}
+                  </span>
+                </td>
+                <td>
+                  <span :class="['status-badge', app.status]">
+                    {{ getStatusLabel(app.status) }}
+                  </span>
+                </td>
+                <td class="actions-cell">
                   <select
-                    @change="updateApplicationStatus(app, $event.target.value)"
+                    @change="updateEducationApplicationStatus(app, $event.target.value)"
                     :value="app.status"
                     class="status-select"
                   >
@@ -336,243 +560,17 @@
                     <option value="approved">승인</option>
                     <option value="rejected">거부</option>
                   </select>
-                  <button v-if="app.status === 'approved'" @click="downloadExemptionDocument(app)" class="doc-download-btn" title="신청서 다운로드">
-                    신청서
-                  </button>
-                </div>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-        
-        <div v-if="applications.length === 0" class="no-applications">
-          신청자가 없습니다.
-        </div>
-      </div>
-    </div>
+                  <button v-if="app.status === 'approved'" @click="downloadEducationDocument(app)" class="doc-download-btn" title="요트교육 신청서 다운로드">신청서</button>
+                  <button @click="viewEducationApplication(app)" class="view-btn">상세보기</button>
+                  <button @click="deleteEducationApplication(app.id)" class="delete-btn">삭제</button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
 
-    <!-- 승선 체험 신청서 탭 -->
-    <div v-if="activeTab === 'boarding'" class="admin-content">
-      <!-- 통계 카드 -->
-      <div class="stats-cards">
-        <div class="stat-card">
-          <div class="stat-number">{{ boardingStats.total || 0 }}</div>
-          <div class="stat-label">총 신청</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-number">{{ boardingStats.pending || 0 }}</div>
-          <div class="stat-label">대기중</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-number">{{ boardingStats.confirmed || 0 }}</div>
-          <div class="stat-label">승인됨</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-number">{{ boardingStats.cancelled || 0 }}</div>
-          <div class="stat-label">취소됨</div>
-        </div>
-      </div>
-
-      <div class="content-header">
-        <h2>승선 체험 신청서 관리</h2>
-        <div class="header-actions">
-          <button @click="exportBoardingApplications" class="export-btn">엑셀 다운로드</button>
-          <button @click="refreshBoardingApplications" class="refresh-btn">새로고침</button>
-        </div>
-      </div>
-      
-      <div class="applications-filters">
-        <div class="filter-group">
-          <label>신청일자:</label>
-          <input type="date" v-model="boardingFilters.startDate">
-          <span>~</span>
-          <input type="date" v-model="boardingFilters.endDate">
-        </div>
-        <div class="filter-group">
-          <label>체험 유형:</label>
-          <select v-model="boardingFilters.experienceType">
-            <option value="">전체</option>
-            <option value="cruise">크루저요트</option>
-            <option value="dinghy">딩기요트</option>
-            <option value="paddleboard">패들보드</option>
-          </select>
-        </div>
-        <div class="filter-group">
-          <label>상태:</label>
-          <select v-model="boardingFilters.status">
-            <option value="">전체</option>
-            <option value="pending">대기중</option>
-            <option value="confirmed">승인됨</option>
-            <option value="cancelled">취소됨</option>
-          </select>
-        </div>
-        <button @click="applyBoardingFilters" class="filter-btn">필터 적용</button>
-      </div>
-
-      <div class="applications-table-container">
-        <table class="applications-table">
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th>이름</th>
-              <th>연락처</th>
-              <th>이메일</th>
-              <th>체험 유형</th>
-              <th>시간</th>
-              <th>희망 날짜</th>
-              <th>인원</th>
-              <th>상태</th>
-              <th>신청일</th>
-              <th>액션</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="app in boardingApplications" :key="app.id">
-              <td>{{ app.id }}</td>
-              <td>{{ app.name }}</td>
-              <td>{{ app.phone }}</td>
-              <td>{{ app.email }}</td>
-              <td>
-                <span class="program-badge" :class="app.experienceType">
-                  {{ getExperienceTypeLabel(app.experienceType) }}
-                </span>
-              </td>
-              <td>{{ app.duration || '-' }}</td>
-              <td>{{ formatDate(app.desiredDate) }}</td>
-              <td>{{ app.participants }}명</td>
-              <td>
-                <select v-model="app.status" @change="updateBoardingApplicationStatus(app, app.status)" 
-                        class="status-select" :class="app.status">
-                  <option value="pending">대기중</option>
-                  <option value="confirmed">승인됨</option>
-                  <option value="cancelled">취소됨</option>
-                </select>
-              </td>
-              <td>{{ formatDate(app.createdAt) }}</td>
-              <td class="actions">
-                <button @click="viewBoardingApplication(app)" class="view-btn">상세보기</button>
-                <button @click="deleteBoardingApplication(app.id)" class="delete-btn">삭제</button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-
-    <!-- 요트교육 신청자 탭 -->
-    <div v-if="activeTab === 'education'" class="admin-content">
-      <!-- 통계 카드 -->
-      <div class="stats-cards">
-        <div class="stat-card">
-          <div class="stat-number">{{ educationStats.total || 0 }}</div>
-          <div class="stat-label">총 신청</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-number">{{ educationStats.pending || 0 }}</div>
-          <div class="stat-label">대기중</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-number">{{ educationStats.confirmed || 0 }}</div>
-          <div class="stat-label">승인됨</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-number">{{ educationStats.thisMonth || 0 }}</div>
-          <div class="stat-label">이번달 신청</div>
-        </div>
-      </div>
-
-      <div class="content-header">
-        <h2>요트교육 신청자 관리</h2>
-        <div class="header-actions">
-          <button @click="exportEducationApplications" class="export-btn">엑셀 다운로드</button>
-          <button @click="refreshEducationApplications" class="refresh-btn">새로고침</button>
-        </div>
-      </div>
-      
-      <div class="applications-filters">
-        <div class="filter-group">
-          <label>신청일자:</label>
-          <input type="date" v-model="educationFilters.startDate">
-          <span>~</span>
-          <input type="date" v-model="educationFilters.endDate">
-        </div>
-        <div class="filter-group">
-          <label>교육과정:</label>
-          <select v-model="educationFilters.courseType">
-            <option value="">전체</option>
-            <option value="크루저">크루저 요트 교육</option>
-            <option value="딩기">딩기 요트 교육</option>
-          </select>
-        </div>
-        <div class="filter-group">
-          <label>상태:</label>
-          <select v-model="educationFilters.status">
-            <option value="">전체</option>
-            <option value="pending">대기중</option>
-            <option value="approved">승인</option>
-            <option value="rejected">거부</option>
-          </select>
-        </div>
-        <button @click="applyEducationFilters" class="filter-btn">필터 적용</button>
-      </div>
-
-      <div class="applications-table-container">
-        <table class="applications-table">
-          <thead>
-            <tr>
-              <th>신청일</th>
-              <th>이름</th>
-              <th>연락처</th>
-              <th>이메일</th>
-              <th>생년월일</th>
-              <th>성별</th>
-              <th>소재지</th>
-              <th>교육과정</th>
-              <th>상태</th>
-              <th>관리</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="app in educationApplications" :key="app.id" :class="['app-row', app.status]">
-              <td>{{ formatDate(app.createdAt) }}</td>
-              <td class="name-cell">
-                <strong>{{ app.name }}</strong>
-                <span v-if="!app.user_id" class="guest-badge">비회원</span>
-              </td>
-              <td>{{ app.phone }}</td>
-              <td>{{ app.email }}</td>
-              <td>{{ formatDate(app.birthDate) }}</td>
-              <td>{{ formatGender(app.gender) }}</td>
-              <td class="address-cell">{{ app.address }}</td>
-              <td class="course-cell">
-                <span :class="['course-badge', getCourseTypeClass(app.courseType)]">
-                  {{ app.courseType }}
-                </span>
-              </td>
-              <td>
-                <span :class="['status-badge', app.status]">
-                  {{ getStatusLabel(app.status) }}
-                </span>
-              </td>
-              <td class="actions-cell">
-                <select 
-                  @change="updateEducationApplicationStatus(app, $event.target.value)" 
-                  :value="app.status"
-                  class="status-select"
-                >
-                  <option value="pending">대기중</option>
-                  <option value="approved">승인</option>
-                  <option value="rejected">거부</option>
-                </select>
-                <button @click="viewEducationApplication(app)" class="view-btn">상세보기</button>
-                <button @click="deleteEducationApplication(app.id)" class="delete-btn">삭제</button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-        
-        <div v-if="educationApplications.length === 0" class="no-applications">
-          요트교육 신청자가 없습니다.
+          <div v-if="educationApplications.length === 0" class="no-applications">
+            요트교육 신청자가 없습니다.
+          </div>
         </div>
       </div>
     </div>
@@ -795,20 +793,7 @@
       </div>
     </div>
 
-    <!-- 엑셀 관리 탭 -->
-    <div v-if="activeTab === 'excel'" class="admin-content">
-      <div v-if="!authStore.state.token" class="error-message">
-        인증 토큰이 없습니다. 다시 로그인해주세요.
-      </div>
-      <ExcelManager
-        v-else
-        :authToken="authStore.state.token"
-        @success="handleExcelSuccess"
-        @error="handleExcelError"
-      />
-    </div>
-
-    <!-- 팝업 관리 탭 -->
+<!-- 팝업 관리 탭 -->
     <div v-if="activeTab === 'popups'" class="admin-content">
       <div class="content-header">
         <h2>팝업 관리</h2>
@@ -1317,14 +1302,11 @@
 import { API_BASE_URL } from '../config/env.js';
 import axios from 'axios';
 import authStore from '../stores/auth.js';
-import ExcelManager from '../components/ExcelManager.vue';
-
 import { useToast } from '../components/Toast.vue'
 
 export default {
   name: 'Admin',
   components: {
-    ExcelManager
   },
   setup() {
     const toast = useToast()
@@ -1334,6 +1316,7 @@ export default {
     return {
       authStore,
       activeTab: 'users',
+      appSubTab: 'exemption',
       users: [],
       loginLogs: [],
       isServerVerifiedAdmin: false,
@@ -1501,6 +1484,15 @@ export default {
       return this.authStore.state.user || {};
     },
     
+    filteredApplicationsBySubTab() {
+      if (this.appSubTab === 'exemption') {
+        return this.applications.filter(app => app.course_type !== 'practical');
+      } else if (this.appSubTab === 'practical') {
+        return this.applications.filter(app => app.course_type === 'practical');
+      }
+      return this.applications;
+    },
+
     filteredCommunityItems() {
       let items = [];
       
@@ -1609,10 +1601,12 @@ export default {
       await this.loadSchedules();
       await this.loadApplications();
       await this.loadApplicationStats();
-      // 승선 체험 데이터 초기 로드
-      if (this.activeTab === 'boarding') {
+      // 신청서 관리 탭 초기 로드
+      if (this.activeTab === 'allApplications') {
         await this.loadBoardingApplications();
         await this.loadBoardingStats();
+        await this.loadEducationApplications();
+        await this.loadEducationStats();
       }
     } catch (error) {
       console.error('Failed to load admin data:', error);
@@ -2362,6 +2356,72 @@ export default {
       }
     },
 
+    async downloadPracticalDocument(app) {
+      try {
+        const response = await axios.get(`${API_BASE_URL}/api/applications/exemption/${app.id}/practical-document`, {
+          responseType: 'blob'
+        });
+
+        const blob = new Blob([response.data], {
+          type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+        });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `실기연수신청서_${app.name}.docx`;
+        a.click();
+        window.URL.revokeObjectURL(url);
+        this.toast.success(`${app.name}님의 실기연수 신청서가 다운로드되었습니다.`);
+      } catch (error) {
+        console.error('Failed to download practical document:', error);
+        this.toast.error('실기연수 신청서 다운로드에 실패했습니다.');
+      }
+    },
+
+    async downloadBoardingDocument(app) {
+      try {
+        const response = await axios.get(`${API_BASE_URL}/api/applications/cruise/${app.id}/document`, {
+          responseType: 'blob'
+        });
+
+        const blob = new Blob([response.data], {
+          type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+        });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `승선체험신청서_${app.name}.docx`;
+        a.click();
+        window.URL.revokeObjectURL(url);
+        this.toast.success(`${app.name}님의 승선체험 신청서가 다운로드되었습니다.`);
+      } catch (error) {
+        console.error('Failed to download boarding document:', error);
+        this.toast.error('승선체험 신청서 다운로드에 실패했습니다.');
+      }
+    },
+
+    async downloadEducationDocument(app) {
+      try {
+        const response = await axios.get(`${API_BASE_URL}/api/applications/education/${app.id}/document`, {
+          responseType: 'blob'
+        });
+
+        const blob = new Blob([response.data], {
+          type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+        });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `요트교육신청서_${app.name}.docx`;
+        a.click();
+        window.URL.revokeObjectURL(url);
+        this.toast.success(`${app.name}님의 요트교육 신청서가 다운로드되었습니다.`);
+      } catch (error) {
+        console.error('Failed to download education document:', error);
+        this.toast.error('요트교육 신청서 다운로드에 실패했습니다.');
+      }
+    },
+
     parsePreferredDates(datesString) {
       if (!datesString) return [];
       try {
@@ -2930,7 +2990,8 @@ export default {
         dinghy: '딩기요트',
         'related-events': '관련행사',
         'external-activities': '대외활동',
-        'exemption-education': '면제교육'
+        'exemption-education': '면제교육',
+        'field-work': '현장작업'
       };
       return labels[category] || category;
     },
@@ -3346,9 +3407,19 @@ ${item.content ? `내용: ${item.content.substring(0, 100)}...` : ''}
       if (newTab === 'logs' && this.loginLogs.length === 0) {
         this.loadLoginLogs();
       }
-      if (newTab === 'boarding' && this.boardingApplications.length === 0) {
-        this.loadBoardingApplications();
-        this.loadBoardingStats();
+      if (newTab === 'allApplications') {
+        if (this.applications.length === 0) {
+          this.loadApplications();
+          this.loadApplicationStats();
+        }
+        if (this.boardingApplications.length === 0) {
+          this.loadBoardingApplications();
+          this.loadBoardingStats();
+        }
+        if (this.educationApplications.length === 0) {
+          this.loadEducationApplications();
+          this.loadEducationStats();
+        }
       }
       if (newTab === 'notices' && this.notices.length === 0) {
         this.loadNotices();
@@ -3356,23 +3427,21 @@ ${item.content ? `내용: ${item.content.substring(0, 100)}...` : ''}
       if (newTab === 'community' && this.communityPosts.length === 0) {
         this.refreshCommunity();
       }
-      if (newTab === 'education' && this.educationApplications.length === 0) {
-        this.loadEducationApplications();
-        this.loadEducationStats();
-      }
       if (newTab === 'popups' && this.popups.length === 0) {
         this.loadPopups();
       }
     },
-
-    // 엑셀 관리 이벤트 핸들러
-    handleExcelSuccess(message) {
-      this.toast.success(message);
+    appSubTab(newSubTab) {
+      if (newSubTab === 'boarding' && this.boardingApplications.length === 0) {
+        this.loadBoardingApplications();
+        this.loadBoardingStats();
+      }
+      if (newSubTab === 'education' && this.educationApplications.length === 0) {
+        this.loadEducationApplications();
+        this.loadEducationStats();
+      }
     },
 
-    handleExcelError(message) {
-      this.toast.error(message);
-    }
   }
 };
 </script>
@@ -3404,6 +3473,46 @@ ${item.content ? `내용: ${item.content.substring(0, 100)}...` : ''}
 .admin-nav {
   display: flex;
   gap: 10px;
+  flex-wrap: wrap;
+}
+
+.sub-tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 20px;
+  border-bottom: 2px solid #e9ecef;
+  padding-bottom: 10px;
+}
+
+.sub-tabs button {
+  padding: 8px 18px;
+  border: 1px solid #dee2e6;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: all 0.3s;
+  background: #f8f9fa;
+  color: #495057;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.sub-tabs button.active {
+  background: #2c5aa0;
+  color: white;
+  border-color: #2c5aa0;
+}
+
+.sub-tabs button:hover:not(.active) {
+  background: #dee2e6;
+}
+
+.sub-tab-content {
+  animation: fadeIn 0.2s ease-in;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 .admin-nav button {

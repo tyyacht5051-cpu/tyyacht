@@ -37,16 +37,15 @@
                             <label>카테고리 *</label>
                             <select v-model="gallery.category_id" required>
                                 <option value="">카테고리를 선택하세요</option>
+                                <option value="exemption-education">면제교육</option>
                                 <option value="cruise-education">크루저 요트 교육</option>
                                 <option value="cruise-experience">크루저 요트 체험</option>
                                 <option value="dinghy-education">딩기 요트 교육</option>
                                 <option value="dinghy-experience">딩기 요트 체험</option>
-                                <option value="exemption-education">면제교육</option>
-                                <option value="paddleboard">패들보드</option>
+                                <option value="paddleboard">패들보드 체험</option>
                                 <option value="related-events">관련행사</option>
                                 <option value="external-activities">대외활동</option>
-                                <option value="events">이벤트</option>
-                                <option value="others">기타</option>
+                                <option value="field-work">현장작업</option>
                             </select>
                         </div>
 
