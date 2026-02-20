@@ -123,6 +123,46 @@ function formatGenderShort(gender: string): string {
 }
 
 /**
+ * Format phone number to 010.XXXX.XXXX (dot separator)
+ */
+function formatPhone(phone: string): string {
+  if (!phone) return '';
+  const digits = phone.replace(/[^0-9]/g, '');
+  if (digits.length === 11) {
+    return `${digits.slice(0, 3)}.${digits.slice(3, 7)}.${digits.slice(7)}`;
+  }
+  if (digits.length === 10) {
+    return `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6)}`;
+  }
+  return phone;
+}
+
+/**
+ * Format created_at date to YYYY.MM.DD for the 날짜(Date) field
+ */
+function formatDateDot(dateStr: string): string {
+  if (!dateStr) return '';
+  const d = new Date(dateStr);
+  if (isNaN(d.getTime())) return dateStr;
+  const yyyy = d.getFullYear();
+  const mm = String(d.getMonth() + 1).padStart(2, '0');
+  const dd = String(d.getDate()).padStart(2, '0');
+  return `${yyyy}.${mm}.${dd}`;
+}
+
+/**
+ * Fill the 날짜(Date) field in the document header paragraph
+ * "날짜"와 "(Date) :" 가 별도 run에 있으므로 "(Date) :" run의 텍스트에 날짜 삽입
+ */
+function fillDateField(xml: string, dateStr: string): string {
+  const dateText = formatDateDot(dateStr);
+  return xml.replace(
+    /(<w:t[^>]*>)\(Date\)[^<]*(<\/w:t>)/,
+    `$1(Date) : ${dateText}$2`
+  );
+}
+
+/**
  * Generate a filled boarding experience application document
  * Template: boarding experience.docx
  * Table0: Row0=header, Row1=column headers, Row2=representative, Row3~Row30=companions
@@ -145,7 +185,7 @@ export function generateBoardingDocument(data: BoardingData): Buffer {
     { col: 3, text: String(calculateAge(data.birth_date)) },
     { col: 4, text: formatGenderShort(data.gender) },
     { col: 5, text: data.address || '' },
-    { col: 6, text: data.phone || '' },
+    { col: 6, text: formatPhone(data.phone) },
     { col: 7, text: 'O' },
   ];
 
@@ -171,7 +211,7 @@ export function generateBoardingDocument(data: BoardingData): Buffer {
       { col: 3, text: String(calculateAge(companion.birthDate)) },
       { col: 4, text: formatGenderShort(companion.gender) },
       { col: 5, text: companion.address || '' },
-      { col: 6, text: companion.phone || '' },
+      { col: 6, text: formatPhone(companion.phone) },
       { col: 7, text: 'O' },
     ];
 
@@ -194,6 +234,9 @@ export function generateBoardingDocument(data: BoardingData): Buffer {
   for (const mod of modifications) {
     xml = xml.substring(0, mod.start) + mod.newContent + xml.substring(mod.end);
   }
+
+  // 날짜(Date) 필드 채우기
+  xml = fillDateField(xml, data.created_at);
 
   // Write back to zip
   zip.file('word/document.xml', xml);
