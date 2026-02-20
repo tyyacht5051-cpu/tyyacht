@@ -472,14 +472,14 @@ router.post('/exemption', optionalAuth, (req: AuthenticatedRequest, res) => {
     const result = db.prepare(`
       INSERT INTO exemption_applications (
         user_id, name, phone, email, birth_date, gender, address,
-        course_type, preferred_date, license, discount_eligibility
+        education_type, course_type, preferred_date, license, discount_eligibility
       )
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `).run(
       user_id, name, phone, email || '', birthDate, gender, address,
-      courseType, preferredDates ? JSON.stringify(preferredDates) : null,
+      courseType, courseType, preferredDates ? JSON.stringify(preferredDates) : null,
       license || null, discountEligibility || null
-  );    
+    );
     
     res.status(201).json({ 
       id: result.lastInsertRowid, 

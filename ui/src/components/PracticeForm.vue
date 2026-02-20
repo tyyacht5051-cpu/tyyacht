@@ -138,7 +138,7 @@ const form = reactive({
     phone: '',
     email: '',
     address: '',
-    courseType: 'exemption',
+    courseType: 'practical',
     privacyAgreed: false,
 });
 
@@ -240,7 +240,7 @@ const resetForm = () => {
         phone: '',
         email: '',
         address: '',
-        courseType: 'exemption',
+        courseType: 'practical',
         privacyAgreed: false,
     });
     toast.info('폼이 초기화되었습니다.');

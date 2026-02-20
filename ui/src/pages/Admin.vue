@@ -227,8 +227,12 @@
         <button @click="appSubTab = 'education'" :class="{ active: appSubTab === 'education' }">요트교육</button>
       </div>
 
-      <!-- 면제교육 서브탭 -->
+      <!-- 면제교육/실기연수 서브탭 -->
       <div v-if="appSubTab === 'exemption' || appSubTab === 'practical'" class="sub-tab-content">
+
+        <div class="content-header">
+          <h2>{{ appSubTab === 'practical' ? '실기연수' : '면제교육' }} 신청자 관리</h2>
+        </div>
 
         <div class="applications-filters">
           <div class="filter-group">
@@ -249,21 +253,21 @@
           <button @click="applyFilters" class="filter-btn">필터 적용</button>
         </div>
 
-        <div class="applications-stats">
+        <div class="stats-cards">
           <div class="stat-card">
-            <div class="stat-number">{{ applicationStats.total || 0 }}</div>
+            <div class="stat-number">{{ filteredApplicationStats.total }}</div>
             <div class="stat-label">총 신청자</div>
           </div>
           <div class="stat-card">
-            <div class="stat-number">{{ applicationStats.pending || 0 }}</div>
+            <div class="stat-number">{{ filteredApplicationStats.pending }}</div>
             <div class="stat-label">승인 대기</div>
           </div>
           <div class="stat-card">
-            <div class="stat-number">{{ applicationStats.approved || 0 }}</div>
+            <div class="stat-number">{{ filteredApplicationStats.approved }}</div>
             <div class="stat-label">승인 완료</div>
           </div>
           <div class="stat-card">
-            <div class="stat-number">{{ applicationStats.thisMonth || 0 }}</div>
+            <div class="stat-number">{{ filteredApplicationStats.thisMonth }}</div>
             <div class="stat-label">이번달 신청</div>
           </div>
         </div>
@@ -326,7 +330,7 @@
                       <option value="rejected">거부</option>
                     </select>
                     <button v-if="app.status === 'approved' && app.course_type === 'practical'" @click="downloadPracticalDocument(app)" class="doc-download-btn" title="실기연수 신청서 다운로드">
-                      실기연수
+                      신청서
                     </button>
                     <button v-if="app.status === 'approved' && app.course_type !== 'practical'" @click="downloadExemptionDocument(app)" class="doc-download-btn" title="면제교육 신청서 다운로드">
                       신청서
@@ -345,30 +349,8 @@
 
       <!-- 승선체험 서브탭 -->
       <div v-if="appSubTab === 'boarding'" class="sub-tab-content">
-        <div class="stats-cards">
-          <div class="stat-card">
-            <div class="stat-number">{{ boardingStats.total || 0 }}</div>
-            <div class="stat-label">총 신청</div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-number">{{ boardingStats.pending || 0 }}</div>
-            <div class="stat-label">대기중</div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-number">{{ boardingStats.confirmed || 0 }}</div>
-            <div class="stat-label">승인됨</div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-number">{{ boardingStats.cancelled || 0 }}</div>
-            <div class="stat-label">취소됨</div>
-          </div>
-        </div>
-
         <div class="content-header">
-          <h2>승선 체험 신청서 관리</h2>
-          <div class="header-actions">
-            <button @click="exportBoardingApplications" class="export-btn">엑셀 다운로드</button>
-          </div>
+          <h2>승선체험 신청자 관리</h2>
         </div>
 
         <div class="applications-filters">
@@ -397,6 +379,25 @@
             </select>
           </div>
           <button @click="applyBoardingFilters" class="filter-btn">필터 적용</button>
+        </div>
+
+        <div class="stats-cards">
+          <div class="stat-card">
+            <div class="stat-number">{{ boardingStats.total || 0 }}</div>
+            <div class="stat-label">총 신청</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-number">{{ boardingStats.pending || 0 }}</div>
+            <div class="stat-label">대기중</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-number">{{ boardingStats.confirmed || 0 }}</div>
+            <div class="stat-label">승인됨</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-number">{{ boardingStats.cancelled || 0 }}</div>
+            <div class="stat-label">취소됨</div>
+          </div>
         </div>
 
         <div class="applications-table-container">
@@ -452,30 +453,8 @@
 
       <!-- 요트교육 서브탭 -->
       <div v-if="appSubTab === 'education'" class="sub-tab-content">
-        <div class="stats-cards">
-          <div class="stat-card">
-            <div class="stat-number">{{ educationStats.total || 0 }}</div>
-            <div class="stat-label">총 신청</div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-number">{{ educationStats.pending || 0 }}</div>
-            <div class="stat-label">대기중</div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-number">{{ educationStats.confirmed || 0 }}</div>
-            <div class="stat-label">승인됨</div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-number">{{ educationStats.thisMonth || 0 }}</div>
-            <div class="stat-label">이번달 신청</div>
-          </div>
-        </div>
-
         <div class="content-header">
           <h2>요트교육 신청자 관리</h2>
-          <div class="header-actions">
-            <button @click="exportEducationApplications" class="export-btn">엑셀 다운로드</button>
-          </div>
         </div>
 
         <div class="applications-filters">
@@ -503,6 +482,25 @@
             </select>
           </div>
           <button @click="applyEducationFilters" class="filter-btn">필터 적용</button>
+        </div>
+
+        <div class="stats-cards">
+          <div class="stat-card">
+            <div class="stat-number">{{ educationStats.total || 0 }}</div>
+            <div class="stat-label">총 신청</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-number">{{ educationStats.pending || 0 }}</div>
+            <div class="stat-label">대기중</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-number">{{ educationStats.confirmed || 0 }}</div>
+            <div class="stat-label">승인됨</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-number">{{ educationStats.thisMonth || 0 }}</div>
+            <div class="stat-label">이번달 신청</div>
+          </div>
         </div>
 
         <div class="applications-table-container">
@@ -1481,6 +1479,18 @@ export default {
         return this.applications.filter(app => app.course_type === 'practical');
       }
       return this.applications;
+    },
+
+    filteredApplicationStats() {
+      const apps = this.filteredApplicationsBySubTab;
+      const now = new Date();
+      const thisMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+      return {
+        total: apps.length,
+        pending: apps.filter(a => a.status === 'pending').length,
+        approved: apps.filter(a => a.status === 'approved').length,
+        thisMonth: apps.filter(a => new Date(a.created_at) >= thisMonthStart).length,
+      };
     },
 
     filteredCommunityItems() {

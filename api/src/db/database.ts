@@ -377,6 +377,58 @@ export function initDatabase() {
     // 컬럼이 이미 존재하는 경우 무시
   }
 
+  try {
+    // exemption_applications 테이블에 course_type 컬럼이 없는 경우 추가
+    db.exec(`
+      ALTER TABLE exemption_applications ADD COLUMN course_type VARCHAR(50) DEFAULT 'general';
+    `);
+    console.log('Added course_type column to exemption_applications table');
+  } catch (error) {
+    // 컬럼이 이미 존재하는 경우 무시
+  }
+
+  try {
+    db.exec(`ALTER TABLE exemption_applications ADD COLUMN license VARCHAR(50);`);
+    console.log('Added license column to exemption_applications table');
+  } catch (error) {}
+
+  try {
+    db.exec(`ALTER TABLE exemption_applications ADD COLUMN discount_eligibility VARCHAR(50);`);
+    console.log('Added discount_eligibility column to exemption_applications table');
+  } catch (error) {}
+
+  try {
+    db.exec(`ALTER TABLE exemption_applications ADD COLUMN preferred_dates TEXT;`);
+    console.log('Added preferred_dates column to exemption_applications table');
+  } catch (error) {}
+
+  // education_type 컬럼이 없을 경우 대비 (기존 DB에는 있지만 NOT NULL이므로 기본값 설정)
+  try {
+    db.exec(`ALTER TABLE exemption_applications ADD COLUMN education_type VARCHAR(50) DEFAULT 'general';`);
+    console.log('Added education_type column to exemption_applications table');
+  } catch (error) {}
+
+  // popups 테이블 생성 (없는 경우)
+  try {
+    db.exec(`
+      CREATE TABLE IF NOT EXISTS popups (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        title VARCHAR(255) NOT NULL,
+        content TEXT,
+        image_url TEXT,
+        link_url TEXT,
+        is_active INTEGER DEFAULT 1,
+        display_order INTEGER DEFAULT 0,
+        start_date DATETIME,
+        end_date DATETIME,
+        created_by INTEGER,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (created_by) REFERENCES users(id)
+      );
+    `);
+    console.log('popups table created or already exists');
+  } catch (error) {}
 
   // 초기 스케줄 데이터 생성 (스케줄이 없을 때만)
   try {
