@@ -144,8 +144,17 @@ function formatGender(gender: string): string {
 /**
  * Format course type with checkbox for 크루저/딩기 selection
  */
+/**
+ * Extract sub-course from course_type (e.g., '크루저-초급과정' → '초급과정')
+ */
+function formatSubCourse(courseType: string): string {
+  const idx = courseType.indexOf('-');
+  if (idx !== -1) return courseType.substring(idx + 1);
+  return courseType;
+}
+
 function formatCourseType(courseType: string): string {
-  const isCruiser = courseType.includes('크루저');
+  const isCruiser = courseType.includes('크루저') || courseType.includes('섬간');
   const isDinghy = courseType.includes('딩기');
 
   if (isCruiser) {
@@ -278,6 +287,7 @@ export function generateEducationDocument(data: EducationData): Buffer {
     { table: 0, row: 4, col: 2, text: data.address },
     { table: 0, row: 5, col: 2, text: formatCourseType(data.course_type) },
     { table: 0, row: 5, col: 4, text: formatPreferredDates(data.preferred_date) },
+    { table: 0, row: 6, col: 2, text: formatSubCourse(data.course_type) },
     { table: 0, row: 6, col: 4, text: data.email || '' },
     { table: 0, row: 7, col: 4, text: data.phone },
     { table: 0, row: 8, col: 1, text: formatLicense(data.license) },

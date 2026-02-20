@@ -146,6 +146,17 @@
             </div>
         </div>
 
+        <!-- 보유자격증 -->
+        <div class="form-group">
+            <label class="form-label">보유자격증</label>
+            <select v-model="form.license" class="form-control form-select">
+                <option value="">해당사항 없음</option>
+                <option value="general1">일반조종 1급</option>
+                <option value="general2">일반조종 2급</option>
+                <option value="yacht">요트면허</option>
+            </select>
+        </div>
+
         <!-- 개인정보 동의 -->
         <div class="form-group">
             <label class="checkbox-item privacy-agreement">
@@ -201,6 +212,7 @@ const form = reactive({
     location: '',
     courseType: '',
     subCourse: '',
+    license: '',
     privacyAgreed: false,
 });
 
@@ -270,7 +282,7 @@ const submitApplication = async () => {
             birthDate: form.birthDate,
             gender: form.gender,
             address: form.location,
-            license: '',
+            license: form.license || '',
             courseType: form.subCourse || form.courseType,
             preferredDates: [],
             discountEligibility: '',
@@ -403,6 +415,7 @@ const resetForm = () => {
         location: '',
         courseType: '',
         subCourse: '',
+        license: '',
         privacyAgreed: false,
     });
     errors.value = {};
