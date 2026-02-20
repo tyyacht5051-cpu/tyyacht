@@ -442,9 +442,8 @@
                 </td>
                 <td>{{ formatDate(app.createdAt) }}</td>
                 <td class="actions">
-                  <button @click="viewBoardingApplication(app)" class="view-btn">상세보기</button>
                   <button v-if="app.status === 'confirmed'" @click="downloadBoardingDocument(app)" class="doc-download-btn" title="승선체험 신청서 다운로드">신청서</button>
-                  <button @click="deleteBoardingApplication(app.id)" class="delete-btn">삭제</button>
+                  <button v-if="app.status === 'cancelled'" @click="deleteBoardingApplication(app.id)" class="delete-btn">삭제</button>
                 </td>
               </tr>
             </tbody>
@@ -553,8 +552,7 @@
                     <option value="rejected">거부</option>
                   </select>
                   <button v-if="app.status === 'approved'" @click="downloadEducationDocument(app)" class="doc-download-btn" title="요트교육 신청서 다운로드">신청서</button>
-                  <button @click="viewEducationApplication(app)" class="view-btn">상세보기</button>
-                  <button @click="deleteEducationApplication(app.id)" class="delete-btn">삭제</button>
+                  <button v-if="app.status === 'rejected'" @click="deleteEducationApplication(app.id)" class="delete-btn">삭제</button>
                 </td>
               </tr>
             </tbody>
