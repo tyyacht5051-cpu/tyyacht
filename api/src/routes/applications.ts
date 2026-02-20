@@ -2,6 +2,9 @@ import express from 'express';
 import { db } from '../db/database';
 import { authenticateToken, requireAdmin, optionalAuth, AuthenticatedRequest } from '../middleware/auth';
 import { generateExemptionDocument } from '../utils/exemption-document';
+import { generateBoardingDocument } from '../utils/boarding-document';
+import { generatePracticalDocument } from '../utils/practical-document';
+import { generateEducationDocument } from '../utils/education-document';
 
 const router = express.Router();
 
@@ -116,7 +119,7 @@ const sanitizeString = (str: string): string => {
 };
 
 // 승선체험 신청 제출 (보안 강화)
-router.post('/cruise', authenticateToken, (req: AuthenticatedRequest, res) => {
+router.post('/cruise', optionalAuth, (req: AuthenticatedRequest, res) => {
   try {
     const {
       name,
@@ -153,9 +156,8 @@ router.post('/cruise', authenticateToken, (req: AuthenticatedRequest, res) => {
     const sanitizedName = sanitizeString(name);
     const sanitizedEmail = sanitizeString(email);
     const sanitizedRequests = sanitizeString(special_requests);
-    
     const user_id = req.user ? req.user.id : null;
-    
+
     // 실제 동승자 정보를 기반으로 demographic 데이터 계산
     const {
       experience_type = '크루즈요트',
@@ -314,7 +316,7 @@ router.post('/cruise', authenticateToken, (req: AuthenticatedRequest, res) => {
       infant_male, infant_female, teens_male, teens_female,
       twenties_male, twenties_female, thirties_male, thirties_female,
       forties_male, forties_female, fifties_plus_male, fifties_plus_female,
-      sanitizedRequests
+      JSON.stringify({ text: sanitizedRequests, representative, companions })
     );
     
     console.log('✅ Cruise application submitted:', { id: result.lastInsertRowid, user_id, name: sanitizedName });
@@ -692,10 +694,100 @@ router.get('/exemption/:id/document', authenticateToken, requireAdmin, (req: Aut
   }
 });
 
+// 승선체험 신청서 문서 다운로드 (관리자만)
+router.get('/cruise/:id/document', authenticateToken, requireAdmin, (req: AuthenticatedRequest, res) => {
+  try {
+    const applicationId = parseInt(req.params.id);
+    if (isNaN(applicationId)) {
+      return res.status(400).json({ error: 'Invalid application ID' });
+    }
+
+    const application = db.prepare(`
+      SELECT * FROM cruise_applications WHERE id = ?
+    `).get(applicationId) as any;
+
+    if (!application) {
+      return res.status(404).json({ error: 'Application not found' });
+    }
+
+    // special_requests에 대표자+동승자 정보가 JSON으로 저장됨
+    let companions: any[] = [];
+    let representative: any = {};
+    try {
+      if (application.special_requests) {
+        const parsed = JSON.parse(application.special_requests);
+        if (parsed && typeof parsed === 'object') {
+          companions = parsed.companions || [];
+          representative = parsed.representative || {};
+        }
+      }
+    } catch {
+      // JSON이 아니면 빈 배열
+    }
+
+    const docBuffer = generateBoardingDocument({
+      name: application.name,
+      birth_date: representative.birthDate || '',
+      gender: representative.gender || '',
+      address: `${application.address_do || ''} ${application.address_sigungu || ''}`.trim(),
+      phone: application.phone || '',
+      experience_date: application.experience_date || '',
+      companions: companions,
+      created_at: application.created_at || '',
+    });
+
+    const fileName = encodeURIComponent(`승선체험신청서_${application.name}.docx`);
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
+    res.setHeader('Content-Disposition', `attachment; filename*=UTF-8''${fileName}`);
+    res.send(docBuffer);
+  } catch (error) {
+    console.error('Failed to generate boarding document:', error);
+    res.status(500).json({ error: 'Failed to generate document' });
+  }
+});
+
+// 실기연수 신청서 문서 다운로드 (관리자만) - exemption_applications에서 course_type='practical'
+router.get('/exemption/:id/practical-document', authenticateToken, requireAdmin, (req: AuthenticatedRequest, res) => {
+  try {
+    const applicationId = parseInt(req.params.id);
+    if (isNaN(applicationId)) {
+      return res.status(400).json({ error: 'Invalid application ID' });
+    }
+
+    const application = db.prepare(`
+      SELECT * FROM exemption_applications WHERE id = ?
+    `).get(applicationId) as any;
+
+    if (!application) {
+      return res.status(404).json({ error: 'Application not found' });
+    }
+
+    const docBuffer = generatePracticalDocument({
+      name: application.name,
+      gender: application.gender || '',
+      birth_date: application.birth_date || '',
+      address: application.address || '',
+      preferred_date: application.preferred_date,
+      email: application.email || '',
+      phone: application.phone || '',
+      license: application.license,
+      created_at: application.created_at || '',
+    });
+
+    const fileName = encodeURIComponent(`실기연수신청서_${application.name}.docx`);
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
+    res.setHeader('Content-Disposition', `attachment; filename*=UTF-8''${fileName}`);
+    res.send(docBuffer);
+  } catch (error) {
+    console.error('Failed to generate practical document:', error);
+    res.status(500).json({ error: 'Failed to generate document' });
+  }
+});
+
 // ============= 요트교육 신청 API =============
 
 // 요트교육 신청 제출
-router.post('/education', authenticateToken, (req: AuthenticatedRequest, res) => {
+router.post('/education', optionalAuth, (req: AuthenticatedRequest, res) => {
   try {
     const {
       name,
@@ -712,12 +804,12 @@ router.post('/education', authenticateToken, (req: AuthenticatedRequest, res) =>
       motivation
     } = req.body;
     
-    if (!name || !phone || !email || !birthDate || !gender || !address || !courseType) {
+    if (!name || !phone || !birthDate || !gender || !address || !courseType) {
       return res.status(400).json({ error: 'Required fields are missing' });
     }
-        
+
     const user_id = req.user ? req.user.id : null;
-    
+
     const result = db.prepare(`
       INSERT INTO education_applications (
         user_id, name, phone, email, birth_date, gender, address, 
@@ -887,6 +979,45 @@ router.get('/education/export', authenticateToken, requireAdmin, (req: Authentic
   } catch (error) {
     console.error('Failed to export education applications:', error);
     res.status(500).json({ error: 'Failed to export applications' });
+  }
+});
+
+// 요트교육 신청서 문서 다운로드 (관리자만)
+router.get('/education/:id/document', authenticateToken, requireAdmin, (req: AuthenticatedRequest, res) => {
+  try {
+    const applicationId = parseInt(req.params.id);
+    if (isNaN(applicationId)) {
+      return res.status(400).json({ error: 'Invalid application ID' });
+    }
+
+    const application = db.prepare(`
+      SELECT * FROM education_applications WHERE id = ?
+    `).get(applicationId) as any;
+
+    if (!application) {
+      return res.status(404).json({ error: 'Application not found' });
+    }
+
+    const docBuffer = generateEducationDocument({
+      name: application.name,
+      gender: application.gender || '',
+      birth_date: application.birth_date || '',
+      address: application.address || '',
+      preferred_date: application.preferred_dates,
+      email: application.email || '',
+      phone: application.phone || '',
+      license: application.license,
+      course_type: application.course_type || '',
+      created_at: application.created_at || '',
+    });
+
+    const fileName = encodeURIComponent(`요트교육신청서_${application.name}.docx`);
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
+    res.setHeader('Content-Disposition', `attachment; filename*=UTF-8''${fileName}`);
+    res.send(docBuffer);
+  } catch (error) {
+    console.error('Failed to generate education document:', error);
+    res.status(500).json({ error: 'Failed to generate document' });
   }
 });
 

@@ -206,7 +206,7 @@
                                             required
                                         >
                                             <option value="">선택하세요</option>
-                                            <option v-for="n in 31" :key="n" :value="n">{{ n }}명</option>
+                                            <option v-for="n in 29" :key="n" :value="n">{{ n }}명</option>
                                         </select>
                                         <div v-if="errors.participants" class="form-error">
                                             {{ errors.participants }}
@@ -281,6 +281,37 @@
                                                 </div>
                                             </div>
                                         </div>
+                                        <div class="grid grid-2">
+                                            <div class="form-group">
+                                                <label class="form-label">주소 *</label>
+                                                <input
+                                                    type="text"
+                                                    v-model="companion.address"
+                                                    class="form-control"
+                                                    :class="{ error: errors[`companion_${index}_address`] }"
+                                                    placeholder="주소를 입력하세요"
+                                                    required
+                                                />
+                                                <div v-if="errors[`companion_${index}_address`]" class="form-error">
+                                                    {{ errors[`companion_${index}_address`] }}
+                                                </div>
+                                            </div>
+                                            <div class="form-group">
+                                                <label class="form-label">연락처 *</label>
+                                                <input
+                                                    type="tel"
+                                                    v-model="companion.phone"
+                                                    class="form-control"
+                                                    :class="{ error: errors[`companion_${index}_phone`] }"
+                                                    placeholder="010-1234-5678"
+                                                    maxlength="13"
+                                                    required
+                                                />
+                                                <div v-if="errors[`companion_${index}_phone`]" class="form-error">
+                                                    {{ errors[`companion_${index}_phone`] }}
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
                                     
                                     <div class="add-companion-section">
@@ -328,7 +359,6 @@
                                         type="submit"
                                         class="btn btn-primary"
                                         :disabled="isSubmitting"
-                                        @click="action"
                                     >
                                         <span v-if="isSubmitting" class="loading-spinner"></span>
                                         {{ isSubmitting ? '제출 중...' : '체험 신청' }}
@@ -470,6 +500,12 @@ export default {
                 if (!companion.gender) {
                     this.errors[`companion_${index}_gender`] = '성별을 선택해주세요';
                 }
+                if (!companion.address || !companion.address.trim()) {
+                    this.errors[`companion_${index}_address`] = '주소를 입력해주세요';
+                }
+                if (!companion.phone || !companion.phone.trim()) {
+                    this.errors[`companion_${index}_phone`] = '연락처를 입력해주세요';
+                }
             });
 
             if (!this.form.privacyAgreed) {
@@ -527,6 +563,7 @@ export default {
             this.form = {
                 name: '',
                 birthDate: '',
+                gender: '',
                 phone: '',
                 location: '',
                 programType: '',
@@ -544,7 +581,9 @@ export default {
                 this.form.companions.push({
                     name: '',
                     birthDate: '',
-                    gender: ''
+                    gender: '',
+                    address: '',
+                    phone: ''
                 });
             }
         },
