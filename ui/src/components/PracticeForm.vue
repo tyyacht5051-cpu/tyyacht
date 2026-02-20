@@ -138,7 +138,7 @@ const form = reactive({
     phone: '',
     email: '',
     address: '',
-    courseType: 'practical',
+    courseType: 'exemption',
     privacyAgreed: false,
 });
 
@@ -193,6 +193,11 @@ const validateForm = (): boolean => {
         return false;
     }
 
+    if (!form.gender) {
+        toast.error('성별을 선택해주세요.');
+        return false;
+    }
+
     if (!form.phone.trim()) {
         toast.error('연락처를 입력해주세요.');
         return false;
@@ -201,6 +206,11 @@ const validateForm = (): boolean => {
     const phoneRegex = /^01[016789]-?\d{3,4}-?\d{4}$/;
     if (!phoneRegex.test(form.phone.replace(/-/g, ''))) {
         toast.error('올바른 연락처 형식으로 입력해주세요.');
+        return false;
+    }
+
+    if (!form.address.trim()) {
+        toast.error('주소를 입력해주세요.');
         return false;
     }
 
@@ -230,7 +240,7 @@ const resetForm = () => {
         phone: '',
         email: '',
         address: '',
-        courseType: 'practical',
+        courseType: 'exemption',
         privacyAgreed: false,
     });
     toast.info('폼이 초기화되었습니다.');

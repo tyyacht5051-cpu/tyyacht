@@ -57,7 +57,6 @@
 
       <div class="content-header">
         <h2>등록된 사용자 목록</h2>
-        <button @click="refreshUsers" class="refresh-btn">새로고침</button>
       </div>
       
       <div class="users-table">
@@ -114,7 +113,6 @@
     <div v-if="activeTab === 'logs'" class="admin-content">
       <div class="content-header">
         <h2>로그인 기록</h2>
-        <button @click="refreshLogs" class="refresh-btn">새로고침</button>
       </div>
       
       <div class="logs-display">
@@ -231,9 +229,6 @@
 
       <!-- 면제교육 서브탭 -->
       <div v-if="appSubTab === 'exemption' || appSubTab === 'practical'" class="sub-tab-content">
-        <div class="header-actions" style="margin-bottom: 10px;">
-          <button @click="refreshApplications" class="refresh-btn">새로고침</button>
-        </div>
 
         <div class="applications-filters">
           <div class="filter-group">
@@ -305,7 +300,7 @@
                 <td>{{ formatLicense(app.boat_license_number) }}</td>
                 <td class="course-cell">
                   <span :class="['course-badge', app.education_type]">
-                    {{ app.education_type === 'exemption' ? '면제교육' : app.education_type === 'general' ? '면제교육' : '실기연수' }}
+                    {{ '면제교육' }}
                   </span>
                 </td>
                 <td class="dates-cell">
@@ -334,7 +329,7 @@
                       실기연수
                     </button>
                     <button v-if="app.status === 'approved' && app.course_type !== 'practical'" @click="downloadExemptionDocument(app)" class="doc-download-btn" title="면제교육 신청서 다운로드">
-                      면제교육
+                      신청서
                     </button>
                   </div>
                 </td>
@@ -373,7 +368,6 @@
           <h2>승선 체험 신청서 관리</h2>
           <div class="header-actions">
             <button @click="exportBoardingApplications" class="export-btn">엑셀 다운로드</button>
-            <button @click="refreshBoardingApplications" class="refresh-btn">새로고침</button>
           </div>
         </div>
 
@@ -481,7 +475,6 @@
           <h2>요트교육 신청자 관리</h2>
           <div class="header-actions">
             <button @click="exportEducationApplications" class="export-btn">엑셀 다운로드</button>
-            <button @click="refreshEducationApplications" class="refresh-btn">새로고침</button>
           </div>
         </div>
 
@@ -580,7 +573,6 @@
       <div class="content-header">
         <h2>공지사항 관리</h2>
         <div class="header-actions">
-          <button @click="refreshNotices" class="refresh-btn">새로고침</button>
         </div>
       </div>
       
@@ -695,7 +687,6 @@
       <div class="content-header">
         <h2>커뮤니티 관리</h2>
         <div class="header-actions">
-          <button @click="refreshCommunity" class="refresh-btn">새로고침</button>
         </div>
       </div>
       
@@ -801,7 +792,6 @@
           <button @click="showPopupForm = true; editingPopup = null; resetPopupForm()" class="create-btn">
             + 새 팝업 생성
           </button>
-          <button @click="loadPopups" class="refresh-btn">새로고침</button>
         </div>
       </div>
 
