@@ -312,7 +312,7 @@
                     {{ formatShortDate(date) }}
                   </div>
                 </td>
-                <td>{{ formatDiscount(app.special_requests) }}</td>
+                <td>{{ formatDiscount(app.discountEligibility) }}</td>
                 <td>
                   <span :class="['status-badge', app.status]">
                     {{ getStatusLabel(app.status) }}
@@ -2444,7 +2444,7 @@ export default {
       const discountMap = {
         'tongyeong': '통영시민할인 20%',
         'partner': '협력단체 20%',
-        'disabled': '장애인할인 20%'
+        'disabled': '장애인할인 50%'
       };
       return discountMap[discount] || discount;
     },
