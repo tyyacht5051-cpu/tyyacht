@@ -301,7 +301,7 @@
                 <td>{{ app.email }}</td>
                 <td>{{ formatDate(app.birth_date) }}</td>
                 <td class="address-cell">{{ app.address }}</td>
-                <td>{{ formatLicense(app.boat_license_number) }}</td>
+                <td>{{ formatLicense(app.license) }}</td>
                 <td class="course-cell">
                   <span :class="['course-badge', app.education_type]">
                     {{ '면제교육' }}
@@ -312,7 +312,7 @@
                     {{ formatShortDate(date) }}
                   </div>
                 </td>
-                <td>{{ formatDiscount(app.discountEligibility) }}</td>
+                <td>{{ formatDiscount(app.discount_eligibility) }}</td>
                 <td>
                   <span :class="['status-badge', app.status]">
                     {{ getStatusLabel(app.status) }}
