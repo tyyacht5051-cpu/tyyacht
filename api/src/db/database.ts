@@ -483,16 +483,9 @@ export function initDatabase() {
     END;
   `);
 
-  // 크루모집게시판 테이블 - 기존 테이블 삭제 후 재생성
-  try {
-    db.exec('DROP TABLE IF EXISTS crew_recruitments;');
-    console.log('Dropped existing crew_recruitments table');
-  } catch (error) {
-    console.log('No existing crew_recruitments table to drop');
-  }
-
+  // 크루모집게시판 테이블
   db.exec(`
-    CREATE TABLE crew_recruitments (
+    CREATE TABLE IF NOT EXISTS crew_recruitments (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       title VARCHAR(255) NOT NULL,
       content TEXT NOT NULL,
@@ -514,7 +507,7 @@ export function initDatabase() {
       FOREIGN KEY (author_id) REFERENCES users(id)
     );
 
-    CREATE TRIGGER update_crew_recruitments_updated_at
+    CREATE TRIGGER IF NOT EXISTS update_crew_recruitments_updated_at
     AFTER UPDATE ON crew_recruitments
     BEGIN
       UPDATE crew_recruitments SET updated_at = CURRENT_TIMESTAMP WHERE id = NEW.id;
@@ -523,8 +516,7 @@ export function initDatabase() {
 
   // 크루 참가 신청 테이블
   db.exec(`
-    DROP TABLE IF EXISTS crew_applications;
-    CREATE TABLE crew_applications (
+    CREATE TABLE IF NOT EXISTS crew_applications (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       recruitment_id INTEGER NOT NULL,
       applicant_name VARCHAR(100) NOT NULL,
