@@ -4,8 +4,8 @@ import { config } from '../config/env';
 import { ensureDirectory } from '../utils/fileSystem';
 import { runMigrations } from './migrations';
 
-// 데이터베이스 경로 설정 (config에서 가져옴)
-const dbPath = path.resolve(config.DATABASE_PATH);
+// 데이터베이스 경로 설정 (':memory:'는 인메모리 DB로 처리)
+const dbPath = config.DATABASE_PATH === ':memory:' ? ':memory:' : path.resolve(config.DATABASE_PATH);
 console.log(`💾 Database path: ${dbPath}`);
 
 // 데이터베이스 디렉토리 생성

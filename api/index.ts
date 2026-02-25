@@ -1,67 +1,5 @@
-import express from 'express';
-import cors from 'cors';
-import cookieParser from 'cookie-parser';
-import path from 'path';
-import { initDatabase } from './src/db/database';
+import app from './app';
 import { config } from './src/config/env';
-import { globalErrorHandler, notFoundHandler } from './src/middleware/errorHandler';
-import { generalLimiter } from './src/middleware/rateLimiter';
-import { initializeUploadDirectories } from './src/utils/fileSystem';
-import homeRoutes from './src/routes/home';
-import authRoutes from './src/routes/auth';
-import adminRoutes from './src/routes/admin';
-import noticesRoutes from './src/routes/notices';
-import photosRoutes from './src/routes/photos';
-import videosRoutes from './src/routes/videos';
-import applicationsRoutes from './src/routes/applications';
-import schedulesRoutes from './src/routes/schedules';
-import reviewsRoutes from './src/routes/reviews';
-import crewsRoutes from './src/routes/crews';
-import excelRoutes from './src/routes/excel';
-import popupsRoutes from './src/routes/popups';
-
-const app = express();
-
-  app.use(
-cors({
-      credentials: true,
-      origin: config.ALLOWED_ORIGINS,
-  })
-  );
-
-  // Trust proxy (nginx 리버스 프록시 사용)
-  app.set('trust proxy', 1);
-
-app.use(express.json());
-app.use(cookieParser());
-
-// 전역 Rate Limiting 적용 (모든 API 요청에 대해)
-app.use('/api', generalLimiter);
-
-// 정적 파일 서비스 (업로드된 파일들)
-app.use('/api/uploads', express.static(path.join(process.cwd(), config.UPLOAD_PATH)));
-
-// 업로드 디렉토리 초기화
-initializeUploadDirectories();
-
-initDatabase();
-
-app.use('/api/home', homeRoutes);
-app.use('/api/auth', authRoutes);
-app.use('/api/admin', adminRoutes);
-app.use('/api/notices', noticesRoutes);
-app.use('/api/photos', photosRoutes);
-app.use('/api/videos', videosRoutes);
-app.use('/api/applications', applicationsRoutes);
-app.use('/api/schedules', schedulesRoutes);
-app.use('/api/reviews', reviewsRoutes);
-app.use('/api/crews', crewsRoutes);
-app.use('/api/excel', excelRoutes);
-app.use('/api/popups', popupsRoutes);
-
-app.get('/', (_req: express.Request, res: express.Response) => {
-    res.send('Yacht School API Running...');
-});
 
 // 캘린더 이벤트 API (임시)
 app.get('/api/calendar', (_req: any, res: any) => {
@@ -125,12 +63,6 @@ app.get('/api/company-info', (_req: any, res: any) => {
         hours: '평일 09:00 - 18:00',
     });
 });
-
-// 404 에러 핸들러 (모든 라우트 이후에 배치)
-app.use(notFoundHandler);
-
-// 글로벌 에러 핸들러 (가장 마지막에 배치)
-app.use(globalErrorHandler);
 
 app.listen(config.PORT, () => {
     console.log(`✅ API Server is ready and listening on port ${config.PORT}`);
