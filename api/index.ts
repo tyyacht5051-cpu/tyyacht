@@ -2,7 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import path from 'path';
-import { initDatabase, db } from './src/db/database';
+import { initDatabase } from './src/db/database';
 import { config } from './src/config/env';
 import { globalErrorHandler, notFoundHandler } from './src/middleware/errorHandler';
 import { generalLimiter } from './src/middleware/rateLimiter';
@@ -124,31 +124,6 @@ app.get('/api/company-info', (_req: any, res: any) => {
         services: ['요트면허교육', '체험프로그램', '클럽운영'],
         hours: '평일 09:00 - 18:00',
     });
-});
-
-// 헬스체크 엔드포인트
-app.get('/api/health', (_req: express.Request, res: express.Response) => {
-    try {
-        db.prepare('SELECT 1').get();
-        const mem = process.memoryUsage();
-        res.json({
-            status: 'ok',
-            timestamp: new Date().toISOString(),
-            uptime: Math.floor(process.uptime()),
-            db: 'connected',
-            memory: {
-                used: Math.round(mem.heapUsed / 1024 / 1024) + 'MB',
-                total: Math.round(mem.heapTotal / 1024 / 1024) + 'MB'
-            }
-        });
-    } catch (error) {
-        res.status(503).json({
-            status: 'error',
-            timestamp: new Date().toISOString(),
-            uptime: Math.floor(process.uptime()),
-            db: 'disconnected'
-        });
-    }
 });
 
 // 404 에러 핸들러 (모든 라우트 이후에 배치)
