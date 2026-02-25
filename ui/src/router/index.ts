@@ -261,26 +261,16 @@ const router = createRouter({
 
 // 인증 상태 확인 함수
 function checkAuthStatus(): { isAuthenticated: boolean; isAdmin: boolean; user: any | null } {
-  console.log('🔍 checkAuthStatus() called')
   try {
-    // localStorage에서 토큰과 사용자 정보 확인
     const token = localStorage.getItem('token')
     const userStr = localStorage.getItem('user')
-    
-    console.log('🔍 checkAuthStatus localStorage:', {
-      hasToken: !!token,
-      hasUserStr: !!userStr,
-      tokenPreview: token ? token.substring(0, 20) + '...' : 'null'
-    })
-    
+
     if (!token || !userStr) {
-      console.log('❌ checkAuthStatus: Missing token or user data')
       return { isAuthenticated: false, isAdmin: false, user: null }
     }
 
     // 기본적인 토큰 형식 검증 (JWT 형태인지 확인)
     if (!token.includes('.')) {
-      console.log('❌ checkAuthStatus: Invalid token format')
       localStorage.removeItem('token')
       localStorage.removeItem('user')
       return { isAuthenticated: false, isAdmin: false, user: null }
@@ -290,13 +280,11 @@ function checkAuthStatus(): { isAuthenticated: boolean; isAdmin: boolean; user: 
     try {
       const payload = JSON.parse(atob(token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')))
       if (payload.exp && payload.exp * 1000 < Date.now()) {
-        console.log('❌ checkAuthStatus: Token expired')
         localStorage.removeItem('token')
         localStorage.removeItem('user')
         return { isAuthenticated: false, isAdmin: false, user: null }
       }
     } catch {
-      console.log('❌ checkAuthStatus: Failed to decode token payload')
       localStorage.removeItem('token')
       localStorage.removeItem('user')
       return { isAuthenticated: false, isAdmin: false, user: null }
@@ -306,9 +294,8 @@ function checkAuthStatus(): { isAuthenticated: boolean; isAdmin: boolean; user: 
     let user: any = null
     try {
       user = JSON.parse(userStr)
-      console.log('✅ checkAuthStatus: User data parsed:', { username: user?.username, role: user?.role })
     } catch (parseError) {
-      console.error('❌ checkAuthStatus: Failed to parse user data:', parseError)
+      console.error('Failed to parse user data:', parseError)
       localStorage.removeItem('token')
       localStorage.removeItem('user')
       return { isAuthenticated: false, isAdmin: false, user: null }
@@ -316,7 +303,6 @@ function checkAuthStatus(): { isAuthenticated: boolean; isAdmin: boolean; user: 
 
     // 사용자 객체 기본 검증
     if (!user || !user.username || !user.id) {
-      console.log('❌ checkAuthStatus: Invalid user object')
       localStorage.removeItem('token')
       localStorage.removeItem('user')
       return { isAuthenticated: false, isAdmin: false, user: null }
@@ -327,81 +313,41 @@ function checkAuthStatus(): { isAuthenticated: boolean; isAdmin: boolean; user: 
       authStore.state.token = token as any
       authStore.state.user = user
       authStore.state.isAuthenticated = true
-      console.log('🔄 checkAuthStatus: AuthStore synchronized')
     }
 
-    const result = {
+    return {
       isAuthenticated: true,
       isAdmin: user?.role === 'admin' || user?.role === 'super_admin',
       user
     }
-    
-    console.log('✅ checkAuthStatus result:', result)
-    return result
   } catch (error) {
-    console.error('💥 checkAuthStatus failed:', error)
+    console.error('checkAuthStatus failed:', error)
     return { isAuthenticated: false, isAdmin: false, user: null }
   }
 }
 
 // 라우터 가드 설정
 router.beforeEach((to, _from, next) => {
-  console.log(`🔄 Router Guard: Navigating to ${to.path}`)
-  
-  // localStorage 직접 확인
-  const token = localStorage.getItem('token')
-  const userStr = localStorage.getItem('user')
-  
-  console.log('📦 localStorage check:', {
-    hasToken: !!token,
-    hasUser: !!userStr,
-    tokenLength: token?.length || 0
-  })
+  const { isAuthenticated, isAdmin } = checkAuthStatus()
 
-  // 인증 상태 확인
-  const { isAuthenticated, isAdmin, user } = checkAuthStatus()
-  
-  // authStore 상태도 확인
-  console.log('🏪 AuthStore state:', {
-    storeAuthenticated: authStore.state?.isAuthenticated,
-    storeUser: (authStore.state?.user as any)?.username,
-    storeToken: !!authStore.state?.token
-  })
-  
-  // 라우트 메타 정보 확인
   const requiresAuth = to.matched.some(record => record.meta?.requiresAuth)
   const requiresAdmin = to.matched.some(record => record.meta?.requiresAdmin)
 
-  console.log('🔐 Router Auth Check:', {
-    path: to.path,
-    requiresAuth,
-    requiresAdmin,
-    isAuthenticated,
-    isAdmin,
-    user: user?.username || 'none'
-  })
-
-  // 권한 검사
   if (requiresAuth && !isAuthenticated) {
-    console.log('❌ REDIRECT: Authentication required but not authenticated')
     next('/login')
     return
   }
 
   if (requiresAdmin && !isAdmin) {
-    console.log('❌ REDIRECT: Admin required but not admin')
     next('/')
     return
   }
 
-  // 이미 로그인한 사용자가 로그인 페이지에 접근하는 경우
   if (to.path === '/login' && isAuthenticated) {
-    console.log('↩️ REDIRECT: Already authenticated, going to home')
     next('/')
     return
   }
 
-  console.log('✅ ACCESS GRANTED to:', to.path)
   next()
 })
 

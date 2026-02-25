@@ -210,7 +210,6 @@ export default {
         this.reviews = [];
     },
     async mounted() {
-        console.log('Home 컴포넌트 마운트됨');
         await this.loadData();
         await this.loadPopups(); // 팝업 로드
 
