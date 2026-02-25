@@ -96,7 +96,7 @@
               </div>
               <div class="detail-item">
                 <label>교육과정:</label>
-                <span>{{ app.education_type === 'general' ? '면제교육' : '실기연수' }}</span>
+                <span>{{ app.education_type === 'practical' ? '실기연수' : '면제교육' }}</span>
               </div>
               <div class="detail-item">
                 <label>희망날짜:</label>
