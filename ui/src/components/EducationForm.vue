@@ -302,7 +302,9 @@ const submitApplication = async () => {
     } catch (error: any) {
         console.error('Education application error:', error);
 
-        if (error.response?.status === 400) {
+        if (error.response?.status === 401) {
+            toast.error('비회원은 신청이 불가합니다. 회원가입 후 시도해주세요.', '로그인 필요');
+        } else if (error.response?.status === 400) {
             const errorMessage = error.response.data?.error || '입력 정보를 확인해주세요.';
             toast.error(errorMessage, '입력 오류');
         } else if (error.response?.status === 500) {

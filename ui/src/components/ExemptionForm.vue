@@ -310,8 +310,12 @@ const submitForm = async () => {
             );
             resetForm();
         }
-    } catch (error) {
-        toast.error('신청 중 오류가 발생했습니다. 다시 시도해주세요.', '신청 오류');
+    } catch (error: any) {
+        if (error.response?.status === 401) {
+            toast.error('비회원은 신청이 불가합니다. 회원가입 후 시도해주세요.', '로그인 필요');
+        } else {
+            toast.error('신청 중 오류가 발생했습니다. 다시 시도해주세요.', '신청 오류');
+        }
     } finally {
         isSubmitting.value = false;
     }
