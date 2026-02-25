@@ -2,6 +2,7 @@ import Database from 'better-sqlite3';
 import path from 'path';
 import { config } from '../config/env';
 import { ensureDirectory } from '../utils/fileSystem';
+import { runMigrations } from './migrations';
 
 // 데이터베이스 경로 설정 (config에서 가져옴)
 const dbPath = path.resolve(config.DATABASE_PATH);
@@ -189,46 +190,6 @@ export function initDatabase() {
     PRAGMA table_info(cruise_applications);
   `);
 
-  // 새 컬럼들을 추가하는 ALTER TABLE 명령들
-  const newColumns = [
-    'ALTER TABLE cruise_applications ADD COLUMN experience_type VARCHAR(50) DEFAULT \'크루즈요트\'',
-    'ALTER TABLE cruise_applications ADD COLUMN desired_date DATE',
-    'ALTER TABLE cruise_applications ADD COLUMN address_do VARCHAR(50)',
-    'ALTER TABLE cruise_applications ADD COLUMN address_sigungu VARCHAR(50)',
-    'ALTER TABLE cruise_applications ADD COLUMN adult_male INTEGER DEFAULT 0',
-    'ALTER TABLE cruise_applications ADD COLUMN adult_female INTEGER DEFAULT 0',
-    'ALTER TABLE cruise_applications ADD COLUMN adult_total INTEGER DEFAULT 0',
-    'ALTER TABLE cruise_applications ADD COLUMN youth_male INTEGER DEFAULT 0',
-    'ALTER TABLE cruise_applications ADD COLUMN youth_female INTEGER DEFAULT 0',
-    'ALTER TABLE cruise_applications ADD COLUMN youth_total INTEGER DEFAULT 0',
-    'ALTER TABLE cruise_applications ADD COLUMN total_participants INTEGER DEFAULT 0',
-    // 세분화된 연령대별 성별 필드
-    'ALTER TABLE cruise_applications ADD COLUMN infant_male INTEGER DEFAULT 0',
-    'ALTER TABLE cruise_applications ADD COLUMN infant_female INTEGER DEFAULT 0',
-    'ALTER TABLE cruise_applications ADD COLUMN teens_male INTEGER DEFAULT 0',
-    'ALTER TABLE cruise_applications ADD COLUMN teens_female INTEGER DEFAULT 0',
-    'ALTER TABLE cruise_applications ADD COLUMN twenties_male INTEGER DEFAULT 0',
-    'ALTER TABLE cruise_applications ADD COLUMN twenties_female INTEGER DEFAULT 0',
-    'ALTER TABLE cruise_applications ADD COLUMN thirties_male INTEGER DEFAULT 0',
-    'ALTER TABLE cruise_applications ADD COLUMN thirties_female INTEGER DEFAULT 0',
-    'ALTER TABLE cruise_applications ADD COLUMN forties_male INTEGER DEFAULT 0',
-    'ALTER TABLE cruise_applications ADD COLUMN forties_female INTEGER DEFAULT 0',
-    'ALTER TABLE cruise_applications ADD COLUMN fifties_plus_male INTEGER DEFAULT 0',
-    'ALTER TABLE cruise_applications ADD COLUMN fifties_plus_female INTEGER DEFAULT 0'
-  ];
-
-  // 각 컬럼을 안전하게 추가
-  for (const alterQuery of newColumns) {
-    try {
-      db.exec(alterQuery);
-    } catch (error: any) {
-      // 컬럼이 이미 존재하는 경우는 무시
-      if (!error.message.includes('duplicate column name')) {
-        console.warn('Error adding column:', error.message);
-      }
-    }
-  }
-
   db.exec(`
 
     -- 면제교육 신청 테이블
@@ -336,99 +297,8 @@ export function initDatabase() {
     }
   }
   
-  // 기존 테이블에 누락된 컬럼이 있는지 확인하고 추가
-  try {
-    // notices 테이블에 published 컬럼이 없는 경우 추가
-    db.exec(`
-      ALTER TABLE notices ADD COLUMN published BOOLEAN DEFAULT 1;
-    `);
-    console.log('Added published column to notices table');
-  } catch (error) {
-    // 컬럼이 이미 존재하는 경우 무시
-  }
-
-  try {
-    // exemption_applications 테이블에 gender 컬럼이 없는 경우 추가
-    db.exec(`
-      ALTER TABLE exemption_applications ADD COLUMN gender VARCHAR(10);
-    `);
-    console.log('Added gender column to exemption_applications table');
-  } catch (error) {
-    // 컬럼이 이미 존재하는 경우 무시
-  }
-
-  try {
-    // exemption_schedules 테이블에 is_closed 컬럼이 없는 경우 추가
-    db.exec(`
-      ALTER TABLE exemption_schedules ADD COLUMN is_closed BOOLEAN DEFAULT 0;
-    `);
-    console.log('Added is_closed column to exemption_schedules table');
-  } catch (error) {
-    // 컬럼이 이미 존재하는 경우 무시
-  }
-
-  try {
-    // exemption_applications 테이블에 preferred_date 컬럼이 없는 경우 추가
-    db.exec(`
-      ALTER TABLE exemption_applications ADD COLUMN preferred_date TEXT;
-    `);
-    console.log('Added preferred_date column to exemption_applications table');
-  } catch (error) {
-    // 컬럼이 이미 존재하는 경우 무시
-  }
-
-  try {
-    // exemption_applications 테이블에 course_type 컬럼이 없는 경우 추가
-    db.exec(`
-      ALTER TABLE exemption_applications ADD COLUMN course_type VARCHAR(50) DEFAULT 'general';
-    `);
-    console.log('Added course_type column to exemption_applications table');
-  } catch (error) {
-    // 컬럼이 이미 존재하는 경우 무시
-  }
-
-  try {
-    db.exec(`ALTER TABLE exemption_applications ADD COLUMN license VARCHAR(50);`);
-    console.log('Added license column to exemption_applications table');
-  } catch (error) {}
-
-  try {
-    db.exec(`ALTER TABLE exemption_applications ADD COLUMN discount_eligibility VARCHAR(50);`);
-    console.log('Added discount_eligibility column to exemption_applications table');
-  } catch (error) {}
-
-  try {
-    db.exec(`ALTER TABLE exemption_applications ADD COLUMN preferred_dates TEXT;`);
-    console.log('Added preferred_dates column to exemption_applications table');
-  } catch (error) {}
-
-  // education_type 컬럼이 없을 경우 대비 (기존 DB에는 있지만 NOT NULL이므로 기본값 설정)
-  try {
-    db.exec(`ALTER TABLE exemption_applications ADD COLUMN education_type VARCHAR(50) DEFAULT 'general';`);
-    console.log('Added education_type column to exemption_applications table');
-  } catch (error) {}
-
-  // popups 테이블 생성 (없는 경우)
-  try {
-    db.exec(`
-      CREATE TABLE IF NOT EXISTS popups (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        title VARCHAR(255) NOT NULL,
-        content TEXT,
-        image_url TEXT,
-        link_url TEXT,
-        is_active INTEGER DEFAULT 1,
-        display_order INTEGER DEFAULT 0,
-        start_date DATETIME,
-        end_date DATETIME,
-        created_by INTEGER,
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-        FOREIGN KEY (created_by) REFERENCES users(id)
-      );
-    `);
-    console.log('popups table created or already exists');
-  } catch (error) {}
+  // 마이그레이션 실행 (스키마 변경 이력 관리)
+  runMigrations();
 
   // 초기 스케줄 데이터 생성 (스케줄이 없을 때만)
   try {
