@@ -26,6 +26,7 @@ jobs:
             echo "=== API 빌드 ==="
             cd api
             npm install --production=false
+            npm rebuild better-sqlite3
             npm run build
             pm2 restart test-tyyacht-api
 
