@@ -75,22 +75,26 @@ const routes: RouteRecordRaw[] = [
   {
     path: '/experience-apply',
     name: 'ExperienceApply',
-    component: () => import('../pages/ExperienceApply.vue')
+    component: () => import('../pages/ExperienceApply.vue'),
+    meta: { requiresAuth: true }
   },
   {
     path: '/exemption-apply',
     name: 'ExemptionApply',
-    component: () => import('../pages/ExemptionApply.vue')
+    component: () => import('../pages/ExemptionApply.vue'),
+    meta: { requiresAuth: true }
   },
   {
     path: '/practice-apply',
     name: 'PracticeApply',
-    component: () => import('../pages/PracticeApply.vue')
+    component: () => import('../pages/PracticeApply.vue'),
+    meta: { requiresAuth: true }
   },
   {
     path: '/education-apply',
     name: 'EducationApply',
-    component: () => import('../pages/EducationApply.vue')
+    component: () => import('../pages/EducationApply.vue'),
+    meta: { requiresAuth: true }
   },
   {
     path: '/community/photo-gallery',

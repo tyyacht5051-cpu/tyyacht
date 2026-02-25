@@ -118,8 +118,8 @@ const sanitizeString = (str: string): string => {
   return str.trim().replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '');
 };
 
-// 승선체험 신청 제출 (보안 강화)
-router.post('/cruise', optionalAuth, (req: AuthenticatedRequest, res) => {
+// 승선체험 신청 제출 (로그인 필수)
+router.post('/cruise', authenticateToken, (req: AuthenticatedRequest, res) => {
   try {
     const {
       name,
@@ -433,8 +433,8 @@ router.get('/cruise/export', authenticateToken, requireAdmin, (req: Authenticate
 
 // ============= 면제교육 신청 API =============
 
-// 면제교육 신청 제출 (비로그인도 가능)
-router.post('/exemption', optionalAuth, (req: AuthenticatedRequest, res) => {
+// 면제교육 신청 제출 (로그인 필수)
+router.post('/exemption', authenticateToken, (req: AuthenticatedRequest, res) => {
   try {
     const {
       name,
@@ -806,8 +806,8 @@ router.get('/exemption/:id/practical-document', authenticateToken, requireAdmin,
 
 // ============= 요트교육 신청 API =============
 
-// 요트교육 신청 제출
-router.post('/education', optionalAuth, (req: AuthenticatedRequest, res) => {
+// 요트교육 신청 제출 (로그인 필수)
+router.post('/education', authenticateToken, (req: AuthenticatedRequest, res) => {
   try {
     const {
       name,
