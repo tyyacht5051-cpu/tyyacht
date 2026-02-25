@@ -287,6 +287,7 @@
                 <th>희망일자</th>
                 <th>할인혜택</th>
                 <th>상태</th>
+                <th>입금확인</th>
                 <th>관리</th>
               </tr>
             </thead>
@@ -299,7 +300,7 @@
                 </td>
                 <td>{{ app.phone }}</td>
                 <td>{{ app.email }}</td>
-                <td>{{ formatDate(app.birth_date) }}</td>
+                <td>{{ formatDateOnly(app.birth_date) }}</td>
                 <td class="address-cell">{{ app.address }}</td>
                 <td>{{ formatLicense(app.license) }}</td>
                 <td class="course-cell">
@@ -317,6 +318,12 @@
                   <span :class="['status-badge', app.status]">
                     {{ getStatusLabel(app.status) }}
                   </span>
+                </td>
+                <td>
+                  <button v-if="app.payment_status !== 'confirmed'"
+                    @click="updatePaymentStatus(app, 'exemption')"
+                    class="payment-btn">입금확인</button>
+                  <span v-else class="payment-confirmed">입금완료</span>
                 </td>
                 <td class="actions-cell">
                   <div class="actions-group">
@@ -516,6 +523,7 @@
                 <th>소재지</th>
                 <th>교육과정</th>
                 <th>상태</th>
+                <th>입금확인</th>
                 <th>관리</th>
               </tr>
             </thead>
@@ -528,7 +536,7 @@
                 </td>
                 <td>{{ app.phone }}</td>
                 <td>{{ app.email }}</td>
-                <td>{{ formatDate(app.birthDate) }}</td>
+                <td>{{ formatDateOnly(app.birthDate) }}</td>
                 <td>{{ formatGender(app.gender) }}</td>
                 <td class="address-cell">{{ app.address }}</td>
                 <td class="course-cell">
@@ -540,6 +548,12 @@
                   <span :class="['status-badge', app.status]">
                     {{ getStatusLabel(app.status) }}
                   </span>
+                </td>
+                <td>
+                  <button v-if="app.payment_status !== 'confirmed'"
+                    @click="updatePaymentStatus(app, 'education')"
+                    class="payment-btn">입금확인</button>
+                  <span v-else class="payment-confirmed">입금완료</span>
                 </td>
                 <td class="actions-cell">
                   <select
@@ -2172,6 +2186,13 @@ export default {
       return new Date(dateString).toLocaleString('ko-KR');
     },
 
+    formatDateOnly(dateString) {
+      if (!dateString) return '-';
+      const match = String(dateString).match(/^(\d{4})-(\d{2})-(\d{2})/);
+      if (match) return `${match[1]}. ${parseInt(match[2])}. ${parseInt(match[3])}.`;
+      return dateString;
+    },
+
     // 스케줄 관리 메서드들
     async loadSchedules() {
       try {
@@ -2330,6 +2351,19 @@ export default {
       } catch (error) {
         console.error('Failed to update application status:', error);
         this.toast.error('상태 변경에 실패했습니다.');
+      }
+    },
+
+    async updatePaymentStatus(app, type) {
+      try {
+        await axios.patch(`${API_BASE_URL}/api/applications/${type}/${app.id}/payment`, {
+          payment_status: 'confirmed'
+        });
+        app.payment_status = 'confirmed';
+        this.toast.success('입금이 확인되었습니다.', '입금확인');
+      } catch (error) {
+        console.error('Failed to update payment status:', error);
+        this.toast.error('입금 확인에 실패했습니다.');
       }
     },
 
@@ -4576,6 +4610,26 @@ ${item.content ? `내용: ${item.content.substring(0, 100)}...` : ''}
 
 .delete-btn:hover {
   background: #c82333;
+}
+
+.payment-btn {
+  background: #007bff;
+  color: white;
+  border: none;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+
+.payment-btn:hover {
+  background: #0056b3;
+}
+
+.payment-confirmed {
+  color: #155724;
+  font-weight: 600;
+  font-size: 0.85rem;
 }
 
 .toggle-btn {

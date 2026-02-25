@@ -577,6 +577,19 @@ router.patch('/exemption/:id/status', authenticateToken, requireAdmin, (req: Aut
   }
 });
 
+// 면제교육 입금확인 (admin only)
+router.patch('/exemption/:id/payment', authenticateToken, requireAdmin, (req: AuthenticatedRequest, res) => {
+  const { payment_status } = req.body;
+  if (!['pending', 'confirmed'].includes(payment_status)) {
+    return res.status(400).json({ error: 'Invalid payment_status' });
+  }
+  const result = db.prepare(
+    `UPDATE exemption_applications SET payment_status = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?`
+  ).run(payment_status, parseInt(req.params.id));
+  if (result.changes === 0) return res.status(404).json({ error: 'Not found' });
+  res.json({ message: 'Payment status updated' });
+});
+
 // 면제교육/실기연수 신청 삭제 (관리자만)
 router.delete('/exemption/:id', authenticateToken, requireAdmin, (req: AuthenticatedRequest, res) => {
   try {
@@ -936,6 +949,19 @@ router.patch('/education/:id/status', authenticateToken, requireAdmin, (req: Aut
     console.error('Failed to update education application status:', error);
     res.status(500).json({ error: 'Failed to update status' });
   }
+});
+
+// 요트교육 입금확인 (admin only)
+router.patch('/education/:id/payment', authenticateToken, requireAdmin, (req: AuthenticatedRequest, res) => {
+  const { payment_status } = req.body;
+  if (!['pending', 'confirmed'].includes(payment_status)) {
+    return res.status(400).json({ error: 'Invalid payment_status' });
+  }
+  const result = db.prepare(
+    `UPDATE education_applications SET payment_status = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?`
+  ).run(payment_status, parseInt(req.params.id));
+  if (result.changes === 0) return res.status(404).json({ error: 'Not found' });
+  res.json({ message: 'Payment status updated' });
 });
 
 // 요트교육 신청 삭제 (관리자만)

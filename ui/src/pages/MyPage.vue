@@ -82,7 +82,12 @@
           <div v-for="app in exemptionApplications" :key="app.id" class="application-item">
             <div class="app-header">
               <h3>면제교육 신청</h3>
-              <span :class="['status-badge', app.status]">{{ getStatusLabel(app.status) }}</span>
+              <div class="badge-group">
+                <span :class="['status-badge', app.status]">{{ getStatusLabel(app.status) }}</span>
+                <span :class="['payment-badge', app.payment_status || 'pending']">
+                  {{ app.payment_status === 'confirmed' ? '입금완료' : '입금확인 대기중' }}
+                </span>
+              </div>
             </div>
             <div class="app-details">
               <div class="detail-item">
@@ -97,6 +102,10 @@
                 <label>희망날짜:</label>
                 <span>{{ formatPreferredDates(app.preferred_date) }}</span>
               </div>
+            </div>
+            <div v-if="app.status === 'approved' && app.payment_status === 'confirmed'"
+              class="completion-message">
+              모든 절차가 완료 되었습니다.
             </div>
           </div>
         </div>
@@ -528,6 +537,41 @@ export default {
 .status-badge.rejected {
   background: #f8d7da;
   color: #721c24;
+}
+
+.badge-group {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.payment-badge {
+  padding: 0.25rem 0.75rem;
+  border-radius: 12px;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.payment-badge.pending {
+  background: #fff3cd;
+  color: #856404;
+}
+
+.payment-badge.confirmed {
+  background: #d4edda;
+  color: #155724;
+}
+
+.completion-message {
+  margin-top: 1rem;
+  padding: 0.75rem;
+  background: #d4edda;
+  border: 1px solid #c3e6cb;
+  border-radius: 6px;
+  color: #155724;
+  font-weight: bold;
+  text-align: center;
 }
 
 .app-details {

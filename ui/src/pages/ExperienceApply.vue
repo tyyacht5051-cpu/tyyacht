@@ -551,7 +551,7 @@ export default {
                     this.toast.celebrate(response.data.message || '체험 프로그램 신청이 성공적으로 접수되었습니다!');
                     this.$router.push('/');
                 }
-            } catch (error: any) {
+            } catch (error) {
                 console.error('신청 중 오류:', error);
                 if (error.response?.status === 401) {
                     this.toast.error('비회원은 신청이 불가합니다. 회원가입 후 시도해주세요.');

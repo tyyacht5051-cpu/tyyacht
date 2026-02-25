@@ -104,6 +104,21 @@ const migrations: Migration[] = [
       `);
     },
   },
+  {
+    id: 6,
+    name: 'add_payment_status',
+    up: () => {
+      const columns = [
+        `ALTER TABLE exemption_applications ADD COLUMN payment_status VARCHAR(20) DEFAULT 'pending'`,
+        `ALTER TABLE education_applications ADD COLUMN payment_status VARCHAR(20) DEFAULT 'pending'`,
+      ];
+      for (const sql of columns) {
+        try { db.exec(sql); } catch (e: any) {
+          if (!e.message.includes('duplicate column name')) throw e;
+        }
+      }
+    },
+  },
 ];
 
 export function runMigrations() {
