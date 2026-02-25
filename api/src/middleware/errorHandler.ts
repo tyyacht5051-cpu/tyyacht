@@ -30,10 +30,8 @@ function logError(error: AppError, req: Request) {
 
   console.error(logMessage);
 
-  // 운영 환경에서는 추가적인 로깅 시스템으로 전송 가능
-  if (config.NODE_ENV === 'production') {
-    // TODO: 실제 로깅 서비스로 전송 (예: Winston, Sentry 등)
-  }
+  // 운영 환경에서 console.error 출력은 PM2가 /var/log/tyyacht/error.log에 자동 기록
+  // 향후 트래픽 증가 시 Sentry 또는 Winston 연동 고려
 }
 
 // 운영 에러와 개발 에러를 다르게 처리

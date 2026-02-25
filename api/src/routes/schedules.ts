@@ -1,20 +1,9 @@
 import { Router } from 'express';
 import jwt from 'jsonwebtoken';
 import { db } from '../db/database';
+import { config } from '../config/env';
 
 const router = Router();
-
-// JWT 시크릿
-const JWT_SECRET = process.env.JWT_SECRET || 'tyyacht-jwt-secret-key-2024-development';
-
-if (!process.env.JWT_SECRET && process.env.NODE_ENV === 'production') {
-  console.error('❌ JWT_SECRET must be configured in production');
-  process.exit(1);
-}
-
-if (!process.env.JWT_SECRET) {
-  console.warn('⚠️ Using default JWT_SECRET in development - please set JWT_SECRET environment variable');
-}
 
 // 관리자 권한 확인 미들웨어
 const authenticateAdmin = (req: any, res: any, next: any) => {
@@ -24,7 +13,7 @@ const authenticateAdmin = (req: any, res: any, next: any) => {
   }
 
   try {
-    const decoded = jwt.verify(token, JWT_SECRET) as any;
+    const decoded = jwt.verify(token, config.JWT_SECRET) as any;
     const user = db.prepare('SELECT * FROM users WHERE id = ?').get(decoded.userId) as any;
     
     if (!user || user.role !== 'admin') {

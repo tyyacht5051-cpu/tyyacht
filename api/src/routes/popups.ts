@@ -104,7 +104,7 @@ router.get('/:id', async (req: Request, res: Response) => {
 router.post('/', authenticateToken, requireAdmin, upload.single('image'), async (req: Request, res: Response) => {
     try {
         const { title, content, link_url, is_active, display_order, start_date, end_date } = req.body;
-        const userId = (req as any).user.userId;
+        const userId = (req as any).user.id;
 
         if (!title) {
             return res.status(400).json({ error: '제목은 필수입니다' });

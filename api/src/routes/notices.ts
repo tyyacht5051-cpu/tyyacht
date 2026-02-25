@@ -116,7 +116,7 @@ router.get('/', (req, res) => {
         ...image,
         url: `/api/uploads/notices/${image.filename}`
       }));
-      return { ...notice, images, files: imagesWithUrls };
+      return { ...notice, images: imagesWithUrls, files };
     });
     
     res.json(noticesWithImages);

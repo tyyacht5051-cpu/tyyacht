@@ -1,11 +1,8 @@
 import { Router, Request, Response } from 'express';
-import Database from 'better-sqlite3';
 import { authenticateToken, requireAdmin } from '../middleware/auth';
+import { db } from '../db/database';
 
 const router = Router();
-
-// 데이터베이스 인스턴스 가져오기 (다른 라우트에서와 동일한 방식)
-const db = new Database('./database.db');
 
 interface AuthenticatedRequest extends Request {
   user?: {

@@ -286,6 +286,22 @@ function checkAuthStatus(): { isAuthenticated: boolean; isAdmin: boolean; user: 
       return { isAuthenticated: false, isAdmin: false, user: null }
     }
 
+    // JWT 만료 시간 검증
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')))
+      if (payload.exp && payload.exp * 1000 < Date.now()) {
+        console.log('❌ checkAuthStatus: Token expired')
+        localStorage.removeItem('token')
+        localStorage.removeItem('user')
+        return { isAuthenticated: false, isAdmin: false, user: null }
+      }
+    } catch {
+      console.log('❌ checkAuthStatus: Failed to decode token payload')
+      localStorage.removeItem('token')
+      localStorage.removeItem('user')
+      return { isAuthenticated: false, isAdmin: false, user: null }
+    }
+
     // 사용자 정보 파싱
     let user: any = null
     try {
