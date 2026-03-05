@@ -75,7 +75,7 @@
                                 ref="imageFileInput"
                                 class="file-input"
                             />
-                            <div class="file-info">지원 형식: JPG, PNG, GIF (최대 5MB, 최대 3개 파일)</div>
+                            <div class="file-info">지원 형식: JPG, PNG, GIF (최대 30MB, 최대 3개 파일)</div>
                         </div>
 
                         <div v-if="selectedImages.length > 0" class="selected-images">
@@ -120,7 +120,7 @@
                                 ref="fileInput"
                                 class="file-input"
                             />
-                            <div class="file-info">지원 형식: PDF, DOC, DOCX, XLS, XLSX, ZIP, HWP, HWPX (최대 10MB, 최대 5개 파일)</div>
+                            <div class="file-info">지원 형식: PDF, DOC, DOCX, XLS, XLSX, ZIP, HWP, HWPX (최대 50MB, 최대 5개 파일)</div>
                         </div>
 
                         <div v-if="selectedFiles.length > 0" class="selected-files">
@@ -436,8 +436,8 @@ export default {
             this.selectedImages = [];
 
             files.forEach(file => {
-                if (file.size > 5 * 1024 * 1024) {
-                    this.toast.error(`${file.name}은(는) 파일 크기가 5MB를 초과합니다.`, '⚠️ 파일 크기 초과');
+                if (file.size > 30 * 1024 * 1024) {
+                    this.toast.error(`${file.name}은(는) 파일 크기가 30MB를 초과합니다.`, '⚠️ 파일 크기 초과');
                     return;
                 }
 
@@ -475,8 +475,8 @@ export default {
             this.selectedFiles = [];
 
             files.forEach(file => {
-                if (file.size > 10 * 1024 * 1024) {
-                    this.toast.error(`${file.name}은(는) 파일 크기가 10MB를 초과합니다.`, '⚠️ 파일 크기 초과');
+                if (file.size > 50 * 1024 * 1024) {
+                    this.toast.error(`${file.name}은(는) 파일 크기가 50MB를 초과합니다.`, '⚠️ 파일 크기 초과');
                     return;
                 }
 

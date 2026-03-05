@@ -23,7 +23,7 @@ const storage = multer.diskStorage({
 
 const upload = multer({ 
   storage: storage,
-  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
+  limits: { fileSize: 50 * 1024 * 1024 }, // 50MB limit
  fileFilter: (req, file, cb) => {
       // 허용된 파일 확장자 (한글 파일의 MIME 타입이 브라우저마다 다를 수 있어 확장자로도 체크)
       const allowedExtensions = ['.pdf', '.doc', '.docx', '.xls', '.xlsx', '.zip', '.hwp', '.hwpx', '.jpg', '.jpeg', '.png', '.gif', '.webp'];

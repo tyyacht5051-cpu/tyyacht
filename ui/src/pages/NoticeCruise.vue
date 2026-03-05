@@ -280,7 +280,7 @@ export default {
         handleImageSelection(event) {
             const files = Array.from(event.target.files);
             const maxFiles = 3;
-            const maxSize = 5 * 1024 * 1024; // 5MB
+            const maxSize = 30 * 1024 * 1024; // 30MB
             
             if (this.selectedImages.length + files.length > maxFiles) {
                 alert(`최대 ${maxFiles}개의 이미지만 업로드할 수 있습니다.`);
@@ -289,7 +289,7 @@ export default {
             
             files.forEach(file => {
                 if (file.size > maxSize) {
-                    alert(`${file.name} 파일이 너무 큽니다. (최대 5MB)`);
+                    alert(`${file.name} 파일이 너무 큽니다. (최대 30MB)`);
                     return;
                 }
                 
