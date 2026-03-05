@@ -2,7 +2,7 @@ import express from 'express';
 import multer from 'multer';
 import path from 'path';
 import { db } from '../db/database';
-import { authenticateToken, requireAdmin, AuthenticatedRequest } from '../middleware/auth';
+import { authenticateToken, requireAdmin, optionalAuth, AuthenticatedRequest } from '../middleware/auth';
 import { config } from '../config/env';
 import { ensureDirectory, safeDeleteFile } from '../utils/fileSystem';
 
@@ -85,22 +85,32 @@ interface NoticeImage {
 
 
 // 공지사항 목록 조회
-router.get('/', (req, res) => {
+router.get('/', optionalAuth, (req: AuthenticatedRequest, res) => {
   try {
     const { category, limit = 20, offset = 0 } = req.query;
-    
+    const isAdmin = req.user?.isAdmin;
+
     let query = `
-      SELECT n.*, u.username as author_name 
-      FROM notices n 
-      JOIN users u ON n.author_id = u.id 
+      SELECT n.*, u.username as author_name
+      FROM notices n
+      JOIN users u ON n.author_id = u.id
     `;
     const params: any[] = [];
-    
+    const conditions: string[] = [];
+
+    if (!isAdmin) {
+      conditions.push('n.published = 1');
+    }
+
     if (category && category !== 'all') {
-      query += ' WHERE n.category_id = ?';
+      conditions.push('n.category_id = ?');
       params.push(category);
     }
-    
+
+    if (conditions.length > 0) {
+      query += ' WHERE ' + conditions.join(' AND ');
+    }
+
     query += ' ORDER BY n.important DESC, n.created_at DESC LIMIT ? OFFSET ?';
     params.push(Number(limit), Number(offset));
     
@@ -127,20 +137,26 @@ router.get('/', (req, res) => {
 });
 
 // 공지사항 상세 조회
-router.get('/:id', (req, res) => {
+router.get('/:id', optionalAuth, (req: AuthenticatedRequest, res) => {
   try {
     const noticeId = parseInt(req.params.id);
+    const isAdmin = req.user?.isAdmin;
 
     // 조회수 증가
     db.prepare('UPDATE notices SET views = views + 1 WHERE id = ?').run(noticeId);
 
-    // 공지사항 정보 조회
-    const notice = db.prepare(`
+    // 공지사항 정보 조회 (비관리자는 published = 1인 것만)
+    let noticeQuery = `
       SELECT n.*, u.username as author_name, u.full_name as author_full_name
       FROM notices n
       JOIN users u ON n.author_id = u.id
       WHERE n.id = ?
-    `).get(noticeId) as Notice;
+    `;
+    if (!isAdmin) {
+      noticeQuery += ' AND n.published = 1';
+    }
+
+    const notice = db.prepare(noticeQuery).get(noticeId) as Notice;
 
     if (!notice) {
       return res.status(404).json({ error: 'Notice not found' });
