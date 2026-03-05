@@ -263,7 +263,7 @@ router.post('/draft', authenticateToken, requireAdmin, (req: AuthenticatedReques
 });
 
 // 공지사항 작성 (관리자만)
-router.post('/', authenticateToken, requireAdmin, upload.array('images', 3), (req: AuthenticatedRequest, res) => {
+router.post('/', authenticateToken, requireAdmin, upload.array('images', 10), (req: AuthenticatedRequest, res) => {
   try {
     const { title, content, category_id, important } = req.body;
     const author_id = req.user?.id;
@@ -318,7 +318,7 @@ router.post('/', authenticateToken, requireAdmin, upload.array('images', 3), (re
 });
 
 // 공지사항 수정 (관리자만)
-router.put('/:id', authenticateToken, requireAdmin, upload.array('images', 3), (req: AuthenticatedRequest, res) => {
+router.put('/:id', authenticateToken, requireAdmin, upload.array('images', 10), (req: AuthenticatedRequest, res) => {
   try {
     const noticeId = parseInt(req.params.id);
     const { title, content, category_id, important } = req.body;
